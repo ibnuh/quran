@@ -1,6 +1,5 @@
 import Player from 'aplayer'
-import 'aplayer/dist/APlayer.min.css';
-
+import 'aplayer/dist/APlayer.min.css'
 
 window.vue = new Vue({
     el: '#app',
@@ -9,22 +8,23 @@ window.vue = new Vue({
         audio: [],
         verses: [],
         active: [],
-        current: 0
+        current: 0,
     },
     mounted() {
-        axios.get('/sample/grab.json')
+        axios
+            .get('/sample/32.json')
             .then(res => {
                 this.verses = res.data
             })
             .then(res => {
-                this.count();
-            });
+                this.count()
+            })
     },
     methods: {
-        isCurrent(index){
-            return (index + 1) == this.current;
+        isCurrent(index) {
+            return index + 1 == this.current
         },
-        initPlayer(){
+        initPlayer() {
             this.player = new Player({
                 container: document.getElementById('player'),
                 mini: false,
@@ -36,12 +36,12 @@ window.vue = new Vue({
                 mutex: true,
                 listFolded: false,
                 listMaxHeight: 90,
-                audio: this.audio
+                audio: this.audio,
             })
 
             this.player.on('durationchange', () => {
-                console.log(this.player.audio.duration);
-                this.current++;
+                console.log(this.player.audio.duration)
+                this.current++
             })
         },
         count() {
@@ -51,15 +51,15 @@ window.vue = new Vue({
                     artist: 'Al-Waqiah',
                     url: 'https://verses.quran.com/' + verse.audio.url.slice(6),
                 })
-            });
+            })
 
             this.initPlayer()
 
-            console.log(this.duration);
-            console.log(this.player.audio.duration);
+            console.log(this.duration)
+            console.log(this.player.audio.duration)
         },
-        manager(){
-            return this.player.audio;
-        }
-    }
+        manager() {
+            return this.player.audio
+        },
+    },
 })
