@@ -6,7 +6,7 @@ const store = usePlayerStore()
 </script>
 
 <template>
-  <div class="text-center max-w-2xl w-full">
+  <div class="text-center w-full" :style="{ maxWidth: store.contentWidth + 'rem' }">
     <!-- Loading -->
     <div v-if="store.isLoading" class="text-muted">
       <div class="w-9 h-9 border-3 border-border border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
@@ -38,7 +38,7 @@ const store = usePlayerStore()
         {{ store.currentVerse.number }}
       </span>
 
-      <p class="leading-relaxed text-muted font-light max-w-lg mx-auto" :style="{ fontSize: store.translationFontSize + 'rem' }">
+      <p class="leading-relaxed text-muted font-light mx-auto" :style="{ fontSize: store.translationFontSize + 'rem', maxWidth: (store.contentWidth * 0.75) + 'rem' }">
         {{ store.currentTranslationVerse?.text }}
       </p>
     </div>

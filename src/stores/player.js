@@ -23,6 +23,7 @@ export const usePlayerStore = defineStore('player', {
     arabicFont: 'uthmanic',
     arabicFontSize: 3.2,
     translationFontSize: 1.3,
+    contentWidth: 80,
     isLoading: false,
     error: null
   }),
@@ -162,6 +163,11 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setContentWidth(width) {
+      this.contentWidth = width
+      this.savePreferences()
+    },
+
     setTranslation(id) {
       this.currentTranslation = id
       this.savePreferences()
@@ -194,7 +200,8 @@ export const usePlayerStore = defineStore('player', {
           translation: this.currentTranslation,
           arabicFont: this.arabicFont,
           arabicFontSize: this.arabicFontSize,
-          translationFontSize: this.translationFontSize
+          translationFontSize: this.translationFontSize,
+          contentWidth: this.contentWidth
         }))
       } catch (e) {}
     },
@@ -218,6 +225,7 @@ export const usePlayerStore = defineStore('player', {
           if (prefs.arabicFont) this.arabicFont = prefs.arabicFont
           if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
           if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
+          if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
         }
       } catch (e) {}
     }

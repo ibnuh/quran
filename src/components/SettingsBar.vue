@@ -107,6 +107,19 @@ const showFontSettings = ref(false)
             />
             <span class="text-xs text-muted w-8 text-right">{{ store.translationFontSize.toFixed(1) }}</span>
           </div>
+          <div class="flex items-center gap-3 flex-1">
+            <label class="text-xs font-medium text-muted whitespace-nowrap">Content Width</label>
+            <input
+              type="range"
+              min="30"
+              max="100"
+              step="5"
+              :value="store.contentWidth"
+              class="range-field flex-1"
+              @input="store.setContentWidth(parseFloat($event.target.value))"
+            />
+            <span class="text-xs text-muted w-8 text-right">{{ store.contentWidth }}</span>
+          </div>
         </div>
       </div>
     </Transition>

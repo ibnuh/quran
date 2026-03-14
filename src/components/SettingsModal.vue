@@ -119,6 +119,22 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             </div>
             <p class="text-muted font-light mt-2" :style="{ fontSize: store.translationFontSize + 'rem' }">In the name of God</p>
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-muted mb-3">Content Width</label>
+            <div class="flex items-center gap-3">
+              <input
+                type="range"
+                min="30"
+                max="100"
+                step="5"
+                :value="store.contentWidth"
+                class="range-field flex-1"
+                @input="store.setContentWidth(parseFloat($event.target.value))"
+              />
+              <span class="text-body w-12 text-right text-sm">{{ store.contentWidth }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
