@@ -15,6 +15,63 @@
   --font-arabic: 'Amiri', serif;
 }
 
+/* Theme overrides */
+[data-theme="dark"] {
+  --color-primary: #2d9b6e;
+  --color-primary-dark: #1a6b4b;
+  --color-primary-light: #1a3a2a;
+  --color-accent: #d4b06a;
+  --color-accent-light: #3a3020;
+  --color-surface: #121212;
+  --color-card: #1e1e1e;
+  --color-body: #e0e0e0;
+  --color-muted: #999999;
+  --color-arabic: #f0f0f0;
+  --color-border: #333333;
+}
+
+[data-theme="sepia"] {
+  --color-primary: #8b6914;
+  --color-primary-dark: #6b4f0e;
+  --color-primary-light: #f5ecd7;
+  --color-accent: #a07830;
+  --color-accent-light: #f0e4c8;
+  --color-surface: #f4e8c1;
+  --color-card: #faf3e0;
+  --color-body: #3d2e0a;
+  --color-muted: #7a6b4e;
+  --color-arabic: #2a1f05;
+  --color-border: #e0d4b0;
+}
+
+[data-theme="midnight"] {
+  --color-primary: #5b8def;
+  --color-primary-dark: #3a6bd4;
+  --color-primary-light: #1a2744;
+  --color-accent: #a08ce0;
+  --color-accent-light: #2a2440;
+  --color-surface: #0f1729;
+  --color-card: #1a2744;
+  --color-body: #d4dce8;
+  --color-muted: #7a8ba3;
+  --color-arabic: #e8eef5;
+  --color-border: #2a3a55;
+}
+
+[data-theme="nature"] {
+  --color-primary: #4a9b6e;
+  --color-primary-dark: #2d7a4e;
+  --color-primary-light: #1a3828;
+  --color-accent: #b8a050;
+  --color-accent-light: #2a3020;
+  --color-surface: #1a2618;
+  --color-card: #243322;
+  --color-body: #d4e0d4;
+  --color-muted: #8aaa8a;
+  --color-arabic: #e8f0e8;
+  --color-border: #2e4a2e;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--color-surface);

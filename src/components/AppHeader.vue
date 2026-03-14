@@ -1,8 +1,29 @@
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import THEMES from '../data/themes.js'
 
 defineEmits(['open-settings', 'toggle-verses', 'toggle-settings-bar'])
 const store = usePlayerStore()
+const showThemePicker = ref(false)
+
+function toggleThemePicker() {
+  showThemePicker.value = !showThemePicker.value
+}
+
+function selectTheme(id) {
+  store.setTheme(id)
+  showThemePicker.value = false
+}
+
+function onClickOutside(e) {
+  if (showThemePicker.value && !e.target.closest('.theme-picker-wrapper')) {
+    showThemePicker.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', onClickOutside))
+onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </script>
 
 <template>
@@ -37,6 +58,40 @@ const store = usePlayerStore()
     </div>
 
     <div class="flex items-center">
+      <div class="relative theme-picker-wrapper">
+        <button
+          class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+          title="Theme"
+          @click.stop="toggleThemePicker"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-1-.01-.83.67-1.49 1.5-1.49H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+          </svg>
+        </button>
+        <Transition name="theme-pop">
+          <div
+            v-if="showThemePicker"
+            class="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[160px]"
+          >
+            <button
+              v-for="theme in THEMES"
+              :key="theme.id"
+              class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-body transition-colors cursor-pointer"
+              :class="store.theme === theme.id ? 'bg-primary/10 font-medium' : 'hover:bg-surface'"
+              @click="selectTheme(theme.id)"
+            >
+              <span
+                class="w-5 h-5 rounded-full border-2 shrink-0"
+                :style="{ background: theme.colors.surface, borderColor: theme.colors.primary }"
+              ></span>
+              <span>{{ theme.name }}</span>
+              <svg v-if="store.theme === theme.id" class="ml-auto w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </button>
+          </div>
+        </Transition>
+      </div>
       <button
         class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
         :class="store.autoHideControls ? 'opacity-100' : 'opacity-50'"
@@ -62,3 +117,15 @@ const store = usePlayerStore()
     </div>
   </header>
 </template>
+
+<style scoped>
+.theme-pop-enter-active,
+.theme-pop-leave-active {
+  transition: all 0.15s ease;
+}
+.theme-pop-enter-from,
+.theme-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(-4px);
+}
+</style>

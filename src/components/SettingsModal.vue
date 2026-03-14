@@ -6,6 +6,7 @@ import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS from '../data/translations.js'
 import ARABIC_FONTS from '../data/fonts.js'
+import THEMES from '../data/themes.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
@@ -135,6 +136,25 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                 @input="store.setContentWidth(parseFloat($event.target.value))"
               />
               <span class="text-body w-12 text-right text-sm">{{ store.contentWidth }}</span>
+            </div>
+          </div>
+
+          <div class="border-t border-border pt-5">
+            <label class="block text-sm font-medium text-muted mb-3">Theme</label>
+            <div class="grid grid-cols-5 gap-2">
+              <button
+                v-for="theme in THEMES"
+                :key="theme.id"
+                class="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-colors cursor-pointer"
+                :class="store.theme === theme.id ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
+                @click="store.setTheme(theme.id)"
+              >
+                <span
+                  class="w-8 h-8 rounded-full border-2"
+                  :style="{ background: theme.colors.surface, borderColor: theme.colors.primary }"
+                ></span>
+                <span class="text-[0.65rem] text-body">{{ theme.name }}</span>
+              </button>
             </div>
           </div>
 

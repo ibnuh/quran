@@ -24,6 +24,7 @@ export const usePlayerStore = defineStore('player', {
     arabicFontSize: 3.2,
     translationFontSize: 1.3,
     contentWidth: 80,
+    theme: 'light',
     autoHideControls: true,
     isLoading: false,
     error: null
@@ -169,6 +170,12 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setTheme(id) {
+      this.theme = id
+      document.documentElement.setAttribute('data-theme', id === 'light' ? '' : id)
+      this.savePreferences()
+    },
+
     setAutoHideControls(val) {
       this.autoHideControls = val
       this.savePreferences()
@@ -208,6 +215,7 @@ export const usePlayerStore = defineStore('player', {
           arabicFontSize: this.arabicFontSize,
           translationFontSize: this.translationFontSize,
           contentWidth: this.contentWidth,
+          theme: this.theme,
           autoHideControls: this.autoHideControls
         }))
       } catch (e) {}
@@ -233,6 +241,10 @@ export const usePlayerStore = defineStore('player', {
           if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
           if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
           if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
+          if (prefs.theme) {
+            this.theme = prefs.theme
+            document.documentElement.setAttribute('data-theme', prefs.theme === 'light' ? '' : prefs.theme)
+          }
           if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
         }
       } catch (e) {}
