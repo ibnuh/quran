@@ -30,7 +30,7 @@ const fontOptions = computed(() =>
 
 <template>
   <Transition name="bar">
-    <div v-if="visible" class="hidden md:block bg-card border-b border-border">
+    <div v-if="visible" class="hidden md:block landscape-compact:!hidden bg-card border-b border-border">
     <div class="flex items-center gap-3 px-4 py-2.5 max-w-7xl mx-auto">
       <div class="flex-1 min-w-0">
         <SearchSelect

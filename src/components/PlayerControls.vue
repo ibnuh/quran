@@ -13,10 +13,10 @@ const emit = defineEmits(['toggle-play', 'prev-verse', 'next-verse', 'prev-surah
 </script>
 
 <template>
-  <div class="px-6 pb-6 pt-2">
+  <div class="px-6 pb-6 pt-2 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4">
     <ProgressBar :progress="progress" @seek="emit('seek', $event)" />
 
-    <div class="flex items-center justify-center gap-1 mt-3">
+    <div class="flex items-center justify-center gap-1 mt-3 landscape-compact:mt-1">
       <button
         class="btn-nav"
         :disabled="!store.canPrevSurah"
@@ -36,7 +36,7 @@ const emit = defineEmits(['toggle-play', 'prev-verse', 'next-verse', 'prev-surah
       </button>
 
       <button
-        class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center mx-1.5 shadow-md hover:bg-primary-dark hover:scale-105 active:scale-[0.97] transition-all duration-200 cursor-pointer"
+        class="w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-1.5 shadow-md hover:bg-primary-dark hover:scale-105 active:scale-[0.97] transition-all duration-200 cursor-pointer"
         title="Play / Pause"
         @click="emit('toggle-play')"
       >
@@ -63,7 +63,7 @@ const emit = defineEmits(['toggle-play', 'prev-verse', 'next-verse', 'prev-surah
       </button>
     </div>
 
-    <div v-if="store.currentVerse" class="text-center text-xs text-muted mt-2">
+    <div v-if="store.currentVerse" class="text-center text-xs text-muted mt-2 landscape-compact:hidden">
       Verse {{ store.currentVerse.number }} of {{ store.totalVerses }}
     </div>
   </div>

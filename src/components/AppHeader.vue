@@ -6,7 +6,7 @@ const store = usePlayerStore()
 </script>
 
 <template>
-  <header class="flex items-center justify-between px-3 py-2.5 bg-primary text-white">
+  <header class="flex items-center justify-between px-3 py-2.5 landscape-compact:py-1 bg-primary text-white">
     <div class="flex items-center">
       <button
         class="md:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
@@ -29,8 +29,8 @@ const store = usePlayerStore()
     </div>
 
     <div v-if="store.currentSurah" class="text-center flex-1 min-w-0 px-2">
-      <h1 class="font-arabic text-lg leading-tight truncate">{{ store.currentSurah.name }}</h1>
-      <p class="text-[0.7rem] opacity-75 truncate">{{ store.currentSurah.englishName }} - {{ store.currentSurah.englishNameTranslation }}</p>
+      <h1 class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate">{{ store.currentSurah.name }}</h1>
+      <p class="text-[0.7rem] opacity-75 truncate landscape-compact:hidden">{{ store.currentSurah.englishName }} - {{ store.currentSurah.englishNameTranslation }}</p>
     </div>
     <div v-else class="text-center flex-1">
       <h1 class="text-base font-semibold">Quran Player</h1>
