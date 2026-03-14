@@ -2,7 +2,7 @@ const TEXT_API = 'https://api.alquran.cloud/v1'
 const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
 
 export async function fetchSurahText(surahNumber, translationId) {
-  const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-simple,${translationId}`
+  const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-uthmani,${translationId}`
   const res = await fetch(url)
 
   if (!res.ok) throw new Error(`Text API error: ${res.status}`)
@@ -18,7 +18,7 @@ export async function fetchSurahText(surahNumber, translationId) {
   return {
     verses: arabicData.ayahs.map(a => ({
       number: a.numberInSurah,
-      text: a.text
+      text: a.text.replace(/\u0649/g, '\u06CC')
     })),
     translationVerses: translationData.ayahs.map(a => ({
       number: a.numberInSurah,
