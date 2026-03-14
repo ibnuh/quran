@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import SearchSelect from './SearchSelect.vue'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS from '../data/translations.js'
@@ -12,6 +13,19 @@ defineProps({
 
 const store = usePlayerStore()
 const showFontSettings = ref(false)
+
+const surahOptions = computed(() =>
+  SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName}` }))
+)
+const reciterOptions = computed(() =>
+  RECITERS.map(r => ({ value: r.id, label: r.name }))
+)
+const translationOptions = computed(() =>
+  TRANSLATIONS.map(t => ({ value: t.identifier, label: t.englishName }))
+)
+const fontOptions = computed(() =>
+  ARABIC_FONTS.map(f => ({ value: f.id, label: f.name }))
+)
 </script>
 
 <template>
@@ -19,51 +33,43 @@ const showFontSettings = ref(false)
     <div v-if="visible" class="hidden md:block bg-card border-b border-border">
     <div class="flex items-center gap-3 px-4 py-2.5 max-w-7xl mx-auto">
       <div class="flex-1 min-w-0">
-        <select
-          :value="store.currentSurahNum"
-          class="bar-select"
-          @change="store.setSurah(parseInt($event.target.value))"
-        >
-          <option v-for="s in SURAHS" :key="s.number" :value="s.number">
-            {{ s.number }}. {{ s.englishName }}
-          </option>
-        </select>
+        <SearchSelect
+          :model-value="store.currentSurahNum"
+          :options="surahOptions"
+          placeholder="Search surah..."
+          compact
+          @update:model-value="store.setSurah($event)"
+        />
       </div>
 
       <div class="flex-1 min-w-0">
-        <select
-          :value="store.currentReciter"
-          class="bar-select"
-          @change="store.setReciter($event.target.value)"
-        >
-          <option v-for="r in RECITERS" :key="r.id" :value="r.id">
-            {{ r.name }}
-          </option>
-        </select>
+        <SearchSelect
+          :model-value="store.currentReciter"
+          :options="reciterOptions"
+          placeholder="Search reciter..."
+          compact
+          @update:model-value="store.setReciter($event)"
+        />
       </div>
 
       <div class="flex-1 min-w-0">
-        <select
-          :value="store.currentTranslation"
-          class="bar-select"
-          @change="store.setTranslation($event.target.value)"
-        >
-          <option v-for="t in TRANSLATIONS" :key="t.identifier" :value="t.identifier">
-            {{ t.englishName }}
-          </option>
-        </select>
+        <SearchSelect
+          :model-value="store.currentTranslation"
+          :options="translationOptions"
+          placeholder="Search translation..."
+          compact
+          @update:model-value="store.setTranslation($event)"
+        />
       </div>
 
       <div class="flex-1 min-w-0">
-        <select
-          :value="store.arabicFont"
-          class="bar-select"
-          @change="store.setArabicFont($event.target.value)"
-        >
-          <option v-for="f in ARABIC_FONTS" :key="f.id" :value="f.id">
-            {{ f.name }}
-          </option>
-        </select>
+        <SearchSelect
+          :model-value="store.arabicFont"
+          :options="fontOptions"
+          placeholder="Search font..."
+          compact
+          @update:model-value="store.setArabicFont($event)"
+        />
       </div>
 
       <button
@@ -128,28 +134,6 @@ const showFontSettings = ref(false)
 </template>
 
 <style scoped>
-.bar-select {
-  width: 100%;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.8rem;
-  padding: 0.45rem 1.8rem 0.45rem 0.6rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
-  background: var(--color-surface);
-  color: var(--color-body);
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23777'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  transition: border-color 0.2s ease;
-}
-.bar-select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
 .range-field {
   -webkit-appearance: none;
   appearance: none;
