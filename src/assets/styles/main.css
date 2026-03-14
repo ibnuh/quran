@@ -21,17 +21,22 @@ body {
   color: var(--color-body);
 }
 
-::-webkit-scrollbar {
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
+.scrollable::-webkit-scrollbar {
   width: 6px;
 }
-::-webkit-scrollbar-track {
+.scrollable::-webkit-scrollbar-track {
   background: transparent;
 }
-::-webkit-scrollbar-thumb {
+.scrollable::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
+.scrollable::-webkit-scrollbar-thumb:hover {
   background: var(--color-muted);
 }
 

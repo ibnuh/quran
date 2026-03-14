@@ -137,6 +137,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
               <span class="text-body w-12 text-right text-sm">{{ store.contentWidth }}</span>
             </div>
           </div>
+
+          <div class="border-t border-border pt-5">
+            <label class="flex items-center justify-between cursor-pointer">
+              <span class="text-sm font-medium text-muted">Auto-hide controls during playback</span>
+              <input
+                type="checkbox"
+                :checked="store.autoHideControls"
+                class="toggle-switch"
+                @change="store.setAutoHideControls($event.target.checked)"
+              />
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -169,6 +181,37 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   border: none;
   background: var(--color-primary);
   cursor: pointer;
+}
+
+.toggle-switch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: var(--color-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+.toggle-switch:checked {
+  background: var(--color-primary);
+}
+.toggle-switch:checked::after {
+  transform: translateX(1.25rem);
 }
 
 .modal-enter-active,

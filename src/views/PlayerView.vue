@@ -29,15 +29,16 @@ function showControls() {
 
 function resetHideTimer() {
   clearTimeout(hideTimer)
-  if (!audio.isPlaying.value) return
+  if (!store.autoHideControls || !audio.isPlaying.value) return
   hideTimer = setTimeout(() => {
-    if (audio.isPlaying.value && !showSettings.value && !showVerses.value) {
+    if (store.autoHideControls && audio.isPlaying.value && !showSettings.value && !showVerses.value) {
       controlsVisible.value = false
     }
   }, AUTO_HIDE_DELAY)
 }
 
 function onMainTap() {
+  if (!store.autoHideControls) return
   if (!controlsVisible.value) {
     showControls()
   } else if (audio.isPlaying.value) {
@@ -49,7 +50,16 @@ watch(() => audio.isPlaying.value, (playing) => {
   if (!playing) {
     controlsVisible.value = true
     clearTimeout(hideTimer)
-  } else {
+  } else if (store.autoHideControls) {
+    resetHideTimer()
+  }
+})
+
+watch(() => store.autoHideControls, (enabled) => {
+  if (!enabled) {
+    controlsVisible.value = true
+    clearTimeout(hideTimer)
+  } else if (audio.isPlaying.value) {
     resetHideTimer()
   }
 })
@@ -204,7 +214,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-surface" @mousemove="showControls" @touchstart="showControls">
+  <div class="h-dvh flex flex-col bg-surface overflow-hidden" @mousemove="showControls" @touchstart="showControls">
     <div
       class="transition-all duration-300"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
@@ -218,7 +228,7 @@ onMounted(() => {
     </div>
 
     <main
-      class="flex-1 flex items-center justify-center px-4 overflow-y-auto cursor-pointer"
+      class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer"
       @click="onMainTap"
     >
       <VerseDisplay @retry="store.loadSurah()" />

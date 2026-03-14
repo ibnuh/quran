@@ -24,6 +24,7 @@ export const usePlayerStore = defineStore('player', {
     arabicFontSize: 3.2,
     translationFontSize: 1.3,
     contentWidth: 80,
+    autoHideControls: true,
     isLoading: false,
     error: null
   }),
@@ -168,6 +169,11 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setAutoHideControls(val) {
+      this.autoHideControls = val
+      this.savePreferences()
+    },
+
     setTranslation(id) {
       this.currentTranslation = id
       this.savePreferences()
@@ -201,7 +207,8 @@ export const usePlayerStore = defineStore('player', {
           arabicFont: this.arabicFont,
           arabicFontSize: this.arabicFontSize,
           translationFontSize: this.translationFontSize,
-          contentWidth: this.contentWidth
+          contentWidth: this.contentWidth,
+          autoHideControls: this.autoHideControls
         }))
       } catch (e) {}
     },
@@ -226,6 +233,7 @@ export const usePlayerStore = defineStore('player', {
           if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
           if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
           if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
+          if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
         }
       } catch (e) {}
     }
