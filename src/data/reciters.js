@@ -1,0 +1,22 @@
+export default [
+  {identifier:"ar.alafasy",englishName:"Mishary Alafasy"},
+  {identifier:"ar.abdulbasitmurattal",englishName:"Abdul Basit (Murattal)"},
+  {identifier:"ar.abdulsamad",englishName:"Abdul Samad"},
+  {identifier:"ar.abdurrahmaansudais",englishName:"Abdurrahmaan As-Sudais"},
+  {identifier:"ar.abdullahbasfar",englishName:"Abdullah Basfar"},
+  {identifier:"ar.ahmedajamy",englishName:"Ahmed al-Ajamy"},
+  {identifier:"ar.aymanswoaid",englishName:"Ayman Sowaid"},
+  {identifier:"ar.hanirifai",englishName:"Hani Rifai"},
+  {identifier:"ar.hudhaify",englishName:"Hudhaify"},
+  {identifier:"ar.husary",englishName:"Husary"},
+  {identifier:"ar.husarymujawwad",englishName:"Husary (Mujawwad)"},
+  {identifier:"ar.ibrahimakhbar",englishName:"Ibrahim Akhdar"},
+  {identifier:"ar.mahermuaiqly",englishName:"Maher Al Muaiqly"},
+  {identifier:"ar.minshawi",englishName:"Minshawi"},
+  {identifier:"ar.minshawimujawwad",englishName:"Minshawy (Mujawwad)"},
+  {identifier:"ar.muhammadayyoub",englishName:"Muhammad Ayyoub"},
+  {identifier:"ar.muhammadjibreel",englishName:"Muhammad Jibreel"},
+  {identifier:"ar.parhizgar",englishName:"Parhizgar"},
+  {identifier:"ar.saoodshuraym",englishName:"Saood Ash-Shuraym"},
+  {identifier:"ar.shaatree",englishName:"Abu Bakr Ash-Shaatree"}
+]
