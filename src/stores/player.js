@@ -1,25 +1,31 @@
 import { defineStore } from 'pinia'
-import { fetchSurahText, fetchSurahAudio } from '../services/api.js'
+import { fetchSurahText, fetchSurahAudio, fetchVerseAudio } from '../services/api.js'
 import SURAHS from '../data/surahs.js'
+import RECITERS from '../data/reciters.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
 export const usePlayerStore = defineStore('player', {
   state: () => ({
     currentSurahNum: 1,
-    currentReciter: 7,
+    currentReciter: 'alafasy',
     currentTranslation: 'en.sahih',
     currentVerseIndex: 0,
     verses: [],
     translationVerses: [],
+    // Full surah audio (qurancdn.com)
+    playbackMode: null, // 'full' | 'verse'
     audioUrl: null,
     verseTimings: [],
+    // Per-verse audio (alquran.cloud fallback)
+    audioUrls: [],
     isLoading: false,
     error: null
   }),
 
   getters: {
     currentSurah: (state) => SURAHS.find(s => s.number === state.currentSurahNum),
+    currentReciterData: (state) => RECITERS.find(r => r.id === state.currentReciter),
     currentVerse: (state) => state.verses[state.currentVerseIndex] || null,
     currentTranslationVerse: (state) => state.translationVerses[state.currentVerseIndex] || null,
     totalVerses: (state) => state.verses.length,
@@ -36,16 +42,55 @@ export const usePlayerStore = defineStore('player', {
       this.isLoading = true
       this.error = null
 
+      const reciter = this.currentReciterData
+      if (!reciter) {
+        this.error = 'Unknown reciter selected.'
+        this.isLoading = false
+        return
+      }
+
       try {
-        const [textData, audioData] = await Promise.all([
-          fetchSurahText(this.currentSurahNum, this.currentTranslation),
-          fetchSurahAudio(this.currentReciter, this.currentSurahNum)
-        ])
+        const textPromise = fetchSurahText(this.currentSurahNum, this.currentTranslation)
+
+        // Try full surah audio first, then fall back to per-verse
+        let audioResult = null
+
+        if (reciter.cdnId) {
+          try {
+            const data = await fetchSurahAudio(reciter.cdnId, this.currentSurahNum)
+            audioResult = {
+              mode: 'full',
+              audioUrl: data.audioUrl,
+              verseTimings: data.verseTimings,
+              audioUrls: []
+            }
+          } catch (e) {
+            // CDN failed, will try per-verse fallback
+          }
+        }
+
+        if (!audioResult && reciter.cloudId) {
+          const data = await fetchVerseAudio(reciter.cloudId, this.currentSurahNum)
+          audioResult = {
+            mode: 'verse',
+            audioUrl: null,
+            verseTimings: [],
+            audioUrls: data.audioUrls
+          }
+        }
+
+        if (!audioResult) {
+          throw new Error('No audio source available for this reciter')
+        }
+
+        const textData = await textPromise
 
         this.verses = textData.verses
         this.translationVerses = textData.translationVerses
-        this.audioUrl = audioData.audioUrl
-        this.verseTimings = audioData.verseTimings
+        this.playbackMode = audioResult.mode
+        this.audioUrl = audioResult.audioUrl
+        this.verseTimings = audioResult.verseTimings
+        this.audioUrls = audioResult.audioUrls
 
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
@@ -96,7 +141,6 @@ export const usePlayerStore = defineStore('player', {
 
     setTranslation(id) {
       this.currentTranslation = id
-      this.currentVerseIndex = 0
       this.savePreferences()
       return this.loadSurah()
     },
@@ -135,7 +179,15 @@ export const usePlayerStore = defineStore('player', {
         if (saved) {
           const prefs = JSON.parse(saved)
           if (prefs.surah) this.currentSurahNum = prefs.surah
-          if (prefs.reciter) this.currentReciter = prefs.reciter
+          if (prefs.reciter) {
+            // Handle migration from old numeric cdnId format
+            if (typeof prefs.reciter === 'number') {
+              const found = RECITERS.find(r => r.cdnId === prefs.reciter)
+              if (found) this.currentReciter = found.id
+            } else {
+              this.currentReciter = prefs.reciter
+            }
+          }
           if (prefs.translation) this.currentTranslation = prefs.translation
         }
       } catch (e) {}

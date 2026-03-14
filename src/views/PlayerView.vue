@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, watch } from 'vue'
+import { onMounted, onBeforeUnmount, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useAudio } from '../composables/useAudio.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
@@ -13,35 +13,95 @@ import VerseList from '../components/VerseList.vue'
 const store = usePlayerStore()
 const audio = useAudio()
 
+// -- Preloader for verse-by-verse mode --
+const preloadCache = []
+
+function getPreloadCount() {
+  const conn = navigator.connection
+  if (!conn) return 3
+  if (conn.effectiveType === '4g') return 5
+  if (conn.effectiveType === '3g') return 3
+  return 1
+}
+
+function preloadAhead() {
+  if (store.playbackMode !== 'verse') return
+
+  preloadCache.forEach(a => { a.src = '' })
+  preloadCache.length = 0
+
+  const count = getPreloadCount()
+  const start = store.currentVerseIndex + 1
+  const end = Math.min(start + count, store.audioUrls.length)
+
+  for (let i = start; i < end; i++) {
+    const a = new Audio()
+    a.preload = 'auto'
+    a.src = store.audioUrls[i]
+    preloadCache.push(a)
+  }
+}
+
+onBeforeUnmount(() => {
+  preloadCache.forEach(a => { a.src = '' })
+  preloadCache.length = 0
+})
+
+// -- Audio event handlers --
 audio.onTimeUpdate((timeMs) => {
-  const idx = store.getVerseIndexAtTime(timeMs)
-  if (idx !== store.currentVerseIndex) {
-    store.currentVerseIndex = idx
+  if (store.playbackMode === 'full') {
+    const idx = store.getVerseIndexAtTime(timeMs)
+    if (idx !== store.currentVerseIndex) {
+      store.currentVerseIndex = idx
+    }
   }
 })
 
 audio.onEnded(() => {
-  audio.stop()
+  if (store.playbackMode === 'verse' && store.canNextVerse) {
+    store.nextVerse()
+    audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+    preloadAhead()
+  } else {
+    audio.stop()
+  }
 })
 
+// -- Controls --
 function togglePlay() {
   if (audio.isPlaying.value) {
     audio.pause()
-  } else if (store.audioUrl) {
+    return
+  }
+
+  if (store.playbackMode === 'full' && store.audioUrl) {
     audio.play()
+  } else if (store.playbackMode === 'verse' && store.audioUrls.length) {
+    audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+    preloadAhead()
   }
 }
 
 function handlePrevVerse() {
   store.prevVerse()
-  const timing = store.verseTimings[store.currentVerseIndex]
-  if (timing) audio.seekTo(timing.timestampFrom)
+  if (store.playbackMode === 'full') {
+    const timing = store.verseTimings[store.currentVerseIndex]
+    if (timing) audio.seekTo(timing.timestampFrom)
+  } else if (audio.isPlaying.value) {
+    audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+    preloadAhead()
+  }
 }
 
 function handleNextVerse() {
   store.nextVerse()
-  const timing = store.verseTimings[store.currentVerseIndex]
-  if (timing) audio.seekTo(timing.timestampFrom)
+  if (store.playbackMode === 'full') {
+    const timing = store.verseTimings[store.currentVerseIndex]
+    if (timing) audio.seekTo(timing.timestampFrom)
+  } else if (audio.isPlaying.value) {
+    audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+    preloadAhead()
+  }
 }
 
 function handlePrevSurah() {
@@ -56,10 +116,15 @@ function handleNextSurah() {
 
 function handleVerseSelect(index) {
   store.setVerse(index)
-  const timing = store.verseTimings[index]
-  if (timing) {
-    audio.seekTo(timing.timestampFrom)
-    if (!audio.isPlaying.value) audio.play()
+  if (store.playbackMode === 'full') {
+    const timing = store.verseTimings[index]
+    if (timing) {
+      audio.seekTo(timing.timestampFrom)
+      if (!audio.isPlaying.value) audio.play()
+    }
+  } else {
+    audio.loadAndPlay(store.audioUrls[index])
+    preloadAhead()
   }
 }
 
@@ -67,18 +132,17 @@ function handleSeek(ratio) {
   audio.seek(ratio)
 }
 
-// Preload audio when surah loads (without auto-playing)
-let wasPlaying = false
+// Preload full surah audio when URL changes (without auto-playing)
 watch(() => store.audioUrl, (url) => {
-  wasPlaying = audio.isPlaying.value
-  audio.stop()
-  if (url) {
+  if (url && store.playbackMode === 'full') {
+    const wasPlaying = audio.isPlaying.value
+    audio.stop()
     audio.loadAndPlay(url)
     if (!wasPlaying) audio.pause()
   }
 })
 
-// Stop audio when reciter changes (surah reload handles the rest)
+// Stop audio on surah/reciter change
 watch(
   () => [store.currentSurahNum, store.currentReciter],
   () => { audio.stop() }

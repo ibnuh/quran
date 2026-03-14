@@ -27,8 +27,8 @@ export async function fetchSurahText(surahNumber, translationId) {
   }
 }
 
-export async function fetchSurahAudio(reciterId, chapterNumber) {
-  const url = `${AUDIO_API}/${reciterId}/audio_files?chapter=${chapterNumber}&segments=true`
+export async function fetchSurahAudio(cdnReciterId, chapterNumber) {
+  const url = `${AUDIO_API}/${cdnReciterId}/audio_files?chapter=${chapterNumber}&segments=true`
   const res = await fetch(url)
 
   if (!res.ok) throw new Error(`Audio API error: ${res.status}`)
@@ -49,5 +49,22 @@ export async function fetchSurahAudio(reciterId, chapterNumber) {
       timestampFrom: vt.timestamp_from,
       timestampTo: vt.timestamp_to
     }))
+  }
+}
+
+export async function fetchVerseAudio(cloudReciterId, surahNumber) {
+  const url = `${TEXT_API}/surah/${surahNumber}/${cloudReciterId}`
+  const res = await fetch(url)
+
+  if (!res.ok) throw new Error(`Verse audio API error: ${res.status}`)
+
+  const data = await res.json()
+
+  if (data.code !== 200 || !data.data) {
+    throw new Error('Invalid verse audio response')
+  }
+
+  return {
+    audioUrls: data.data.ayahs.map(a => a.audio)
   }
 }

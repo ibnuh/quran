@@ -11,7 +11,7 @@ function onSurahChange(e) {
 }
 
 function onReciterChange(e) {
-  store.setReciter(parseInt(e.target.value))
+  store.setReciter(e.target.value)
 }
 
 function onTranslationChange(e) {
