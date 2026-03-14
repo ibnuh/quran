@@ -25,6 +25,14 @@ export function useAudio() {
     if (onEndedCb) onEndedCb()
   })
 
+  audio.addEventListener('play', () => {
+    isPlaying.value = true
+  })
+
+  audio.addEventListener('pause', () => {
+    isPlaying.value = false
+  })
+
   audio.addEventListener('error', () => {
     isPlaying.value = false
   })
@@ -32,23 +40,19 @@ export function useAudio() {
   function loadAndPlay(url) {
     audio.src = url
     audio.play().catch(() => {})
-    isPlaying.value = true
   }
 
   function play() {
     audio.play().catch(() => {})
-    isPlaying.value = true
   }
 
   function pause() {
     audio.pause()
-    isPlaying.value = false
   }
 
   function stop() {
     audio.pause()
     audio.currentTime = 0
-    isPlaying.value = false
     progress.value = 0
     currentTimeMs.value = 0
   }
