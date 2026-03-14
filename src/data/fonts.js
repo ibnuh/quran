@@ -1,8 +1,14 @@
 const ARABIC_FONTS = [
   {
+    id: 'scheherazade',
+    name: 'Scheherazade New',
+    description: 'SIL full Unicode Arabic (recommended)',
+    family: "'Scheherazade New', serif"
+  },
+  {
     id: 'amiri-quran',
     name: 'Amiri Quran',
-    description: 'Quran-optimized Naskh (recommended)',
+    description: 'Quran-optimized Naskh',
     family: "'Amiri Quran', serif"
   },
   {
@@ -10,12 +16,6 @@ const ARABIC_FONTS = [
     name: 'Uthmanic Hafs',
     description: 'King Fahd Complex (may have mark issues)',
     family: "'UthmanicHafs', 'Amiri Quran', serif"
-  },
-  {
-    id: 'scheherazade',
-    name: 'Scheherazade New',
-    description: 'SIL full Unicode Arabic',
-    family: "'Scheherazade New', serif"
   },
   {
     id: 'amiri',
