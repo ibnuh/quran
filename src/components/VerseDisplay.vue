@@ -25,12 +25,12 @@ const store = usePlayerStore()
     <!-- Verse -->
     <div v-else-if="store.currentVerse">
       <div v-if="store.showBismillah" class="mb-8">
-        <p class="font-arabic text-xl sm:text-2xl text-accent" dir="rtl">
+        <p class="quran-text text-xl sm:text-2xl text-accent" dir="rtl" :style="{ fontFamily: store.arabicFontFamily }">
           {{"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}}
         </p>
       </div>
 
-      <p class="font-arabic text-3xl sm:text-[2.5rem] leading-[2] text-arabic mb-5" dir="rtl">
+      <p class="quran-text leading-[2] text-arabic mb-5" dir="rtl" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }">
         {{ store.currentVerse.text }}
       </p>
 
@@ -38,9 +38,21 @@ const store = usePlayerStore()
         {{ store.currentVerse.number }}
       </span>
 
-      <p class="text-base sm:text-lg leading-relaxed text-muted font-light max-w-lg mx-auto">
+      <p class="leading-relaxed text-muted font-light max-w-lg mx-auto" :style="{ fontSize: store.translationFontSize + 'rem' }">
         {{ store.currentTranslationVerse?.text }}
       </p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.quran-text {
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeLegibility;
+  letter-spacing: normal;
+  word-spacing: 0.05em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+</style>

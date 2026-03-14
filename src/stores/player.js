@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { fetchSurahText, fetchSurahAudio, fetchVerseAudio } from '../services/api.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
+import ARABIC_FONTS from '../data/fonts.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
@@ -19,6 +20,9 @@ export const usePlayerStore = defineStore('player', {
     verseTimings: [],
     // Per-verse audio (alquran.cloud fallback)
     audioUrls: [],
+    arabicFont: 'uthmanic',
+    arabicFontSize: 3.2,
+    translationFontSize: 1.3,
     isLoading: false,
     error: null
   }),
@@ -33,7 +37,11 @@ export const usePlayerStore = defineStore('player', {
     canPrevVerse: (state) => state.currentVerseIndex > 0,
     canNextVerse: (state) => state.currentVerseIndex < state.verses.length - 1,
     canPrevSurah: (state) => state.currentSurahNum > 1,
-    canNextSurah: (state) => state.currentSurahNum < 114
+    canNextSurah: (state) => state.currentSurahNum < 114,
+    arabicFontFamily: (state) => {
+      const font = ARABIC_FONTS.find(f => f.id === state.arabicFont)
+      return font ? font.family : ARABIC_FONTS[0].family
+    }
   },
 
   actions: {
@@ -139,6 +147,21 @@ export const usePlayerStore = defineStore('player', {
       return this.loadSurah()
     },
 
+    setArabicFont(id) {
+      this.arabicFont = id
+      this.savePreferences()
+    },
+
+    setArabicFontSize(size) {
+      this.arabicFontSize = size
+      this.savePreferences()
+    },
+
+    setTranslationFontSize(size) {
+      this.translationFontSize = size
+      this.savePreferences()
+    },
+
     setTranslation(id) {
       this.currentTranslation = id
       this.savePreferences()
@@ -168,7 +191,10 @@ export const usePlayerStore = defineStore('player', {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           surah: this.currentSurahNum,
           reciter: this.currentReciter,
-          translation: this.currentTranslation
+          translation: this.currentTranslation,
+          arabicFont: this.arabicFont,
+          arabicFontSize: this.arabicFontSize,
+          translationFontSize: this.translationFontSize
         }))
       } catch (e) {}
     },
@@ -189,6 +215,9 @@ export const usePlayerStore = defineStore('player', {
             }
           }
           if (prefs.translation) this.currentTranslation = prefs.translation
+          if (prefs.arabicFont) this.arabicFont = prefs.arabicFont
+          if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
+          if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
         }
       } catch (e) {}
     }

@@ -4,6 +4,7 @@ import { usePlayerStore } from '../stores/player.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS from '../data/translations.js'
+import ARABIC_FONTS from '../data/fonts.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
@@ -71,6 +72,53 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
               </option>
             </select>
           </div>
+
+          <div class="border-t border-border pt-5">
+            <label class="block text-sm font-medium text-muted mb-1.5">Arabic Font</label>
+            <select
+              :value="store.arabicFont"
+              class="select-field"
+              @change="store.setArabicFont($event.target.value)"
+            >
+              <option v-for="f in ARABIC_FONTS" :key="f.id" :value="f.id">
+                {{ f.name }} - {{ f.description }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-muted mb-3">Arabic Font Size</label>
+            <div class="flex items-center gap-3">
+              <input
+                type="range"
+                min="1.5"
+                max="5"
+                step="0.1"
+                :value="store.arabicFontSize"
+                class="range-field flex-1"
+                @input="store.setArabicFontSize(parseFloat($event.target.value))"
+              />
+              <span class="font-arabic text-body w-12 text-right text-sm">{{ store.arabicFontSize.toFixed(1) }}</span>
+            </div>
+            <p class="text-arabic mt-2" dir="rtl" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', lineHeight: 2 }">بِسْمِ اللَّهِ</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-muted mb-3">Translation Font Size</label>
+            <div class="flex items-center gap-3">
+              <input
+                type="range"
+                min="0.8"
+                max="2.5"
+                step="0.05"
+                :value="store.translationFontSize"
+                class="range-field flex-1"
+                @input="store.setTranslationFontSize(parseFloat($event.target.value))"
+              />
+              <span class="text-body w-12 text-right text-sm">{{ store.translationFontSize.toFixed(1) }}</span>
+            </div>
+            <p class="text-muted font-light mt-2" :style="{ fontSize: store.translationFontSize + 'rem' }">In the name of God</p>
+          </div>
         </div>
       </div>
     </div>
@@ -98,6 +146,33 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 .select-field:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.range-field {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-border);
+  outline: none;
+  cursor: pointer;
+}
+.range-field::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+}
+.range-field::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  cursor: pointer;
 }
 
 .modal-enter-active,
