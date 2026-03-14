@@ -11,7 +11,7 @@ function onSurahChange(e) {
 }
 
 function onReciterChange(e) {
-  store.setReciter(e.target.value)
+  store.setReciter(parseInt(e.target.value))
 }
 
 function onTranslationChange(e) {
@@ -42,8 +42,8 @@ function onTranslationChange(e) {
         class="select-field"
         @change="onReciterChange"
       >
-        <option v-for="r in RECITERS" :key="r.identifier" :value="r.identifier">
-          {{ r.englishName }}
+        <option v-for="r in RECITERS" :key="r.id" :value="r.id">
+          {{ r.name }}
         </option>
       </select>
     </div>

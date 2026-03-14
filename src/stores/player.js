@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { fetchSurahEditions } from '../services/api.js'
+import { fetchSurahText, fetchSurahAudio } from '../services/api.js'
 import SURAHS from '../data/surahs.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
@@ -7,12 +7,13 @@ const STORAGE_KEY = 'quran-player-prefs'
 export const usePlayerStore = defineStore('player', {
   state: () => ({
     currentSurahNum: 1,
-    currentReciter: 'ar.alafasy',
+    currentReciter: 7,
     currentTranslation: 'en.sahih',
     currentVerseIndex: 0,
     verses: [],
     translationVerses: [],
-    audioUrls: [],
+    audioUrl: null,
+    verseTimings: [],
     isLoading: false,
     error: null
   }),
@@ -21,7 +22,6 @@ export const usePlayerStore = defineStore('player', {
     currentSurah: (state) => SURAHS.find(s => s.number === state.currentSurahNum),
     currentVerse: (state) => state.verses[state.currentVerseIndex] || null,
     currentTranslationVerse: (state) => state.translationVerses[state.currentVerseIndex] || null,
-    currentAudioUrl: (state) => state.audioUrls[state.currentVerseIndex] || null,
     totalVerses: (state) => state.verses.length,
     showBismillah: (state) => state.currentSurahNum !== 1 && state.currentSurahNum !== 9 && state.currentVerseIndex === 0,
     canPrevVerse: (state) => state.currentVerseIndex > 0,
@@ -37,14 +37,15 @@ export const usePlayerStore = defineStore('player', {
       this.error = null
 
       try {
-        const data = await fetchSurahEditions(
-          this.currentSurahNum,
-          this.currentTranslation,
-          this.currentReciter
-        )
-        this.verses = data.verses
-        this.translationVerses = data.translationVerses
-        this.audioUrls = data.audioUrls
+        const [textData, audioData] = await Promise.all([
+          fetchSurahText(this.currentSurahNum, this.currentTranslation),
+          fetchSurahAudio(this.currentReciter, this.currentSurahNum)
+        ])
+
+        this.verses = textData.verses
+        this.translationVerses = textData.translationVerses
+        this.audioUrl = audioData.audioUrl
+        this.verseTimings = audioData.verseTimings
 
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
@@ -56,6 +57,15 @@ export const usePlayerStore = defineStore('player', {
       }
     },
 
+    getVerseIndexAtTime(timeMs) {
+      for (let i = this.verseTimings.length - 1; i >= 0; i--) {
+        if (timeMs >= this.verseTimings[i].timestampFrom) {
+          return i
+        }
+      }
+      return 0
+    },
+
     setVerse(index) {
       if (index >= 0 && index < this.verses.length) {
         this.currentVerseIndex = index
@@ -63,15 +73,11 @@ export const usePlayerStore = defineStore('player', {
     },
 
     nextVerse() {
-      if (this.canNextVerse) {
-        this.currentVerseIndex++
-      }
+      if (this.canNextVerse) this.currentVerseIndex++
     },
 
     prevVerse() {
-      if (this.canPrevVerse) {
-        this.currentVerseIndex--
-      }
+      if (this.canPrevVerse) this.currentVerseIndex--
     },
 
     setSurah(num) {

@@ -13,38 +13,35 @@ import VerseList from '../components/VerseList.vue'
 const store = usePlayerStore()
 const audio = useAudio()
 
-audio.onEnded(() => {
-  if (store.canNextVerse) {
-    store.nextVerse()
-    audio.play(store.currentAudioUrl)
-  } else {
-    audio.stop()
+audio.onTimeUpdate((timeMs) => {
+  const idx = store.getVerseIndexAtTime(timeMs)
+  if (idx !== store.currentVerseIndex) {
+    store.currentVerseIndex = idx
   }
 })
 
-audio.onError(() => {
-  if (audio.isPlaying.value && store.canNextVerse) {
-    store.nextVerse()
-    audio.play(store.currentAudioUrl)
-  }
+audio.onEnded(() => {
+  audio.stop()
 })
 
 function togglePlay() {
   if (audio.isPlaying.value) {
     audio.pause()
-  } else if (store.currentAudioUrl) {
-    audio.play(store.currentAudioUrl)
+  } else if (store.audioUrl) {
+    audio.play()
   }
 }
 
 function handlePrevVerse() {
   store.prevVerse()
-  if (audio.isPlaying.value) audio.play(store.currentAudioUrl)
+  const timing = store.verseTimings[store.currentVerseIndex]
+  if (timing) audio.seekTo(timing.timestampFrom)
 }
 
 function handleNextVerse() {
   store.nextVerse()
-  if (audio.isPlaying.value) audio.play(store.currentAudioUrl)
+  const timing = store.verseTimings[store.currentVerseIndex]
+  if (timing) audio.seekTo(timing.timestampFrom)
 }
 
 function handlePrevSurah() {
@@ -59,15 +56,31 @@ function handleNextSurah() {
 
 function handleVerseSelect(index) {
   store.setVerse(index)
-  if (audio.isPlaying.value) audio.play(store.currentAudioUrl)
+  const timing = store.verseTimings[index]
+  if (timing) {
+    audio.seekTo(timing.timestampFrom)
+    if (!audio.isPlaying.value) audio.play()
+  }
 }
 
 function handleSeek(ratio) {
   audio.seek(ratio)
 }
 
+// Preload audio when surah loads (without auto-playing)
+let wasPlaying = false
+watch(() => store.audioUrl, (url) => {
+  wasPlaying = audio.isPlaying.value
+  audio.stop()
+  if (url) {
+    audio.loadAndPlay(url)
+    if (!wasPlaying) audio.pause()
+  }
+})
+
+// Stop audio when reciter changes (surah reload handles the rest)
 watch(
-  () => [store.currentSurahNum, store.currentReciter, store.currentTranslation],
+  () => [store.currentSurahNum, store.currentReciter],
   () => { audio.stop() }
 )
 
