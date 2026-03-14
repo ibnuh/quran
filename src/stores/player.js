@@ -20,7 +20,7 @@ export const usePlayerStore = defineStore('player', {
     verseTimings: [],
     // Per-verse audio (alquran.cloud fallback)
     audioUrls: [],
-    arabicFont: 'scheherazade',
+    arabicFont: 'amiri-quran',
     arabicFontSize: 3.2,
     translationFontSize: 1.3,
     contentWidth: 80,
