@@ -2,7 +2,7 @@ const TEXT_API = 'https://api.alquran.cloud/v1'
 const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
 
 export async function fetchSurahText(surahNumber, translationId) {
-  const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-uthmani,${translationId}`
+  const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-simple,${translationId}`
   const res = await fetch(url)
 
   if (!res.ok) throw new Error(`Text API error: ${res.status}`)
