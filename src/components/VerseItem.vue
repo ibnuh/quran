@@ -26,7 +26,7 @@ defineEmits(['select'])
         : 'bg-surface text-muted border-border'"
     >{{ verse.number }}</div>
     <div class="flex-1 min-w-0">
-      <p class="text-xl sm:text-[1.35rem] leading-[1.8] text-arabic text-right mb-1" dir="rtl" :style="{ fontFamily: store.arabicFontFamily }">
+      <p class="text-xl sm:text-[1.35rem] leading-[1.8] text-arabic text-right mb-1" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
         {{ verse.text }}
       </p>
       <p class="text-sm sm:text-[0.85rem] leading-normal text-muted">

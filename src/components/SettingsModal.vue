@@ -103,7 +103,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
               />
               <span class="font-arabic text-body w-12 text-right text-sm">{{ store.arabicFontSize.toFixed(1) }}</span>
             </div>
-            <p class="text-arabic mt-2" dir="rtl" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', lineHeight: 2 }">بِسْمِ اللَّهِ</p>
+            <p class="text-arabic mt-2" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', lineHeight: 2 }">بِسْمِ اللَّهِ</p>
           </div>
 
           <div>

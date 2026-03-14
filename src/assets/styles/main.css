@@ -97,4 +97,15 @@ html, body {
   background: var(--color-muted);
 }
 
+/* Arabic text rendering - let HarfBuzz handle OpenType shaping automatically */
+[lang="ar"], [dir="rtl"] {
+  font-variant-ligatures: common-ligatures contextual;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  letter-spacing: normal;
+  word-spacing: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @custom-variant landscape-compact (@media (orientation: landscape) and (max-height: 500px));

@@ -25,12 +25,12 @@ const store = usePlayerStore()
     <!-- Verse -->
     <div v-else-if="store.currentVerse">
       <div v-if="store.showBismillah" class="mb-8">
-        <p class="quran-text text-xl sm:text-2xl text-accent" dir="rtl" :style="{ fontFamily: store.arabicFontFamily }">
+        <p class="text-xl sm:text-2xl text-accent" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
           {{"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}}
         </p>
       </div>
 
-      <p class="quran-text leading-[2] text-arabic mb-5" dir="rtl" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }">
+      <p class="leading-[2] text-arabic mb-5" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }">
         {{ store.currentVerse.text }}
       </p>
 
@@ -45,14 +45,3 @@ const store = usePlayerStore()
   </div>
 </template>
 
-<style scoped>
-.quran-text {
-  font-feature-settings: "liga" 1, "calt" 1, "kern" 1;
-  font-variant-ligatures: common-ligatures contextual;
-  text-rendering: optimizeLegibility;
-  letter-spacing: normal;
-  word-spacing: 0.05em;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-</style>
