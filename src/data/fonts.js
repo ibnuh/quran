@@ -1,15 +1,15 @@
 const ARABIC_FONTS = [
   {
-    id: 'uthmanic',
-    name: 'Uthmanic Hafs',
-    description: 'King Fahd Complex (quran.com)',
-    family: "'UthmanicHafs', 'Amiri Quran', serif"
-  },
-  {
     id: 'amiri-quran',
     name: 'Amiri Quran',
-    description: 'Quran-optimized Naskh',
+    description: 'Quran-optimized Naskh (recommended)',
     family: "'Amiri Quran', serif"
+  },
+  {
+    id: 'uthmanic',
+    name: 'Uthmanic Hafs',
+    description: 'King Fahd Complex (may have mark issues)',
+    family: "'UthmanicHafs', 'Amiri Quran', serif"
   },
   {
     id: 'scheherazade',
