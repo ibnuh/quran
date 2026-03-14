@@ -17,6 +17,45 @@ const showSettings = ref(false)
 const showSettingsBar = ref(true)
 const showVerses = ref(false)
 
+// -- Auto-hide controls (YouTube-style) --
+const controlsVisible = ref(true)
+let hideTimer = null
+const AUTO_HIDE_DELAY = 3000
+
+function showControls() {
+  controlsVisible.value = true
+  resetHideTimer()
+}
+
+function resetHideTimer() {
+  clearTimeout(hideTimer)
+  if (!audio.isPlaying.value) return
+  hideTimer = setTimeout(() => {
+    if (audio.isPlaying.value && !showSettings.value && !showVerses.value) {
+      controlsVisible.value = false
+    }
+  }, AUTO_HIDE_DELAY)
+}
+
+function onMainTap() {
+  if (!controlsVisible.value) {
+    showControls()
+  } else if (audio.isPlaying.value) {
+    controlsVisible.value = false
+  }
+}
+
+watch(() => audio.isPlaying.value, (playing) => {
+  if (!playing) {
+    controlsVisible.value = true
+    clearTimeout(hideTimer)
+  } else {
+    resetHideTimer()
+  }
+})
+
+onBeforeUnmount(() => clearTimeout(hideTimer))
+
 // -- Preloader for verse-by-verse mode --
 const preloadCache = []
 
@@ -165,28 +204,41 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-surface">
-    <AppHeader
-      @open-settings="showSettings = true"
-      @toggle-settings-bar="showSettingsBar = !showSettingsBar"
-      @toggle-verses="showVerses = !showVerses"
-    />
-    <SettingsBar :visible="showSettingsBar" />
+  <div class="h-dvh flex flex-col bg-surface" @mousemove="showControls" @touchstart="showControls">
+    <div
+      class="transition-all duration-300"
+      :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
+    >
+      <AppHeader
+        @open-settings="showSettings = true"
+        @toggle-settings-bar="showSettingsBar = !showSettingsBar"
+        @toggle-verses="showVerses = !showVerses"
+      />
+      <SettingsBar :visible="showSettingsBar" />
+    </div>
 
-    <main class="flex-1 flex items-center justify-center px-4 overflow-y-auto">
+    <main
+      class="flex-1 flex items-center justify-center px-4 overflow-y-auto cursor-pointer"
+      @click="onMainTap"
+    >
       <VerseDisplay @retry="store.loadSurah()" />
     </main>
 
-    <PlayerControls
-      :is-playing="audio.isPlaying.value"
-      :progress="audio.progress.value"
-      @toggle-play="togglePlay"
-      @prev-verse="handlePrevVerse"
-      @next-verse="handleNextVerse"
-      @prev-surah="handlePrevSurah"
-      @next-surah="handleNextSurah"
-      @seek="handleSeek"
-    />
+    <div
+      class="transition-all duration-300"
+      :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
+    >
+      <PlayerControls
+        :is-playing="audio.isPlaying.value"
+        :progress="audio.progress.value"
+        @toggle-play="togglePlay"
+        @prev-verse="handlePrevVerse"
+        @next-verse="handleNextVerse"
+        @prev-surah="handlePrevSurah"
+        @next-surah="handleNextSurah"
+        @seek="handleSeek"
+      />
+    </div>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
