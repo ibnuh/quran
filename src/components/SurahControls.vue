@@ -20,105 +20,74 @@ function onTranslationChange(e) {
 </script>
 
 <template>
-  <div class="controls">
-    <div class="select-group">
-      <label for="surah-select">Surah</label>
-      <select id="surah-select" :value="store.currentSurahNum" @change="onSurahChange">
-        <option
-          v-for="s in SURAHS"
-          :key="s.number"
-          :value="s.number"
-        >{{ s.number }}. {{ s.englishName }} - {{ s.englishNameTranslation }}</option>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 bg-card border-b border-border sm:mx-4 sm:border sm:border-t-0 sm:rounded-b-xl">
+    <div class="flex flex-col gap-1">
+      <label for="surah-select" class="text-[0.7rem] font-semibold uppercase tracking-wider text-muted">Surah</label>
+      <select
+        id="surah-select"
+        :value="store.currentSurahNum"
+        class="select-field"
+        @change="onSurahChange"
+      >
+        <option v-for="s in SURAHS" :key="s.number" :value="s.number">
+          {{ s.number }}. {{ s.englishName }} - {{ s.englishNameTranslation }}
+        </option>
       </select>
     </div>
-    <div class="select-group">
-      <label for="reciter-select">Reciter</label>
-      <select id="reciter-select" :value="store.currentReciter" @change="onReciterChange">
-        <option
-          v-for="r in RECITERS"
-          :key="r.identifier"
-          :value="r.identifier"
-        >{{ r.englishName }}</option>
+    <div class="flex flex-col gap-1">
+      <label for="reciter-select" class="text-[0.7rem] font-semibold uppercase tracking-wider text-muted">Reciter</label>
+      <select
+        id="reciter-select"
+        :value="store.currentReciter"
+        class="select-field"
+        @change="onReciterChange"
+      >
+        <option v-for="r in RECITERS" :key="r.identifier" :value="r.identifier">
+          {{ r.englishName }}
+        </option>
       </select>
     </div>
-    <div class="select-group">
-      <label for="translation-select">Translation</label>
-      <select id="translation-select" :value="store.currentTranslation" @change="onTranslationChange">
-        <option
-          v-for="t in TRANSLATIONS"
-          :key="t.identifier"
-          :value="t.identifier"
-        >{{ t.englishName }}</option>
+    <div class="flex flex-col gap-1">
+      <label for="translation-select" class="text-[0.7rem] font-semibold uppercase tracking-wider text-muted">Translation</label>
+      <select
+        id="translation-select"
+        :value="store.currentTranslation"
+        class="select-field"
+        @change="onTranslationChange"
+      >
+        <option v-for="t in TRANSLATIONS" :key="t.identifier" :value="t.identifier">
+          {{ t.englishName }}
+        </option>
       </select>
     </div>
   </div>
 </template>
 
 <style scoped>
-.controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-}
-
-.select-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.select-group label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-light);
-}
-
-.select-group select {
+.select-field {
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.85rem;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
+  padding: 0.5rem 1.5rem 0.5rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-body);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23777'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
-  padding-right: 1.5rem;
-  transition: border-color var(--transition);
+  transition: border-color 0.2s ease;
 }
-
-.select-group select:focus {
+.select-field:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--color-primary);
 }
-
 @media (max-width: 640px) {
-  .controls {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    padding: 0.75rem;
-  }
-  .select-group select {
+  .select-field {
     font-size: 0.9rem;
-    padding: 0.6rem;
-  }
-}
-
-@media (min-width: 641px) {
-  .controls {
-    border-radius: 0 0 var(--radius) var(--radius);
-    margin: 0 1rem;
-    border: 1px solid var(--border);
-    border-top: none;
+    padding: 0.6rem 1.5rem 0.6rem 0.6rem;
   }
 }
 </style>

@@ -1,11 +1,7 @@
 <script setup>
 defineProps({
-  progress: {
-    type: Number,
-    default: 0
-  }
+  progress: { type: Number, default: 0 }
 })
-
 const emit = defineEmits(['seek'])
 
 function onClick(e) {
@@ -16,26 +12,7 @@ function onClick(e) {
 </script>
 
 <template>
-  <div class="progress-container" @click="onClick">
-    <div class="progress-bar" :style="{ width: progress + '%' }"></div>
+  <div class="w-full h-1 bg-border rounded-sm cursor-pointer relative overflow-hidden" @click="onClick">
+    <div class="h-full bg-primary rounded-sm transition-[width] duration-100 ease-linear" :style="{ width: progress + '%' }"></div>
   </div>
 </template>
-
-<style scoped>
-.progress-container {
-  width: 100%;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--primary);
-  border-radius: 2px;
-  transition: width 0.1s linear;
-}
-</style>

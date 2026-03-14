@@ -11,7 +11,7 @@ defineEmits(['select'])
 watch(() => store.currentVerseIndex, async () => {
   await nextTick()
   if (!listRef.value) return
-  const active = listRef.value.querySelector('.verse-item.active')
+  const active = listRef.value.querySelector('.border-primary')
   if (active) {
     active.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
@@ -20,10 +20,10 @@ watch(() => store.currentVerseIndex, async () => {
 
 <template>
   <div v-if="store.verses.length > 0">
-    <div class="verse-list-header">
-      <h4>All Verses</h4>
+    <div class="pt-4 pb-2 mt-2 border-t border-border">
+      <h4 class="text-sm font-semibold text-muted uppercase tracking-wider">All Verses</h4>
     </div>
-    <div ref="listRef" class="verse-list">
+    <div ref="listRef" class="flex flex-col gap-2 pb-8">
       <VerseItem
         v-for="(verse, i) in store.verses"
         :key="verse.number"
@@ -35,27 +35,3 @@ watch(() => store.currentVerseIndex, async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.verse-list-header {
-  padding: 1rem 0 0.5rem;
-  border-top: 1px solid var(--border);
-  margin-top: 0.5rem;
-}
-
-.verse-list-header h4 {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-light);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0;
-}
-
-.verse-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-bottom: 2rem;
-}
-</style>

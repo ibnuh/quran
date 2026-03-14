@@ -39,16 +39,12 @@ function togglePlay() {
 
 function handlePrevVerse() {
   store.prevVerse()
-  if (audio.isPlaying.value) {
-    audio.play(store.currentAudioUrl)
-  }
+  if (audio.isPlaying.value) audio.play(store.currentAudioUrl)
 }
 
 function handleNextVerse() {
   store.nextVerse()
-  if (audio.isPlaying.value) {
-    audio.play(store.currentAudioUrl)
-  }
+  if (audio.isPlaying.value) audio.play(store.currentAudioUrl)
 }
 
 function handlePrevSurah() {
@@ -63,16 +59,13 @@ function handleNextSurah() {
 
 function handleVerseSelect(index) {
   store.setVerse(index)
-  if (audio.isPlaying.value) {
-    audio.play(store.currentAudioUrl)
-  }
+  if (audio.isPlaying.value) audio.play(store.currentAudioUrl)
 }
 
 function handleSeek(ratio) {
   audio.seek(ratio)
 }
 
-// Stop audio when surah/reciter/translation changes via controls
 watch(
   () => [store.currentSurahNum, store.currentReciter, store.currentTranslation],
   () => { audio.stop() }
@@ -91,15 +84,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="app">
+  <div class="max-w-[860px] mx-auto pb-8">
     <AppHeader />
     <SurahControls />
-    <main class="main">
+    <main class="px-3 sm:px-4">
       <SurahHeader v-if="store.currentSurah" :surah="store.currentSurah" />
-      <VerseDisplay
-        :is-playing="audio.isPlaying.value"
-        @retry="store.loadSurah()"
-      />
+      <VerseDisplay :is-playing="audio.isPlaying.value" @retry="store.loadSurah()" />
       <PlayerControls
         :is-playing="audio.isPlaying.value"
         :progress="audio.progress.value"
@@ -114,21 +104,3 @@ onMounted(() => {
     </main>
   </div>
 </template>
-
-<style scoped>
-.app {
-  max-width: 860px;
-  margin: 0 auto;
-  padding-bottom: 2rem;
-}
-
-.main {
-  padding: 0 1rem;
-}
-
-@media (max-width: 640px) {
-  .main {
-    padding: 0 0.75rem;
-  }
-}
-</style>
