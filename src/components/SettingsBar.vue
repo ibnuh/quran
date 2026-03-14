@@ -126,15 +126,6 @@ const fontOptions = computed(() =>
             />
             <span class="text-xs text-muted w-8 text-right">{{ store.contentWidth }}</span>
           </div>
-          <label class="flex items-center gap-2 cursor-pointer shrink-0">
-            <span class="text-xs font-medium text-muted whitespace-nowrap">Auto-hide</span>
-            <input
-              type="checkbox"
-              :checked="store.autoHideControls"
-              class="bar-toggle"
-              @change="store.setAutoHideControls($event.target.checked)"
-            />
-          </label>
         </div>
       </div>
     </Transition>
@@ -168,37 +159,6 @@ const fontOptions = computed(() =>
   border: none;
   background: var(--color-primary);
   cursor: pointer;
-}
-
-.bar-toggle {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 2.25rem;
-  height: 1.25rem;
-  border-radius: 9999px;
-  background: var(--color-border);
-  position: relative;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-}
-.bar-toggle::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  transition: transform 0.2s ease;
-}
-.bar-toggle:checked {
-  background: var(--color-primary);
-}
-.bar-toggle:checked::after {
-  transform: translateX(1rem);
 }
 
 .bar-enter-active,
