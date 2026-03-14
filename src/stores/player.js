@@ -125,15 +125,22 @@ export const usePlayerStore = defineStore('player', {
     setVerse(index) {
       if (index >= 0 && index < this.verses.length) {
         this.currentVerseIndex = index
+        this.savePreferences()
       }
     },
 
     nextVerse() {
-      if (this.canNextVerse) this.currentVerseIndex++
+      if (this.canNextVerse) {
+        this.currentVerseIndex++
+        this.savePreferences()
+      }
     },
 
     prevVerse() {
-      if (this.canPrevVerse) this.currentVerseIndex--
+      if (this.canPrevVerse) {
+        this.currentVerseIndex--
+        this.savePreferences()
+      }
     },
 
     setSurah(num) {
@@ -209,6 +216,7 @@ export const usePlayerStore = defineStore('player', {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           surah: this.currentSurahNum,
+          verse: this.currentVerseIndex,
           reciter: this.currentReciter,
           translation: this.currentTranslation,
           arabicFont: this.arabicFont,
@@ -227,6 +235,7 @@ export const usePlayerStore = defineStore('player', {
         if (saved) {
           const prefs = JSON.parse(saved)
           if (prefs.surah) this.currentSurahNum = prefs.surah
+          if (prefs.verse !== undefined) this.currentVerseIndex = prefs.verse
           if (prefs.reciter) {
             // Handle migration from old numeric cdnId format
             if (typeof prefs.reciter === 'number') {

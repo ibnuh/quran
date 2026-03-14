@@ -106,6 +106,7 @@ audio.onTimeUpdate((timeMs) => {
     const idx = store.getVerseIndexAtTime(timeMs)
     if (idx !== store.currentVerseIndex) {
       store.currentVerseIndex = idx
+      store.savePreferences()
     }
   }
 })
