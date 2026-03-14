@@ -1,17 +1,19 @@
 <script setup>
-import { onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useAudio } from '../composables/useAudio.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
 import AppHeader from '../components/AppHeader.vue'
-import SurahControls from '../components/SurahControls.vue'
-import SurahHeader from '../components/SurahHeader.vue'
+import SettingsModal from '../components/SettingsModal.vue'
 import VerseDisplay from '../components/VerseDisplay.vue'
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
 
 const store = usePlayerStore()
 const audio = useAudio()
+
+const showSettings = ref(false)
+const showVerses = ref(false)
 
 // -- Preloader for verse-by-verse mode --
 const preloadCache = []
@@ -161,23 +163,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-[860px] mx-auto pb-8">
-    <AppHeader />
-    <SurahControls />
-    <main class="px-3 sm:px-4">
-      <SurahHeader v-if="store.currentSurah" :surah="store.currentSurah" />
-      <VerseDisplay :is-playing="audio.isPlaying.value" @retry="store.loadSurah()" />
-      <PlayerControls
-        :is-playing="audio.isPlaying.value"
-        :progress="audio.progress.value"
-        @toggle-play="togglePlay"
-        @prev-verse="handlePrevVerse"
-        @next-verse="handleNextVerse"
-        @prev-surah="handlePrevSurah"
-        @next-surah="handleNextSurah"
-        @seek="handleSeek"
-      />
-      <VerseList @select="handleVerseSelect" />
+  <div class="h-dvh flex flex-col bg-surface">
+    <AppHeader
+      @open-settings="showSettings = true"
+      @toggle-verses="showVerses = !showVerses"
+    />
+
+    <main class="flex-1 flex items-center justify-center px-4 overflow-y-auto">
+      <VerseDisplay @retry="store.loadSurah()" />
     </main>
+
+    <PlayerControls
+      :is-playing="audio.isPlaying.value"
+      :progress="audio.progress.value"
+      @toggle-play="togglePlay"
+      @prev-verse="handlePrevVerse"
+      @next-verse="handleNextVerse"
+      @prev-surah="handlePrevSurah"
+      @next-surah="handleNextSurah"
+      @seek="handleSeek"
+    />
+
+    <SettingsModal v-if="showSettings" @close="showSettings = false" />
+    <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
   </div>
 </template>
