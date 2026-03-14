@@ -30,6 +30,20 @@
   --color-border: #333333;
 }
 
+[data-theme="black"] {
+  --color-primary: #2d9b6e;
+  --color-primary-dark: #1a6b4b;
+  --color-primary-light: #0a1f14;
+  --color-accent: #d4b06a;
+  --color-accent-light: #1a1508;
+  --color-surface: #000000;
+  --color-card: #0a0a0a;
+  --color-body: #e0e0e0;
+  --color-muted: #888888;
+  --color-arabic: #f0f0f0;
+  --color-border: #1a1a1a;
+}
+
 [data-theme="sepia"] {
   --color-primary: #8b6914;
   --color-primary-dark: #6b4f0e;

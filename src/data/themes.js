@@ -36,6 +36,24 @@ const THEMES = [
     }
   },
   {
+    id: 'black',
+    name: 'Black',
+    icon: 'oled',
+    colors: {
+      primary: '#2d9b6e',
+      primaryDark: '#1a6b4b',
+      primaryLight: '#0a1f14',
+      accent: '#d4b06a',
+      accentLight: '#1a1508',
+      surface: '#000000',
+      card: '#0a0a0a',
+      body: '#e0e0e0',
+      muted: '#888888',
+      arabic: '#f0f0f0',
+      border: '#1a1a1a'
+    }
+  },
+  {
     id: 'sepia',
     name: 'Sepia',
     icon: 'book',
