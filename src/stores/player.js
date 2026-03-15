@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { fetchSurahText, fetchSurahAudio, fetchVerseAudio, getCachedSurah, cacheSurah } from '../services/api.js'
+import { fetchSurahText, fetchSurahTextQuranCom, fetchSurahAudio, fetchVerseAudio, getCachedSurah, cacheSurah } from '../services/api.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
@@ -95,7 +95,10 @@ export const usePlayerStore = defineStore('player', {
       }
 
       try {
-        const textPromise = fetchSurahText(this.currentSurahNum, this.currentTranslation, signal)
+        const isQuranCom = this.currentTranslation.startsWith('qdc.')
+        const textPromise = isQuranCom
+          ? fetchSurahTextQuranCom(this.currentSurahNum, parseInt(this.currentTranslation.slice(4)), signal)
+          : fetchSurahText(this.currentSurahNum, this.currentTranslation, signal)
 
         // Try full surah audio first, then fall back to per-verse
         let audioResult = null
@@ -173,8 +176,11 @@ export const usePlayerStore = defineStore('player', {
       if (cached) return
 
       try {
+        const isQuranCom = this.currentTranslation.startsWith('qdc.')
         const [textData, audioData] = await Promise.all([
-          fetchSurahText(nextNum, this.currentTranslation),
+          isQuranCom
+            ? fetchSurahTextQuranCom(nextNum, parseInt(this.currentTranslation.slice(4)))
+            : fetchSurahText(nextNum, this.currentTranslation),
           reciter.cdnId
             ? fetchSurahAudio(reciter.cdnId, nextNum).catch(() => null)
             : Promise.resolve(null)

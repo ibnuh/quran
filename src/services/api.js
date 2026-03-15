@@ -1,5 +1,6 @@
 const TEXT_API = 'https://api.alquran.cloud/v1'
 const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
+const QURANCOM_API = 'https://api.quran.com/api/v4'
 
 const MAX_RETRIES = 2
 const RETRY_DELAY = 1000
@@ -116,5 +117,35 @@ export async function fetchVerseAudio(cloudReciterId, surahNumber, signal) {
 
   return {
     audioUrls: data.data.ayahs.map(a => a.audio)
+  }
+}
+
+export async function fetchSurahTextQuranCom(surahNumber, translationId, signal) {
+  const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?translations=${translationId}&fields=text_uthmani&per_page=300`
+  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
+
+  const data = await res.json()
+
+  if (!data.verses || !data.verses.length) {
+    throw new Error('Invalid Quran.com API response')
+  }
+
+  const stripBismillah = surahNumber !== 1 && surahNumber !== 9
+
+  return {
+    verses: data.verses.map(v => {
+      let text = v.text_uthmani.replace(/\u0649/g, '\u06CC')
+      if (stripBismillah && v.verse_number === 1) {
+        const words = text.split(/\s+/)
+        if (words.length > 4 && /^\u0628/.test(words[0])) {
+          text = words.slice(4).join(' ')
+        }
+      }
+      return { number: v.verse_number, text }
+    }),
+    translationVerses: data.verses.map(v => ({
+      number: v.verse_number,
+      text: (v.translations?.[0]?.text || '').replace(/<[^>]*>/g, '')
+    }))
   }
 }
