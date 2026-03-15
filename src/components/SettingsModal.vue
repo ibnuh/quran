@@ -13,6 +13,66 @@ const emit = defineEmits(['close'])
 const panelRef = ref(null)
 let previouslyFocused = null
 
+const appVersion = __APP_VERSION__
+
+// Install app
+const canInstall = ref(false)
+let deferredInstallPrompt = null
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
+const showIOSInstructions = ref(false)
+
+function onBeforeInstallPrompt(e) {
+  e.preventDefault()
+  deferredInstallPrompt = e
+  canInstall.value = true
+}
+
+async function installApp() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt()
+    const { outcome } = await deferredInstallPrompt.userChoice
+    if (outcome === 'accepted') canInstall.value = false
+    deferredInstallPrompt = null
+  } else if (isIOS) {
+    showIOSInstructions.value = !showIOSInstructions.value
+  }
+}
+
+// Force update
+const updateChecking = ref(false)
+const updateAvailable = ref(false)
+
+async function forceUpdate() {
+  updateChecking.value = true
+  try {
+    const registration = await navigator.serviceWorker?.getRegistration()
+    if (registration) {
+      await registration.update()
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+        updateAvailable.value = true
+        setTimeout(() => window.location.reload(), 500)
+        return
+      }
+    }
+    // If no update found, just reload
+    window.location.reload()
+  } catch (e) {
+    window.location.reload()
+  }
+}
+
+// Reset settings
+function resetSettings() {
+  if (confirm('Reset all settings to defaults? This will reload the page.')) {
+    localStorage.removeItem('quran-player-prefs')
+    localStorage.removeItem('quran-tip-dismissed')
+    localStorage.removeItem('quran-pwa-install-dismissed')
+    window.location.reload()
+  }
+}
+
 function getLangFromTranslation(id) {
   if (id.startsWith('qdc.')) {
     const t = TRANSLATIONS.find(t => t.identifier === id)
@@ -76,9 +136,11 @@ function onKeydown(e) {
 onMounted(() => {
   previouslyFocused = document.activeElement
   document.addEventListener('keydown', onKeydown)
+  window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
   if (previouslyFocused) previouslyFocused.focus()
 })
 </script>
@@ -286,6 +348,49 @@ onBeforeUnmount(() => {
               </label>
             </div>
 
+            <!-- App actions -->
+            <div class="border-t border-border pt-5 space-y-2">
+              <button
+                v-if="canInstall || (isIOS && !isStandalone)"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors cursor-pointer"
+                @click="installApp"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zm-1-4l-1.41-1.41L13 12.17V4h-2v8.17L8.41 9.59 7 11l5 5 5-5z"/>
+                </svg>
+                Install App
+              </button>
+              <div v-if="showIOSInstructions" class="px-3 py-2 bg-surface rounded-lg text-xs text-muted leading-relaxed">
+                <p class="font-medium text-body mb-1">To install on iOS:</p>
+                <ol class="list-decimal list-inside space-y-0.5">
+                  <li>Tap the <span class="font-medium">Share</span> button in Safari</li>
+                  <li>Scroll down and tap <span class="font-medium">Add to Home Screen</span></li>
+                  <li>Tap <span class="font-medium">Add</span></li>
+                </ol>
+              </div>
+
+              <button
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface text-body text-sm hover:bg-border transition-colors cursor-pointer"
+                :disabled="updateChecking"
+                @click="forceUpdate"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" :class="updateChecking ? 'animate-spin' : ''">
+                  <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                {{ updateChecking ? 'Checking...' : 'Check for Updates' }}
+              </button>
+
+              <button
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface text-red-500 text-sm hover:bg-red-50 transition-colors cursor-pointer"
+                @click="resetSettings"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                </svg>
+                Reset Settings
+              </button>
+            </div>
+
             <div class="border-t border-border pt-5">
               <h3 class="text-sm font-semibold text-body mb-3">About</h3>
               <p class="text-xs text-muted leading-relaxed mb-4">
@@ -299,17 +404,6 @@ onBeforeUnmount(() => {
                 </div>
               </div>
               <div class="flex items-center gap-3 flex-wrap">
-                <a
-                  href="https://github.com/ibnuh/quran"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.337-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
-                  </svg>
-                  Open Source
-                </a>
                 <a
                   href="mailto:quran@ibnuhx.com"
                   class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
@@ -396,6 +490,8 @@ onBeforeUnmount(() => {
                   </a>
                 </div>
               </div>
+
+              <p class="mt-4 text-[0.6rem] text-muted/50 text-center tabular-nums">Version <a :href="'https://github.com/ibnuh/quran/commit/' + appVersion" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">{{ appVersion }}</a></p>
             </div>
           </div>
         </div>
