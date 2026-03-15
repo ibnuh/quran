@@ -39,7 +39,7 @@ function selectSpeed(speed) {
 </script>
 
 <template>
-  <div class="px-4 sm:px-12 pb-0 pt-2 landscape-compact:pb-0 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+  <div class="px-4 sm:px-12 pb-1 pt-2 landscape-compact:pb-0 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
@@ -143,13 +143,9 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-  </div>
-
-  <!-- Verse info fills the safe area zone so it's not empty space -->
-  <div class="safe-area-bottom">
-    <span class="text-xs text-muted landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+    <div class="text-center text-xs text-muted mt-2 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
       Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
-    </span>
+    </div>
   </div>
 </template>
 
@@ -187,11 +183,4 @@ function selectSpeed(speed) {
   transform: scale(0.95) translateY(4px);
 }
 
-.safe-area-bottom {
-  display: flex;
-  align-items: start;
-  justify-content: center;
-  height: max(1.25rem, env(safe-area-inset-bottom, 0px));
-  padding-top: 0.125rem;
-}
 </style>
