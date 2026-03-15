@@ -3,17 +3,12 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import THEMES from '../data/themes.js'
 
-const emit = defineEmits(['open-settings', 'toggle-verses', 'toggle-settings-bar', 'toggle-shortcuts'])
+const emit = defineEmits(['open-settings', 'toggle-verses', 'toggle-shortcuts'])
 const store = usePlayerStore()
 const showThemePicker = ref(false)
 
 function handleSettingsClick() {
-  const isDesktop = window.matchMedia('(min-width: 768px) and (min-height: 500px)').matches
-  if (isDesktop) {
-    emit('toggle-settings-bar')
-  } else {
-    emit('open-settings')
-  }
+  emit('open-settings')
 }
 
 function toggleThemePicker() {

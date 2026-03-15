@@ -11,6 +11,8 @@ defineProps({
   visible: { type: Boolean, default: true }
 })
 
+const emit = defineEmits(['collapse'])
+
 const store = usePlayerStore()
 const showFontSettings = ref(false)
 
@@ -82,6 +84,15 @@ const fontOptions = computed(() =>
           <path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/>
         </svg>
         <span>Display</span>
+      </button>
+      <button
+        class="shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-muted hover:bg-surface transition-colors cursor-pointer"
+        aria-label="Collapse settings bar"
+        @click="emit('collapse')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+        </svg>
       </button>
     </div>
 

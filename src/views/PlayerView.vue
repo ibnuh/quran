@@ -404,11 +404,10 @@ onBeforeUnmount(() => {
     >
       <AppHeader
         @open-settings="showSettings = true"
-        @toggle-settings-bar="showSettingsBar = !showSettingsBar"
         @toggle-verses="showVerses = !showVerses"
         @toggle-shortcuts="showShortcuts = !showShortcuts"
       />
-      <SettingsBar :visible="showSettingsBar" />
+      <SettingsBar :visible="showSettingsBar" @collapse="showSettingsBar = false" />
     </div>
 
     <main
