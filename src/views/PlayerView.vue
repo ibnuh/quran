@@ -443,7 +443,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-surface overflow-hidden" @mousemove="showControls" @touchstart="showControls">
+  <div class="h-dvh flex flex-col bg-surface overflow-hidden" @mousemove="showControls">
     <!-- Offline banner -->
     <Transition name="offline-bar">
       <div v-if="!isOnline" class="bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium">
@@ -466,7 +466,7 @@ onBeforeUnmount(() => {
 
     <main
       ref="mainRef"
-      class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer"
+      class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer select-none"
       @click="onMainTap"
     >
       <VerseDisplay @retry="store.loadSurah()" />
