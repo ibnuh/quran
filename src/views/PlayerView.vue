@@ -552,7 +552,7 @@ onBeforeUnmount(() => {
 
     <div
       ref="controlsRef"
-      class="absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm"
+      class="absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm border-t border-border"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls
