@@ -50,15 +50,14 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       </button>
     </div>
 
-    <div v-if="store.currentSurah" class="text-center flex-1 min-w-0 px-2">
+    <div class="text-center flex-1 min-w-0 px-2">
       <h1
         class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate"
-        :title="store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation"
-      >{{ store.currentSurah.name }}</h1>
-      <p class="text-[0.7rem] opacity-75 truncate landscape-compact:hidden">{{ store.currentSurah.englishName }} - {{ store.currentSurah.englishNameTranslation }}</p>
-    </div>
-    <div v-else class="text-center flex-1">
-      <h1 class="text-base font-semibold">Quran Player</h1>
+        :title="store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : ''"
+      >{{ store.currentSurah ? store.currentSurah.name : 'Quran Player' }}</h1>
+      <p class="text-[0.7rem] truncate landscape-compact:hidden" :class="store.currentSurah ? 'opacity-75' : 'opacity-0'">
+        {{ store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : '&nbsp;' }}
+      </p>
     </div>
 
     <div class="flex items-center gap-1">

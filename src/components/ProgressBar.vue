@@ -70,7 +70,7 @@ function onTouchEnd() {
   <div>
     <div
       ref="barRef"
-      class="progress-bar group"
+      class="progress-wrapper group"
       role="slider"
       aria-label="Seek audio"
       :aria-valuenow="Math.round(progress)"
@@ -83,15 +83,17 @@ function onTouchEnd() {
       @touchmove.passive="onTouchMove"
       @touchend.passive="onTouchEnd"
     >
-      <div class="progress-buffered" :style="{ width: buffered + '%' }"></div>
-      <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+      <div class="progress-track">
+        <div class="progress-buffered" :style="{ width: buffered + '%' }"></div>
+        <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+      </div>
       <div
         class="progress-thumb"
         :class="{ 'progress-thumb-active': isDragging }"
         :style="{ left: progress + '%' }"
       ></div>
     </div>
-    <div v-if="durationMs > 0" class="flex justify-between mt-1">
+    <div class="flex justify-between mt-1" :class="durationMs > 0 ? '' : 'invisible'">
       <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(currentTimeMs) }}</span>
       <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(durationMs) }}</span>
     </div>
@@ -99,18 +101,25 @@ function onTouchEnd() {
 </template>
 
 <style scoped>
-.progress-bar {
+.progress-wrapper {
   width: 100%;
-  height: 6px;
-  background: var(--color-border);
-  border-radius: 3px;
+  height: 14px;
   cursor: pointer;
   position: relative;
-  overflow: visible;
-  transition: height 0.15s ease;
+  display: flex;
+  align-items: center;
 }
-.progress-bar:hover {
-  height: 8px;
+.progress-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--color-border);
+  position: relative;
+  transition: transform 0.15s ease;
+  transform-origin: center;
+}
+.progress-wrapper:hover .progress-track {
+  transform: scaleY(2);
 }
 .progress-buffered {
   position: absolute;
@@ -141,7 +150,7 @@ function onTouchEnd() {
   pointer-events: none;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
-.progress-bar:hover .progress-thumb,
+.progress-wrapper:hover .progress-thumb,
 .progress-thumb-active {
   transform: translate(-50%, -50%) scale(1) !important;
 }

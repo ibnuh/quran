@@ -134,8 +134,8 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-    <div v-if="store.currentVerse" class="text-center text-xs text-muted mt-2 landscape-compact:hidden">
-      Verse {{ store.currentVerse.number }} of {{ store.totalVerses }}
+    <div class="text-center text-xs text-muted mt-2 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+      Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
     </div>
   </div>
 </template>
