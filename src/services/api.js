@@ -57,7 +57,13 @@ export async function fetchSurahText(surahNumber, translationId, signal) {
     verses: arabicData.ayahs.map(a => {
       let text = a.text.replace(/\u0649/g, '\u06CC')
       if (stripBismillah && a.numberInSurah === 1) {
-        text = text.replace(/^\u0628\u0650\u0633\u0652\u0645\u0650 .+?\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650\s*/, '')
+        // Strip Bismillah (4 words) from the start of verse 1.
+        // The regex approach broke due to diacritical mark ordering differences,
+        // so we strip by word count after verifying it starts with "baa" (U+0628).
+        const words = text.split(/\s+/)
+        if (words.length > 4 && /^\u0628/.test(words[0])) {
+          text = words.slice(4).join(' ')
+        }
       }
       return { number: a.numberInSurah, text }
     }),

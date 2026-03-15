@@ -223,7 +223,7 @@ export const usePlayerStore = defineStore('player', {
       const timing = this.verseTimings[verseIndex]
       if (!timing || !timing.segments || timing.segments.length === 0) return -1
       const verse = this.verses[verseIndex]
-      const maxWordIndex = verse ? verse.text.split(/\s+/).filter(Boolean).length - 1 : -1
+      const maxWordIndex = verse ? verse.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w)).length - 1 : -1
       for (let i = timing.segments.length - 1; i >= 0; i--) {
         const seg = timing.segments[i]
         if (timeMs >= seg.from) {

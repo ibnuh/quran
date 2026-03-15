@@ -220,6 +220,8 @@ onBeforeUnmount(() => stopWordHighlightLoop())
 
 // -- Audio event handlers --
 audio.onTimeUpdate((timeMs) => {
+  // Skip when RAF loop is active (it handles everything at higher precision)
+  if (rafId) return
   if (store.playbackMode === 'full') {
     const idx = store.getVerseIndexAtTime(timeMs)
     if (idx !== store.currentVerseIndex) {
@@ -227,8 +229,7 @@ audio.onTimeUpdate((timeMs) => {
       store.currentWordIndex = -1
       store.savePreferences()
     }
-    // Word highlight handled by RAF loop when playing; fallback for paused scrubbing
-    if (store.wordHighlight && !audio.isPlaying.value) {
+    if (store.wordHighlight) {
       store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
     }
   }

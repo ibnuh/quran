@@ -7,7 +7,7 @@ const store = usePlayerStore()
 
 const verseWords = computed(() => {
   if (!store.currentVerse) return []
-  return store.currentVerse.text.split(/\s+/).filter(Boolean)
+  return store.currentVerse.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w))
 })
 
 const hasWordTimings = computed(() => {
