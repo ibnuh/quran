@@ -171,6 +171,7 @@ function onMainTap() {
 let touchStartX = 0
 let touchStartY = 0
 let touchStartTime = 0
+let lastTouchTapTime = 0
 
 function onTouchStart(e) {
   touchStartX = e.touches[0].clientX
@@ -186,14 +187,15 @@ function onTouchEnd(e) {
   const dy = Math.abs(e.changedTouches[0].clientY - touchStartY)
   const dt = Date.now() - touchStartTime
   // Only treat as tap if minimal movement in both axes and quick touch
-  if (dx < 10 && dy < 10 && dt < 300) {
+  if (dx < 12 && dy < 12 && dt < 350) {
+    lastTouchTapTime = Date.now()
     onMainTap()
   }
 }
 
 function onMainClick() {
-  // On touch devices, let touchend handle it to avoid double-fire
-  if (isTouchDevice) return
+  // Ignore the synthetic click right after a touch tap to avoid double-fire.
+  if (Date.now() - lastTouchTapTime < 400) return
   onMainTap()
 }
 
