@@ -21,6 +21,8 @@ const showVerses = ref(false)
 const showShortcuts = ref(false)
 const isOnline = ref(navigator.onLine)
 const mainRef = ref(null)
+const showMobileTip = ref(false)
+const tipDismissed = ref(false)
 
 // -- Online/offline detection --
 function onOnline() { isOnline.value = true }
@@ -34,6 +36,30 @@ onBeforeUnmount(() => {
   window.removeEventListener('online', onOnline)
   window.removeEventListener('offline', onOffline)
 })
+
+// -- Mobile tip: recommend auto-hide --
+function checkMobileTip() {
+  if (tipDismissed.value) return
+  const isMobile = window.innerWidth < 768
+  if (isMobile && !store.autoHideControls) {
+    showMobileTip.value = true
+  } else {
+    showMobileTip.value = false
+  }
+}
+
+function applyMobileTip() {
+  store.setAutoHideControls(true)
+  showMobileTip.value = false
+  tipDismissed.value = true
+}
+
+function dismissMobileTip() {
+  showMobileTip.value = false
+  tipDismissed.value = true
+}
+
+watch(() => store.autoHideControls, () => checkMobileTip())
 
 // -- Auto-hide controls (YouTube-style) --
 const controlsVisible = ref(true)
@@ -301,6 +327,7 @@ onMounted(async () => {
     const timing = store.verseTimings[store.currentVerseIndex]
     if (timing) audio.seekTo(timing.timestampFrom)
   }
+  checkMobileTip()
 })
 </script>
 
@@ -357,6 +384,32 @@ onMounted(async () => {
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
     <KeyboardShortcuts v-if="showShortcuts" @close="showShortcuts = false" />
+
+    <!-- Mobile tip -->
+    <Transition name="tip">
+      <div
+        v-if="showMobileTip"
+        class="fixed bottom-20 left-4 right-4 z-40 flex items-center gap-3 bg-card border border-border rounded-xl shadow-xl px-4 py-3 md:hidden"
+      >
+        <svg class="shrink-0 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+        <p class="text-xs text-body flex-1">Enable auto-hide for a better mobile experience</p>
+        <button
+          class="shrink-0 bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer"
+          @click="applyMobileTip"
+        >Enable</button>
+        <button
+          class="shrink-0 text-muted cursor-pointer p-1"
+          aria-label="Dismiss"
+          @click="dismissMobileTip"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -371,5 +424,15 @@ onMounted(async () => {
   opacity: 0;
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.tip-enter-active,
+.tip-leave-active {
+  transition: all 0.3s ease;
+}
+.tip-enter-from,
+.tip-leave-to {
+  opacity: 0;
+  transform: translateY(1rem);
 }
 </style>
