@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#f8f6f1"/>
-  <rect x="0" y="0" width="1200" height="8" fill="#1a6b4b"/>
-  <text x="600" y="200" text-anchor="middle" font-size="72" font-family="Georgia, 'Times New Roman', serif" fill="#1a6b4b" font-weight="bold">Quran Player</text>
-  <text x="600" y="260" text-anchor="middle" font-size="28" font-family="system-ui, sans-serif" fill="#777777">Read &amp; Listen with Word-by-Word Highlighting</text>
-  <text x="600" y="410" text-anchor="middle" font-size="64" font-family="'Geeza Pro', 'Traditional Arabic', 'Simplified Arabic', serif" fill="#c8a45c" xml:lang="ar" direction="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</text>
-  <text x="600" y="540" text-anchor="middle" font-size="20" font-family="system-ui, sans-serif" fill="#999999">30+ Reciters | 150+ Translations | 50+ Languages | Offline Support</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#f8f6f1"/><rect width="1200" height="8" x="0" y="0" fill="#1a6b4b"/><text x="600" y="200" fill="#1a6b4b" font-family="Georgia, 'Times New Roman', serif" font-size="72" font-weight="bold" text-anchor="middle">Quran Player</text><text x="600" y="260" fill="#777" font-family="system-ui, sans-serif" font-size="28" text-anchor="middle">Read &amp; Listen with Word-by-Word Highlighting</text><text x="600" y="410" fill="#c8a45c" direction="rtl" font-family="'Geeza Pro', 'Traditional Arabic', 'Simplified Arabic', serif" font-size="64" text-anchor="middle" xml:lang="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</text><text x="600" y="540" fill="#999" font-family="system-ui, sans-serif" font-size="20" text-anchor="middle">30+ Reciters | 150+ Translations | 50+ Languages | Offline Support</text></svg>
