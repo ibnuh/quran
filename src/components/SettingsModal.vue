@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import SearchSelect from './SearchSelect.vue'
 import SURAHS from '../data/surahs.js'
@@ -10,6 +10,8 @@ import THEMES from '../data/themes.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
+const dialogRef = ref(null)
+let previouslyFocused = null
 
 const surahOptions = computed(() =>
   SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName} - ${s.englishNameTranslation}` }))
@@ -33,18 +35,37 @@ const REPEAT_MODES = [
 
 function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
+  if (e.key === 'Tab' && dialogRef.value) {
+    const focusable = dialogRef.value.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])')
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
 }
 
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
+onMounted(() => {
+  previouslyFocused = document.activeElement
+  document.addEventListener('keydown', onKeydown)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown)
+  if (previouslyFocused) previouslyFocused.focus()
+})
 </script>
 
 <template>
   <Transition name="modal">
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Settings">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Settings" aria-modal="true">
       <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="emit('close')"></div>
 
-      <div class="relative bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollable">
+      <div ref="dialogRef" class="relative bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollable">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-lg font-semibold text-body">Settings</h2>
           <button
@@ -206,12 +227,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             <label class="flex items-center justify-between cursor-pointer">
               <div>
                 <span class="text-sm font-medium text-muted">Word-by-word highlighting</span>
-                <p class="text-xs text-muted/60 mt-0.5">Highlights each word as it is recited</p>
+                <p class="text-xs text-muted/60 mt-0.5">
+                  {{ store.playbackMode === 'verse' ? 'Only available with reciters that support full surah audio' : 'Highlights each word as it is recited' }}
+                </p>
               </div>
               <input
                 type="checkbox"
                 :checked="store.wordHighlight"
                 class="toggle-switch"
+                :disabled="store.playbackMode === 'verse'"
                 @change="store.setWordHighlight($event.target.checked)"
               />
             </label>
@@ -279,6 +303,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 }
 .toggle-switch:checked::after {
   transform: translateX(1.25rem);
+}
+.toggle-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .modal-enter-active,

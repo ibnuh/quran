@@ -4,13 +4,14 @@ const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
 const MAX_RETRIES = 2
 const RETRY_DELAY = 1000
 
-async function fetchWithRetry(url, retries = MAX_RETRIES) {
+async function fetchWithRetry(url, retries = MAX_RETRIES, signal) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, signal ? { signal } : undefined)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return res
     } catch (err) {
+      if (err.name === 'AbortError') throw err
       if (attempt === retries) throw err
       await new Promise(r => setTimeout(r, RETRY_DELAY * Math.pow(2, attempt)))
     }
@@ -39,9 +40,9 @@ export function cacheSurah(surahNum, translationId, reciterId, data) {
   surahCache.set(key, data)
 }
 
-export async function fetchSurahText(surahNumber, translationId) {
+export async function fetchSurahText(surahNumber, translationId, signal) {
   const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-uthmani,${translationId}`
-  const res = await fetchWithRetry(url)
+  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
 
   const data = await res.json()
 
@@ -67,9 +68,9 @@ export async function fetchSurahText(surahNumber, translationId) {
   }
 }
 
-export async function fetchSurahAudio(cdnReciterId, chapterNumber) {
+export async function fetchSurahAudio(cdnReciterId, chapterNumber, signal) {
   const url = `${AUDIO_API}/${cdnReciterId}/audio_files?chapter=${chapterNumber}&segments=true`
-  const res = await fetchWithRetry(url)
+  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
 
   const data = await res.json()
 
@@ -95,9 +96,9 @@ export async function fetchSurahAudio(cdnReciterId, chapterNumber) {
   }
 }
 
-export async function fetchVerseAudio(cloudReciterId, surahNumber) {
+export async function fetchVerseAudio(cloudReciterId, surahNumber, signal) {
   const url = `${TEXT_API}/surah/${surahNumber}/${cloudReciterId}`
-  const res = await fetchWithRetry(url)
+  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
 
   const data = await res.json()
 

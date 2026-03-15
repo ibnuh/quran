@@ -6,6 +6,8 @@ import ARABIC_FONTS from '../data/fonts.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
+let loadAbortController = null
+
 export const usePlayerStore = defineStore('player', {
   state: () => ({
     currentSurahNum: 1,
@@ -53,7 +55,11 @@ export const usePlayerStore = defineStore('player', {
 
   actions: {
     async loadSurah() {
-      if (this.isLoading) return
+      // Abort any in-flight load
+      if (loadAbortController) loadAbortController.abort()
+      loadAbortController = new AbortController()
+      const signal = loadAbortController.signal
+
       this.isLoading = true
       this.error = null
 
@@ -88,14 +94,14 @@ export const usePlayerStore = defineStore('player', {
       }
 
       try {
-        const textPromise = fetchSurahText(this.currentSurahNum, this.currentTranslation)
+        const textPromise = fetchSurahText(this.currentSurahNum, this.currentTranslation, signal)
 
         // Try full surah audio first, then fall back to per-verse
         let audioResult = null
 
         if (reciter.cdnId) {
           try {
-            const data = await fetchSurahAudio(reciter.cdnId, this.currentSurahNum)
+            const data = await fetchSurahAudio(reciter.cdnId, this.currentSurahNum, signal)
             audioResult = {
               mode: 'full',
               audioUrl: data.audioUrl,
@@ -103,12 +109,13 @@ export const usePlayerStore = defineStore('player', {
               audioUrls: []
             }
           } catch (e) {
+            if (e.name === 'AbortError') throw e
             // CDN failed, will try per-verse fallback
           }
         }
 
         if (!audioResult && reciter.cloudId) {
-          const data = await fetchVerseAudio(reciter.cloudId, this.currentSurahNum)
+          const data = await fetchVerseAudio(reciter.cloudId, this.currentSurahNum, signal)
           audioResult = {
             mode: 'verse',
             audioUrl: null,
@@ -122,6 +129,9 @@ export const usePlayerStore = defineStore('player', {
         }
 
         const textData = await textPromise
+
+        // Check if this load was aborted while awaiting
+        if (signal.aborted) return
 
         this.verses = textData.verses
         this.translationVerses = textData.translationVerses
@@ -144,9 +154,10 @@ export const usePlayerStore = defineStore('player', {
           audioUrls: audioResult.audioUrls
         })
       } catch (err) {
+        if (err.name === 'AbortError') return
         this.error = 'Failed to load surah. Please check your connection and try again.'
       } finally {
-        this.isLoading = false
+        if (!signal.aborted) this.isLoading = false
       }
     },
 

@@ -5,10 +5,25 @@ import VerseItem from './VerseItem.vue'
 
 const store = usePlayerStore()
 const listRef = ref(null)
+const panelRef = ref(null)
 const emit = defineEmits(['close', 'select'])
+let previouslyFocused = null
 
 function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
+  if (e.key === 'Tab' && panelRef.value) {
+    const focusable = panelRef.value.querySelectorAll('button, [tabindex]:not([tabindex="-1"])')
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
 }
 
 function scrollToActive(smooth = false) {
@@ -20,11 +35,15 @@ function scrollToActive(smooth = false) {
 }
 
 onMounted(() => {
+  previouslyFocused = document.activeElement
   document.addEventListener('keydown', onKeydown)
   nextTick(() => scrollToActive())
 })
 
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown)
+  if (previouslyFocused) previouslyFocused.focus()
+})
 
 watch(() => store.currentVerseIndex, async () => {
   await nextTick()
@@ -34,10 +53,10 @@ watch(() => store.currentVerseIndex, async () => {
 
 <template>
   <Transition name="panel" appear>
-    <div class="fixed inset-0 z-50 flex justify-end" role="dialog" aria-label="Verse list">
+    <div class="fixed inset-0 z-50 flex justify-end" role="dialog" aria-label="Verse list" aria-modal="true">
       <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
 
-      <div class="relative w-full sm:max-w-md h-full shadow-2xl">
+      <div ref="panelRef" class="relative w-full sm:max-w-md h-full shadow-2xl">
         <div class="bg-card h-full overflow-y-auto">
           <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-4 py-3 border-b border-border">
             <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">All Verses</h3>

@@ -19,6 +19,20 @@ function formatTime(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+function onKeydown(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    e.stopPropagation()
+    const step = e.shiftKey ? 0.1 : 0.02
+    emit('seek', Math.min(1, props.progress / 100 + step))
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+    e.preventDefault()
+    e.stopPropagation()
+    const step = e.shiftKey ? 0.1 : 0.02
+    emit('seek', Math.max(0, props.progress / 100 - step))
+  }
+}
+
 function getSeekRatio(e) {
   const rect = barRef.value.getBoundingClientRect()
   return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
@@ -76,12 +90,14 @@ function onTouchEnd() {
       :aria-valuenow="Math.round(progress)"
       aria-valuemin="0"
       aria-valuemax="100"
+      :aria-valuetext="durationMs > 0 ? formatTime(currentTimeMs) + ' of ' + formatTime(durationMs) : 'No audio loaded'"
       tabindex="0"
       @click="onClick"
       @mousedown.prevent="onMouseDown"
       @touchstart.passive="onTouchStart"
       @touchmove.passive="onTouchMove"
       @touchend.passive="onTouchEnd"
+      @keydown="onKeydown"
     >
       <div class="progress-track">
         <div class="progress-buffered" :style="{ width: buffered + '%' }"></div>
@@ -103,7 +119,7 @@ function onTouchEnd() {
 <style scoped>
 .progress-wrapper {
   width: 100%;
-  height: 14px;
+  height: 24px;
   cursor: pointer;
   position: relative;
   display: flex;
@@ -141,8 +157,8 @@ function onTouchEnd() {
 .progress-thumb {
   position: absolute;
   top: 50%;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--color-primary);
   transform: translate(-50%, -50%) scale(0);

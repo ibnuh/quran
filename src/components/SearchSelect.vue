@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   modelValue: [String, Number],
@@ -15,6 +15,7 @@ const emit = defineEmits(['update:modelValue'])
 const isOpen = ref(false)
 const query = ref('')
 const inputRef = ref(null)
+const highlightedIndex = ref(-1)
 
 const selectedLabel = computed(() => {
   const opt = props.options.find(o => o[props.valueKey] === props.modelValue)
@@ -32,9 +33,13 @@ const filtered = computed(() => {
   return props.options.filter(o => fuzzyMatch(o[props.labelKey], query.value))
 })
 
+// Reset highlighted index when filtered results change
+watch(filtered, () => { highlightedIndex.value = -1 })
+
 function open() {
   isOpen.value = true
   query.value = ''
+  highlightedIndex.value = -1
   nextTick(() => {
     if (inputRef.value) inputRef.value.focus()
   })
@@ -45,8 +50,28 @@ function select(opt) {
   isOpen.value = false
 }
 
+function scrollHighlightedIntoView() {
+  nextTick(() => {
+    const el = document.querySelector('.option-highlighted')
+    if (el) el.scrollIntoView({ block: 'nearest' })
+  })
+}
+
 function onKeydown(e) {
-  if (e.key === 'Escape') isOpen.value = false
+  if (e.key === 'Escape') {
+    isOpen.value = false
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    highlightedIndex.value = Math.min(highlightedIndex.value + 1, filtered.value.length - 1)
+    scrollHighlightedIntoView()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0)
+    scrollHighlightedIntoView()
+  } else if (e.key === 'Enter' && highlightedIndex.value >= 0) {
+    e.preventDefault()
+    select(filtered.value[highlightedIndex.value])
+  }
 }
 
 watch(isOpen, (val) => {
@@ -56,6 +81,8 @@ watch(isOpen, (val) => {
     document.removeEventListener('keydown', onKeydown)
   }
 })
+
+onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
@@ -87,12 +114,13 @@ watch(isOpen, (val) => {
 
           <div class="flex-1 overflow-y-auto px-2 pb-3">
             <button
-              v-for="opt in filtered"
+              v-for="(opt, i) in filtered"
               :key="opt[valueKey]"
               type="button"
               class="option-item"
-              :class="{ 'option-active': opt[valueKey] === modelValue }"
+              :class="{ 'option-active': opt[valueKey] === modelValue, 'option-highlighted': i === highlightedIndex }"
               @click="select(opt)"
+              @mouseenter="highlightedIndex = i"
             >
               <span>{{ opt[labelKey] }}</span>
               <svg v-if="opt[valueKey] === modelValue" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="shrink-0 text-primary">
@@ -169,7 +197,8 @@ watch(isOpen, (val) => {
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.option-item:hover {
+.option-item:hover,
+.option-highlighted {
   background: var(--color-surface);
 }
 .option-active {
