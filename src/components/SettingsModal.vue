@@ -239,6 +239,18 @@ onBeforeUnmount(() => {
                 @change="store.setWordHighlight($event.target.checked)"
               />
             </label>
+            <label class="flex items-center justify-between cursor-pointer">
+              <div>
+                <span class="text-sm font-medium text-muted">Animations</span>
+                <p class="text-xs text-muted/60 mt-0.5">Enable transitions and animations</p>
+              </div>
+              <input
+                type="checkbox"
+                :checked="store.animations"
+                class="toggle-switch"
+                @change="store.setAnimations($event.target.checked)"
+              />
+            </label>
           </div>
         </div>
       </div>

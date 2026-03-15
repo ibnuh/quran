@@ -32,6 +32,7 @@ export const usePlayerStore = defineStore('player', {
     wordHighlight: true,
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     playbackSpeed: 1,
+    animations: true,
     isLoading: false,
     error: null
   }),
@@ -313,6 +314,12 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setAnimations(val) {
+      this.animations = val
+      document.documentElement.classList.toggle('no-animations', !val)
+      this.savePreferences()
+    },
+
     setTranslation(id) {
       this.currentTranslation = id
       this.savePreferences()
@@ -352,7 +359,8 @@ export const usePlayerStore = defineStore('player', {
           autoHideControls: this.autoHideControls,
           wordHighlight: this.wordHighlight,
           repeatMode: this.repeatMode,
-          playbackSpeed: this.playbackSpeed
+          playbackSpeed: this.playbackSpeed,
+          animations: this.animations
         }))
       } catch (e) {}
     },
@@ -412,6 +420,10 @@ export const usePlayerStore = defineStore('player', {
         if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
         if (prefs.repeatMode) this.repeatMode = prefs.repeatMode
         if (prefs.playbackSpeed) this.playbackSpeed = prefs.playbackSpeed
+        if (prefs.animations !== undefined) {
+          this.animations = prefs.animations
+          document.documentElement.classList.toggle('no-animations', !prefs.animations)
+        }
       } catch (e) {}
     }
   }

@@ -153,4 +153,12 @@ button:focus:not(:focus-visible) {
   }
 }
 
+/* User-toggled animations off */
+.no-animations *, .no-animations *::before, .no-animations *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 @custom-variant landscape-compact (@media (orientation: landscape) and (max-height: 500px));
