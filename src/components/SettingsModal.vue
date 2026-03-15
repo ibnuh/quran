@@ -10,7 +10,7 @@ import THEMES from '../data/themes.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
-const dialogRef = ref(null)
+const panelRef = ref(null)
 let previouslyFocused = null
 
 const surahOptions = computed(() =>
@@ -35,8 +35,8 @@ const REPEAT_MODES = [
 
 function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
-  if (e.key === 'Tab' && dialogRef.value) {
-    const focusable = dialogRef.value.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])')
+  if (e.key === 'Tab' && panelRef.value) {
+    const focusable = panelRef.value.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])')
     if (focusable.length === 0) return
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
@@ -61,196 +61,198 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <Transition name="modal">
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Settings" aria-modal="true">
-      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="emit('close')"></div>
+  <Transition name="settings-panel" appear>
+    <div class="fixed inset-0 z-50 flex justify-start" role="dialog" aria-label="Settings" aria-modal="true">
+      <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
 
-      <div ref="dialogRef" class="relative bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollable">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold text-body">Settings</h2>
-          <button
-            class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
-            aria-label="Close settings"
-            @click="emit('close')"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="space-y-5">
-          <div>
-            <label class="block text-sm font-medium text-muted mb-1.5">Surah</label>
-            <SearchSelect
-              :model-value="store.currentSurahNum"
-              :options="surahOptions"
-              placeholder="Search surah..."
-              @update:model-value="store.setSurah($event)"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-muted mb-1.5">Reciter</label>
-            <SearchSelect
-              :model-value="store.currentReciter"
-              :options="reciterOptions"
-              placeholder="Search reciter..."
-              @update:model-value="store.setReciter($event)"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-muted mb-1.5">Translation</label>
-            <SearchSelect
-              :model-value="store.currentTranslation"
-              :options="translationOptions"
-              placeholder="Search translation..."
-              @update:model-value="store.setTranslation($event)"
-            />
+      <div ref="panelRef" class="relative w-full sm:max-w-sm h-full shadow-2xl">
+        <div class="bg-card h-full overflow-y-auto scrollable">
+          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 class="text-base font-semibold text-body">Settings</h2>
+            <button
+              class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
+              aria-label="Close settings"
+              @click="emit('close')"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
           </div>
 
-          <div class="border-t border-border pt-5">
-            <label class="block text-sm font-medium text-muted mb-1.5">Arabic Font</label>
-            <SearchSelect
-              :model-value="store.arabicFont"
-              :options="fontOptions"
-              placeholder="Search font..."
-              @update:model-value="store.setArabicFont($event)"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-muted mb-3">Arabic Font Size</label>
-            <div class="flex items-center gap-3">
-              <input
-                type="range"
-                min="1.5"
-                max="5"
-                step="0.1"
-                :value="store.arabicFontSize"
-                class="range-field flex-1"
-                @input="store.setArabicFontSize(parseFloat($event.target.value))"
+          <div class="p-5 space-y-5">
+            <div>
+              <label class="block text-sm font-medium text-muted mb-1.5">Surah</label>
+              <SearchSelect
+                :model-value="store.currentSurahNum"
+                :options="surahOptions"
+                placeholder="Search surah..."
+                @update:model-value="store.setSurah($event)"
               />
-              <span class="font-arabic text-body w-12 text-right text-sm">{{ store.arabicFontSize.toFixed(1) }}</span>
             </div>
-            <p class="text-arabic mt-2" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', lineHeight: 2 }">بِسْمِ اللَّهِ</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-muted mb-3">Translation Font Size</label>
-            <div class="flex items-center gap-3">
-              <input
-                type="range"
-                min="0.8"
-                max="2.5"
-                step="0.05"
-                :value="store.translationFontSize"
-                class="range-field flex-1"
-                @input="store.setTranslationFontSize(parseFloat($event.target.value))"
+            <div>
+              <label class="block text-sm font-medium text-muted mb-1.5">Reciter</label>
+              <SearchSelect
+                :model-value="store.currentReciter"
+                :options="reciterOptions"
+                placeholder="Search reciter..."
+                @update:model-value="store.setReciter($event)"
               />
-              <span class="text-body w-12 text-right text-sm">{{ store.translationFontSize.toFixed(1) }}</span>
             </div>
-            <p class="text-muted font-light mt-2" :style="{ fontSize: store.translationFontSize + 'rem' }">In the name of God</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-muted mb-3">Content Width</label>
-            <div class="flex items-center gap-3">
-              <input
-                type="range"
-                min="30"
-                max="100"
-                step="5"
-                :value="store.contentWidth"
-                class="range-field flex-1"
-                @input="store.setContentWidth(parseFloat($event.target.value))"
+            <div>
+              <label class="block text-sm font-medium text-muted mb-1.5">Translation</label>
+              <SearchSelect
+                :model-value="store.currentTranslation"
+                :options="translationOptions"
+                placeholder="Search translation..."
+                @update:model-value="store.setTranslation($event)"
               />
-              <span class="text-body w-12 text-right text-sm">{{ store.contentWidth }}</span>
             </div>
-          </div>
 
-          <div class="border-t border-border pt-5">
-            <label class="block text-sm font-medium text-muted mb-3">Theme</label>
-            <div class="grid grid-cols-5 gap-2">
-              <button
-                v-for="theme in THEMES"
-                :key="theme.id"
-                class="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-colors cursor-pointer"
-                :class="store.theme === theme.id ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
-                :aria-label="'Select ' + theme.name + ' theme'"
-                @click="store.setTheme(theme.id)"
-              >
-                <span
-                  class="w-8 h-8 rounded-full border-2"
-                  :style="{ background: theme.colors.surface, borderColor: theme.colors.primary }"
-                ></span>
-                <span class="text-[0.65rem] text-body">{{ theme.name }}</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="border-t border-border pt-5">
-            <label class="block text-sm font-medium text-muted mb-3">Playback Speed</label>
-            <div class="flex gap-1.5">
-              <button
-                v-for="s in SPEEDS"
-                :key="s"
-                class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                :class="store.playbackSpeed === s ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
-                @click="store.setPlaybackSpeed(s)"
-              >{{ s }}x</button>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-muted mb-3">Repeat Mode</label>
-            <div class="flex gap-1.5">
-              <button
-                v-for="mode in REPEAT_MODES"
-                :key="mode.value"
-                class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                :class="store.repeatMode === mode.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
-                @click="store.setRepeatMode(mode.value)"
-              >{{ mode.label }}</button>
-            </div>
-          </div>
-
-          <div class="border-t border-border pt-5 space-y-4">
-            <label class="flex items-center justify-between cursor-pointer">
-              <span class="text-sm font-medium text-muted">Auto-hide controls during playback</span>
-              <input
-                type="checkbox"
-                :checked="store.autoHideControls"
-                class="toggle-switch"
-                @change="store.setAutoHideControls($event.target.checked)"
+            <div class="border-t border-border pt-5">
+              <label class="block text-sm font-medium text-muted mb-1.5">Arabic Font</label>
+              <SearchSelect
+                :model-value="store.arabicFont"
+                :options="fontOptions"
+                placeholder="Search font..."
+                @update:model-value="store.setArabicFont($event)"
               />
-            </label>
-            <label class="flex items-center justify-between cursor-pointer">
-              <div>
-                <span class="text-sm font-medium text-muted">Word-by-word highlighting</span>
-                <p class="text-xs text-muted/60 mt-0.5">
-                  {{ store.playbackMode === 'verse' ? 'Only available with reciters that support full surah audio' : 'Highlights each word as it is recited' }}
-                </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-muted mb-3">Arabic Font Size</label>
+              <div class="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="1.5"
+                  max="5"
+                  step="0.1"
+                  :value="store.arabicFontSize"
+                  class="range-field flex-1"
+                  @input="store.setArabicFontSize(parseFloat($event.target.value))"
+                />
+                <span class="font-arabic text-body w-12 text-right text-sm">{{ store.arabicFontSize.toFixed(1) }}</span>
               </div>
-              <input
-                type="checkbox"
-                :checked="store.wordHighlight"
-                class="toggle-switch"
-                :disabled="store.playbackMode === 'verse'"
-                @change="store.setWordHighlight($event.target.checked)"
-              />
-            </label>
-            <label class="flex items-center justify-between cursor-pointer">
-              <div>
-                <span class="text-sm font-medium text-muted">Animations</span>
-                <p class="text-xs text-muted/60 mt-0.5">Enable transitions and animations</p>
+              <p class="text-arabic mt-2" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily, fontSize: Math.min(store.arabicFontSize, 2.5) + 'rem', lineHeight: 2 }">بِسْمِ اللَّهِ</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-muted mb-3">Translation Font Size</label>
+              <div class="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="0.8"
+                  max="2.5"
+                  step="0.05"
+                  :value="store.translationFontSize"
+                  class="range-field flex-1"
+                  @input="store.setTranslationFontSize(parseFloat($event.target.value))"
+                />
+                <span class="text-body w-12 text-right text-sm">{{ store.translationFontSize.toFixed(1) }}</span>
               </div>
-              <input
-                type="checkbox"
-                :checked="store.animations"
-                class="toggle-switch"
-                @change="store.setAnimations($event.target.checked)"
-              />
-            </label>
+              <p class="text-muted font-light mt-2" :style="{ fontSize: store.translationFontSize + 'rem' }">In the name of God</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-muted mb-3">Content Width</label>
+              <div class="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="30"
+                  max="100"
+                  step="5"
+                  :value="store.contentWidth"
+                  class="range-field flex-1"
+                  @input="store.setContentWidth(parseFloat($event.target.value))"
+                />
+                <span class="text-body w-12 text-right text-sm">{{ store.contentWidth }}</span>
+              </div>
+            </div>
+
+            <div class="border-t border-border pt-5">
+              <label class="block text-sm font-medium text-muted mb-3">Theme</label>
+              <div class="grid grid-cols-5 gap-2">
+                <button
+                  v-for="theme in THEMES"
+                  :key="theme.id"
+                  class="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-colors cursor-pointer"
+                  :class="store.theme === theme.id ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
+                  :aria-label="'Select ' + theme.name + ' theme'"
+                  @click="store.setTheme(theme.id)"
+                >
+                  <span
+                    class="w-8 h-8 rounded-full border-2"
+                    :style="{ background: theme.colors.surface, borderColor: theme.colors.primary }"
+                  ></span>
+                  <span class="text-[0.65rem] text-body">{{ theme.name }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="border-t border-border pt-5">
+              <label class="block text-sm font-medium text-muted mb-3">Playback Speed</label>
+              <div class="flex gap-1.5">
+                <button
+                  v-for="s in SPEEDS"
+                  :key="s"
+                  class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                  :class="store.playbackSpeed === s ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                  @click="store.setPlaybackSpeed(s)"
+                >{{ s }}x</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-muted mb-3">Repeat Mode</label>
+              <div class="flex gap-1.5">
+                <button
+                  v-for="mode in REPEAT_MODES"
+                  :key="mode.value"
+                  class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                  :class="store.repeatMode === mode.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                  @click="store.setRepeatMode(mode.value)"
+                >{{ mode.label }}</button>
+              </div>
+            </div>
+
+            <div class="border-t border-border pt-5 space-y-4">
+              <label class="flex items-center justify-between cursor-pointer">
+                <span class="text-sm font-medium text-muted">Auto-hide controls during playback</span>
+                <input
+                  type="checkbox"
+                  :checked="store.autoHideControls"
+                  class="toggle-switch"
+                  @change="store.setAutoHideControls($event.target.checked)"
+                />
+              </label>
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="text-sm font-medium text-muted">Word-by-word highlighting</span>
+                  <p class="text-xs text-muted/60 mt-0.5">
+                    {{ store.playbackMode === 'verse' ? 'Only available with reciters that support full surah audio' : 'Highlights each word as it is recited' }}
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  :checked="store.wordHighlight"
+                  class="toggle-switch"
+                  :disabled="store.playbackMode === 'verse'"
+                  @change="store.setWordHighlight($event.target.checked)"
+                />
+              </label>
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="text-sm font-medium text-muted">Animations</span>
+                  <p class="text-xs text-muted/60 mt-0.5">Enable transitions and animations</p>
+                </div>
+                <input
+                  type="checkbox"
+                  :checked="store.animations"
+                  class="toggle-switch"
+                  @change="store.setAnimations($event.target.checked)"
+                />
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -321,12 +323,22 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
-.modal-enter-active,
-.modal-leave-active {
+.settings-panel-enter-active,
+.settings-panel-leave-active {
   transition: opacity 0.2s ease;
 }
-.modal-enter-from,
-.modal-leave-to {
+.settings-panel-enter-active > :last-child,
+.settings-panel-leave-active > :last-child {
+  transition: transform 0.25s ease;
+}
+.settings-panel-enter-from,
+.settings-panel-leave-to {
   opacity: 0;
+}
+.settings-panel-enter-from > :last-child {
+  transform: translateX(-100%);
+}
+.settings-panel-leave-to > :last-child {
+  transform: translateX(-100%);
 }
 </style>
