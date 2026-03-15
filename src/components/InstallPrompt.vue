@@ -2,29 +2,23 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const show = ref(false)
-let deferredPrompt = null
 const DISMISSED_KEY = 'quran-pwa-install-dismissed'
 
-function onBeforeInstall(e) {
-  e.preventDefault()
-  deferredPrompt = e
-
-  // Don't show if user dismissed before or already installed
+function checkPrompt() {
+  if (!window.__pwaInstallPrompt) return
   const dismissed = localStorage.getItem(DISMISSED_KEY)
   if (dismissed) return
-
-  // Delay slightly so it doesn't appear immediately on first visit
   setTimeout(() => { show.value = true }, 3000)
 }
 
 async function install() {
-  if (!deferredPrompt) return
-  deferredPrompt.prompt()
-  const { outcome } = await deferredPrompt.userChoice
-  if (outcome === 'accepted') {
-    show.value = false
-  }
-  deferredPrompt = null
+  const prompt = window.__pwaInstallPrompt
+  if (!prompt) return
+  prompt.prompt()
+  const { outcome } = await prompt.userChoice
+  show.value = false
+  // Prompt is consumed after use regardless of outcome
+  window.__pwaInstallPrompt = null
 }
 
 function dismiss() {
@@ -32,19 +26,24 @@ function dismiss() {
   localStorage.setItem(DISMISSED_KEY, '1')
 }
 
-// Hide if app gets installed while prompt is showing
 function onInstalled() {
   show.value = false
-  deferredPrompt = null
+  window.__pwaInstallPrompt = null
 }
 
 onMounted(() => {
-  window.addEventListener('beforeinstallprompt', onBeforeInstall)
   window.addEventListener('appinstalled', onInstalled)
+  // Check if prompt was already captured globally
+  if (window.__pwaInstallPrompt) {
+    checkPrompt()
+  } else {
+    // If not yet, wait for it
+    window.addEventListener('beforeinstallprompt', checkPrompt)
+  }
 })
 onBeforeUnmount(() => {
-  window.removeEventListener('beforeinstallprompt', onBeforeInstall)
   window.removeEventListener('appinstalled', onInstalled)
+  window.removeEventListener('beforeinstallprompt', checkPrompt)
 })
 </script>
 

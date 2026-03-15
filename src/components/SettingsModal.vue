@@ -15,19 +15,20 @@ let previouslyFocused = null
 
 const appVersion = __APP_VERSION__
 
-// Install app - capture prompt globally so it's available when modal opens
+// Install app - read from global prompt captured in main.js
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
 const showIOSInstructions = ref(false)
 const canInstall = ref(!!window.__pwaInstallPrompt)
-let deferredInstallPrompt = window.__pwaInstallPrompt || null
 
 async function installApp() {
-  if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt()
-    const { outcome } = await deferredInstallPrompt.userChoice
-    if (outcome === 'accepted') canInstall.value = false
-    deferredInstallPrompt = null
+  const prompt = window.__pwaInstallPrompt
+  if (prompt) {
+    prompt.prompt()
+    const { outcome } = await prompt.userChoice
+    // Prompt is consumed after use regardless of outcome
+    window.__pwaInstallPrompt = null
+    canInstall.value = false
   } else if (isIOS) {
     showIOSInstructions.value = !showIOSInstructions.value
   }
