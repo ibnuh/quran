@@ -41,8 +41,6 @@ onBeforeUnmount(() => {
 const tipMessage = ref('')
 const tipAction = ref('') // 'auto-hide' | 'landscape' | 'both'
 
-let tipTimer = null
-
 function checkMobileTip() {
   if (tipDismissed.value) return
   const isMobile = window.innerWidth < 768 || window.innerHeight < 768
@@ -67,15 +65,6 @@ function checkMobileTip() {
     showMobileTip.value = true
   } else {
     showMobileTip.value = false
-  }
-
-  // Auto-dismiss after 8 seconds so it doesn't block UI
-  if (showMobileTip.value) {
-    clearTimeout(tipTimer)
-    tipTimer = setTimeout(() => {
-      showMobileTip.value = false
-      tipDismissed.value = true
-    }, 8000)
   }
 }
 
@@ -167,7 +156,7 @@ watch(() => store.autoHideControls, (enabled) => {
   }
 })
 
-onBeforeUnmount(() => { clearTimeout(hideTimer); clearTimeout(tipTimer) })
+onBeforeUnmount(() => clearTimeout(hideTimer))
 
 // -- Swipe gestures --
 useSwipe(mainRef, {
@@ -500,7 +489,7 @@ onBeforeUnmount(() => {
     </Transition>
 
     <div
-      class="transition-all duration-300"
+      class="transition-all duration-300 z-40 relative"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
     >
       <AppHeader
