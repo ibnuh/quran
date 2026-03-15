@@ -537,10 +537,10 @@ onBeforeUnmount(() => {
       ref="mainRef"
       class="h-full flex items-center justify-center overflow-y-auto scrollable cursor-pointer select-none"
       :style="{
-        paddingTop: controlsVisible ? headerHeight + 'px' : '1rem',
+        paddingTop: (controlsVisible ? headerHeight : 16) + 16 + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
-        paddingBottom: controlsVisible ? controlsHeight + 'px' : '1rem',
+        paddingBottom: (controlsVisible ? controlsHeight : 16) + 16 + 'px',
         transition: 'padding 0.3s ease'
       }"
       @click="onMainClick"
