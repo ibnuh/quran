@@ -37,21 +37,31 @@ onBeforeUnmount(() => {
   window.removeEventListener('offline', onOffline)
 })
 
-// -- Mobile tip: recommend portrait + auto-hide in landscape --
+// -- Mobile tip: recommend landscape + auto-hide --
 const tipMessage = ref('')
+const tipAction = ref('') // 'auto-hide' | 'landscape' | 'both'
 
 function checkMobileTip() {
   if (tipDismissed.value) return
   const isMobile = window.innerWidth < 768 || window.innerHeight < 768
   const isLandscape = window.innerWidth > window.innerHeight
 
-  if (isMobile && isLandscape) {
-    tipMessage.value = store.autoHideControls
-      ? 'Rotate to portrait for the best reading experience'
-      : 'Rotate to portrait and enable auto-hide for the best experience'
+  if (!isMobile) {
+    showMobileTip.value = false
+    return
+  }
+
+  if (!isLandscape && !store.autoHideControls) {
+    tipMessage.value = 'Try landscape mode with auto-hide for a better reading experience'
+    tipAction.value = 'both'
     showMobileTip.value = true
-  } else if (isMobile && !store.autoHideControls) {
-    tipMessage.value = 'Enable auto-hide for a better mobile experience'
+  } else if (!isLandscape) {
+    tipMessage.value = 'Try landscape mode for a wider, more immersive reading experience'
+    tipAction.value = 'landscape'
+    showMobileTip.value = true
+  } else if (!store.autoHideControls) {
+    tipMessage.value = 'Enable auto-hide for a more immersive experience'
+    tipAction.value = 'auto-hide'
     showMobileTip.value = true
   } else {
     showMobileTip.value = false
@@ -536,10 +546,10 @@ onBeforeUnmount(() => {
         </svg>
         <p class="text-xs text-body flex-1">{{ tipMessage }}</p>
         <button
-          v-if="!store.autoHideControls"
+          v-if="tipAction === 'auto-hide' || tipAction === 'both'"
           class="shrink-0 bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer"
           @click="applyMobileTip"
-        >Enable</button>
+        >{{ tipAction === 'both' ? 'Enable Auto-hide' : 'Enable' }}</button>
         <button
           class="shrink-0 text-muted cursor-pointer p-1"
           aria-label="Dismiss"
