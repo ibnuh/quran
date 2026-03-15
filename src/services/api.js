@@ -20,7 +20,7 @@ export async function fetchSurahText(surahNumber, translationId) {
     verses: arabicData.ayahs.map(a => {
       let text = a.text.replace(/\u0649/g, '\u06CC')
       if (stripBismillah && a.numberInSurah === 1) {
-        text = text.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '')
+        text = text.replace(/^\u0628\u0650\u0633\u0652\u0645\u0650 .+?\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650\s*/, '')
       }
       return { number: a.numberInSurah, text }
     }),
