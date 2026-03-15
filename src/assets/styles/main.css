@@ -86,15 +86,25 @@
   --color-border: #2e4a2e;
 }
 
+/* Smooth theme transitions */
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--color-surface);
   color: var(--color-body);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html, body {
   overflow: hidden;
   height: 100%;
+}
+
+/* Safe area insets for notched devices */
+#app {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .scrollable::-webkit-scrollbar {
@@ -120,6 +130,27 @@ html, body {
   word-spacing: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus visible styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @custom-variant landscape-compact (@media (orientation: landscape) and (max-height: 500px));

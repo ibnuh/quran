@@ -3,7 +3,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import THEMES from '../data/themes.js'
 
-defineEmits(['open-settings', 'toggle-verses', 'toggle-settings-bar'])
+defineEmits(['open-settings', 'toggle-verses', 'toggle-settings-bar', 'toggle-shortcuts'])
 const store = usePlayerStore()
 const showThemePicker = ref(false)
 
@@ -31,6 +31,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
     <div class="flex items-center gap-1">
       <button
         class="md:hidden header-btn"
+        aria-label="Open settings"
         @click="$emit('open-settings')"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -40,6 +41,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       </button>
       <button
         class="hidden md:flex header-btn"
+        aria-label="Toggle settings bar"
         @click="$emit('toggle-settings-bar')"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -50,7 +52,10 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
     </div>
 
     <div v-if="store.currentSurah" class="text-center flex-1 min-w-0 px-2">
-      <h1 class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate">{{ store.currentSurah.name }}</h1>
+      <h1
+        class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate"
+        :title="store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation"
+      >{{ store.currentSurah.name }}</h1>
       <p class="text-[0.7rem] opacity-75 truncate landscape-compact:hidden">{{ store.currentSurah.englishName }} - {{ store.currentSurah.englishNameTranslation }}</p>
     </div>
     <div v-else class="text-center flex-1">
@@ -58,9 +63,19 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
     </div>
 
     <div class="flex items-center gap-1">
+      <button
+        class="hidden sm:flex header-btn opacity-60 hover:opacity-100"
+        aria-label="Show keyboard shortcuts"
+        @click="$emit('toggle-shortcuts')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/>
+        </svg>
+      </button>
       <div class="relative theme-picker-wrapper">
         <button
           class="header-btn"
+          aria-label="Change theme"
           @click.stop="toggleThemePicker"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -78,6 +93,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
               :key="theme.id"
               class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-body transition-colors cursor-pointer"
               :class="store.theme === theme.id ? 'bg-primary/10 font-medium' : 'hover:bg-surface'"
+              :aria-label="'Select ' + theme.name + ' theme'"
               @click="selectTheme(theme.id)"
             >
               <span
@@ -95,6 +111,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       <button
         class="header-btn"
         :class="store.autoHideControls ? '' : 'opacity-50'"
+        aria-label="Toggle auto-hide controls"
         @click="store.setAutoHideControls(!store.autoHideControls)"
       >
         <svg v-if="store.autoHideControls" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -103,10 +120,11 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
         </svg>
-        <span class="hidden sm:inline">{{ store.autoHideControls ? 'Auto-hide' : 'Auto-hide' }}</span>
+        <span class="hidden sm:inline">Auto-hide</span>
       </button>
       <button
         class="header-btn"
+        aria-label="Show verse list"
         @click="$emit('toggle-verses')"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

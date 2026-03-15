@@ -1,8 +1,14 @@
 import { onMounted, onBeforeUnmount } from 'vue'
 
-export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse }) {
+export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp }) {
   function handler(e) {
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return
+
+    if (e.key === '?') {
+      e.preventDefault()
+      if (toggleHelp) toggleHelp()
+      return
+    }
 
     if (e.code === 'Space') {
       e.preventDefault()

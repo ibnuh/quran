@@ -3,12 +3,14 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useAudio } from '../composables/useAudio.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
+import { useSwipe } from '../composables/useSwipe.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
 import SettingsModal from '../components/SettingsModal.vue'
 import VerseDisplay from '../components/VerseDisplay.vue'
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
+import KeyboardShortcuts from '../components/KeyboardShortcuts.vue'
 
 const store = usePlayerStore()
 const audio = useAudio()
@@ -16,6 +18,22 @@ const audio = useAudio()
 const showSettings = ref(false)
 const showSettingsBar = ref(true)
 const showVerses = ref(false)
+const showShortcuts = ref(false)
+const isOnline = ref(navigator.onLine)
+const mainRef = ref(null)
+
+// -- Online/offline detection --
+function onOnline() { isOnline.value = true }
+function onOffline() { isOnline.value = false }
+
+onMounted(() => {
+  window.addEventListener('online', onOnline)
+  window.addEventListener('offline', onOffline)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('online', onOnline)
+  window.removeEventListener('offline', onOffline)
+})
 
 // -- Auto-hide controls (YouTube-style) --
 const controlsVisible = ref(true)
@@ -66,6 +84,16 @@ watch(() => store.autoHideControls, (enabled) => {
 
 onBeforeUnmount(() => clearTimeout(hideTimer))
 
+// -- Swipe gestures --
+useSwipe(mainRef, {
+  onSwipeLeft: () => {
+    if (store.canNextVerse) handleNextVerse()
+  },
+  onSwipeRight: () => {
+    if (store.canPrevVerse) handlePrevVerse()
+  }
+})
+
 // -- Preloader for verse-by-verse mode --
 const preloadCache = []
 
@@ -100,6 +128,19 @@ onBeforeUnmount(() => {
   preloadCache.length = 0
 })
 
+// -- Preload next surah near end --
+let preloadedNext = false
+watch(() => store.currentVerseIndex, (idx) => {
+  if (!preloadedNext && store.totalVerses > 0 && idx >= store.totalVerses - 3) {
+    preloadedNext = true
+    store.preloadNextSurah()
+  }
+})
+
+watch(() => store.currentSurahNum, () => {
+  preloadedNext = false
+})
+
 // -- Audio event handlers --
 audio.onTimeUpdate((timeMs) => {
   if (store.playbackMode === 'full') {
@@ -116,10 +157,35 @@ audio.onTimeUpdate((timeMs) => {
 })
 
 audio.onEnded(() => {
+  // Repeat verse: replay current verse
+  if (store.repeatMode === 'verse') {
+    if (store.playbackMode === 'full') {
+      const timing = store.verseTimings[store.currentVerseIndex]
+      if (timing) {
+        audio.seekTo(timing.timestampFrom)
+        audio.play()
+      }
+    } else {
+      audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+    }
+    return
+  }
+
   if (store.playbackMode === 'verse' && store.canNextVerse) {
     store.nextVerse()
     audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
     preloadAhead()
+  } else if (store.repeatMode === 'surah') {
+    // Repeat surah: go back to start
+    store.currentVerseIndex = 0
+    store.currentWordIndex = -1
+    if (store.playbackMode === 'full') {
+      audio.seekTo(0)
+      audio.play()
+    } else if (store.audioUrls.length) {
+      audio.loadAndPlay(store.audioUrls[0])
+      preloadAhead()
+    }
   } else {
     audio.stop()
     store.currentWordIndex = -1
@@ -191,6 +257,11 @@ function handleSeek(ratio) {
   audio.seek(ratio)
 }
 
+function handleSetSpeed(speed) {
+  store.setPlaybackSpeed(speed)
+  audio.setPlaybackRate(speed)
+}
+
 // Preload full surah audio when URL changes (without auto-playing)
 watch(() => store.audioUrl, (url) => {
   if (url && store.playbackMode === 'full') {
@@ -210,14 +281,21 @@ watch(
   () => { audio.stop() }
 )
 
+// Sync playback speed when it changes in settings
+watch(() => store.playbackSpeed, (speed) => {
+  audio.setPlaybackRate(speed)
+})
+
 useKeyboardShortcuts({
   togglePlay,
   nextVerse: handleNextVerse,
-  prevVerse: handlePrevVerse
+  prevVerse: handlePrevVerse,
+  toggleHelp: () => { showShortcuts.value = !showShortcuts.value }
 })
 
 onMounted(async () => {
   store.loadPreferences()
+  audio.setPlaybackRate(store.playbackSpeed)
   await store.loadSurah()
   if (store.currentVerseIndex > 0 && store.playbackMode === 'full') {
     const timing = store.verseTimings[store.currentVerseIndex]
@@ -228,6 +306,13 @@ onMounted(async () => {
 
 <template>
   <div class="h-dvh flex flex-col bg-surface overflow-hidden" @mousemove="showControls" @touchstart="showControls">
+    <!-- Offline banner -->
+    <Transition name="offline-bar">
+      <div v-if="!isOnline" class="bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium">
+        You are offline. Some features may not be available.
+      </div>
+    </Transition>
+
     <div
       class="transition-all duration-300"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
@@ -236,15 +321,17 @@ onMounted(async () => {
         @open-settings="showSettings = true"
         @toggle-settings-bar="showSettingsBar = !showSettingsBar"
         @toggle-verses="showVerses = !showVerses"
+        @toggle-shortcuts="showShortcuts = !showShortcuts"
       />
       <SettingsBar :visible="showSettingsBar" />
     </div>
 
     <main
+      ref="mainRef"
       class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer"
       @click="onMainTap"
     >
-      <VerseDisplay @retry="store.loadSurah()" />
+      <VerseDisplay :is-playing="audio.isPlaying.value" @retry="store.loadSurah()" />
     </main>
 
     <div
@@ -254,16 +341,35 @@ onMounted(async () => {
       <PlayerControls
         :is-playing="audio.isPlaying.value"
         :progress="audio.progress.value"
+        :buffered="audio.buffered.value"
+        :current-time-ms="audio.currentTimeMs.value"
+        :duration-ms="audio.duration.value"
         @toggle-play="togglePlay"
         @prev-verse="handlePrevVerse"
         @next-verse="handleNextVerse"
         @prev-surah="handlePrevSurah"
         @next-surah="handleNextSurah"
         @seek="handleSeek"
+        @set-speed="handleSetSpeed"
       />
     </div>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
+    <KeyboardShortcuts v-if="showShortcuts" @close="showShortcuts = false" />
   </div>
 </template>
+
+<style scoped>
+.offline-bar-enter-active,
+.offline-bar-leave-active {
+  transition: all 0.3s ease;
+}
+.offline-bar-enter-from,
+.offline-bar-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+</style>

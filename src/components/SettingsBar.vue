@@ -75,6 +75,7 @@ const fontOptions = computed(() =>
       <button
         class="shrink-0 h-9 px-3 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer"
         :class="showFontSettings ? 'bg-primary text-white' : 'text-muted hover:bg-surface'"
+        aria-label="Toggle display settings"
         @click="showFontSettings = !showFontSettings"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

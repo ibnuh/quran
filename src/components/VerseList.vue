@@ -11,11 +11,11 @@ function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
 }
 
-function scrollToActive() {
+function scrollToActive(smooth = false) {
   if (!listRef.value) return
   const active = listRef.value.querySelector('.verse-active')
   if (active) {
-    active.scrollIntoView({ behavior: 'instant', block: 'start' })
+    active.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' })
   }
 }
 
@@ -28,13 +28,13 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 watch(() => store.currentVerseIndex, async () => {
   await nextTick()
-  scrollToActive()
+  scrollToActive(true)
 })
 </script>
 
 <template>
   <Transition name="panel" appear>
-    <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="fixed inset-0 z-50 flex justify-end" role="dialog" aria-label="Verse list">
       <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
 
       <div class="relative w-full sm:max-w-md h-full shadow-2xl">
@@ -43,6 +43,7 @@ watch(() => store.currentVerseIndex, async () => {
             <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">All Verses</h3>
             <button
               class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
+              aria-label="Close verse list"
               @click="emit('close')"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

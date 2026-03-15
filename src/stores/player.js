@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { fetchSurahText, fetchSurahAudio, fetchVerseAudio } from '../services/api.js'
+import { fetchSurahText, fetchSurahAudio, fetchVerseAudio, getCachedSurah, cacheSurah } from '../services/api.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
@@ -28,6 +28,8 @@ export const usePlayerStore = defineStore('player', {
     autoHideControls: true,
     currentWordIndex: -1,
     wordHighlight: true,
+    repeatMode: 'none', // 'none' | 'verse' | 'surah'
+    playbackSpeed: 1,
     isLoading: false,
     error: null
   }),
@@ -58,6 +60,29 @@ export const usePlayerStore = defineStore('player', {
       const reciter = this.currentReciterData
       if (!reciter) {
         this.error = 'Unknown reciter selected.'
+        this.isLoading = false
+        return
+      }
+
+      // Check if neither audio source is available
+      if (!reciter.cdnId && !reciter.cloudId) {
+        this.error = 'No audio source available for this reciter.'
+        this.isLoading = false
+        return
+      }
+
+      // Check cache first
+      const cached = getCachedSurah(this.currentSurahNum, this.currentTranslation, this.currentReciter)
+      if (cached) {
+        this.verses = cached.verses
+        this.translationVerses = cached.translationVerses
+        this.playbackMode = cached.playbackMode
+        this.audioUrl = cached.audioUrl
+        this.verseTimings = cached.verseTimings
+        this.audioUrls = cached.audioUrls
+        if (this.currentVerseIndex >= this.verses.length) {
+          this.currentVerseIndex = 0
+        }
         this.isLoading = false
         return
       }
@@ -108,10 +133,68 @@ export const usePlayerStore = defineStore('player', {
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
         }
+
+        // Cache the result
+        cacheSurah(this.currentSurahNum, this.currentTranslation, this.currentReciter, {
+          verses: textData.verses,
+          translationVerses: textData.translationVerses,
+          playbackMode: audioResult.mode,
+          audioUrl: audioResult.audioUrl,
+          verseTimings: audioResult.verseTimings,
+          audioUrls: audioResult.audioUrls
+        })
       } catch (err) {
         this.error = 'Failed to load surah. Please check your connection and try again.'
       } finally {
         this.isLoading = false
+      }
+    },
+
+    // Preload next surah data into cache (no UI state change)
+    async preloadNextSurah() {
+      if (!this.canNextSurah) return
+      const nextNum = this.currentSurahNum + 1
+      const reciter = this.currentReciterData
+      if (!reciter) return
+
+      const cached = getCachedSurah(nextNum, this.currentTranslation, this.currentReciter)
+      if (cached) return
+
+      try {
+        const [textData, audioData] = await Promise.all([
+          fetchSurahText(nextNum, this.currentTranslation),
+          reciter.cdnId
+            ? fetchSurahAudio(reciter.cdnId, nextNum).catch(() => null)
+            : Promise.resolve(null)
+        ])
+
+        let audioResult
+        if (audioData) {
+          audioResult = {
+            playbackMode: 'full',
+            audioUrl: audioData.audioUrl,
+            verseTimings: audioData.verseTimings,
+            audioUrls: []
+          }
+        } else if (reciter.cloudId) {
+          const verseData = await fetchVerseAudio(reciter.cloudId, nextNum)
+          audioResult = {
+            playbackMode: 'verse',
+            audioUrl: null,
+            verseTimings: [],
+            audioUrls: verseData.audioUrls
+          }
+        } else {
+          return
+        }
+
+        cacheSurah(nextNum, this.currentTranslation, this.currentReciter, {
+          verses: textData.verses,
+          translationVerses: textData.translationVerses,
+          ...audioResult
+        })
+      } catch (e) {
+        // Preload failure is silent
       }
     },
 
@@ -161,6 +244,16 @@ export const usePlayerStore = defineStore('player', {
 
     setWordHighlight(val) {
       this.wordHighlight = val
+      this.savePreferences()
+    },
+
+    setRepeatMode(mode) {
+      this.repeatMode = mode
+      this.savePreferences()
+    },
+
+    setPlaybackSpeed(speed) {
+      this.playbackSpeed = speed
       this.savePreferences()
     },
 
@@ -246,7 +339,9 @@ export const usePlayerStore = defineStore('player', {
           contentWidth: this.contentWidth,
           theme: this.theme,
           autoHideControls: this.autoHideControls,
-          wordHighlight: this.wordHighlight
+          wordHighlight: this.wordHighlight,
+          repeatMode: this.repeatMode,
+          playbackSpeed: this.playbackSpeed
         }))
       } catch (e) {}
     },
@@ -278,6 +373,8 @@ export const usePlayerStore = defineStore('player', {
           }
           if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
           if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
+          if (prefs.repeatMode) this.repeatMode = prefs.repeatMode
+          if (prefs.playbackSpeed) this.playbackSpeed = prefs.playbackSpeed
         }
       } catch (e) {}
     }

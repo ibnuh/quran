@@ -6,16 +6,34 @@ export function useAudio() {
   const isPlaying = ref(false)
   const progress = ref(0)
   const currentTimeMs = ref(0)
+  const duration = ref(0)
+  const buffered = ref(0)
+  const playbackRate = ref(1)
 
   let onTimeUpdateCb = null
   let onEndedCb = null
+  let lastCbTime = 0
+  const THROTTLE_MS = 200
 
   audio.addEventListener('timeupdate', () => {
     currentTimeMs.value = audio.currentTime * 1000
     if (audio.duration) {
       progress.value = (audio.currentTime / audio.duration) * 100
+      duration.value = audio.duration * 1000
     }
-    if (onTimeUpdateCb) onTimeUpdateCb(currentTimeMs.value)
+    if (onTimeUpdateCb) {
+      const now = performance.now()
+      if (now - lastCbTime >= THROTTLE_MS) {
+        lastCbTime = now
+        onTimeUpdateCb(currentTimeMs.value)
+      }
+    }
+  })
+
+  audio.addEventListener('progress', () => {
+    if (audio.buffered.length > 0 && audio.duration) {
+      buffered.value = (audio.buffered.end(audio.buffered.length - 1) / audio.duration) * 100
+    }
   })
 
   audio.addEventListener('ended', () => {
@@ -44,10 +62,12 @@ export function useAudio() {
 
   function loadAndPlay(url) {
     audio.src = url
+    audio.playbackRate = playbackRate.value
     audio.play().catch(() => {})
   }
 
   function play() {
+    audio.playbackRate = playbackRate.value
     audio.play().catch(() => {})
   }
 
@@ -60,6 +80,7 @@ export function useAudio() {
     audio.currentTime = 0
     progress.value = 0
     currentTimeMs.value = 0
+    buffered.value = 0
   }
 
   function seekTo(ms) {
@@ -73,6 +94,11 @@ export function useAudio() {
     }
   }
 
+  function setPlaybackRate(rate) {
+    playbackRate.value = rate
+    audio.playbackRate = rate
+  }
+
   function onTimeUpdate(cb) { onTimeUpdateCb = cb }
   function onEnded(cb) { onEndedCb = cb }
 
@@ -82,8 +108,9 @@ export function useAudio() {
   })
 
   return {
-    isPlaying, progress, currentTimeMs,
+    isPlaying, progress, currentTimeMs, duration, buffered, playbackRate,
     load, loadAndPlay, play, pause, stop, seekTo, seek,
+    setPlaybackRate,
     onTimeUpdate, onEnded
   }
 }

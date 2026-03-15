@@ -1,11 +1,47 @@
 const TEXT_API = 'https://api.alquran.cloud/v1'
 const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
 
+const MAX_RETRIES = 2
+const RETRY_DELAY = 1000
+
+async function fetchWithRetry(url, retries = MAX_RETRIES) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res
+    } catch (err) {
+      if (attempt === retries) throw err
+      await new Promise(r => setTimeout(r, RETRY_DELAY * Math.pow(2, attempt)))
+    }
+  }
+}
+
+// LRU cache for loaded surahs (max 5 entries)
+const surahCache = new Map()
+const CACHE_MAX = 5
+
+function getCacheKey(surahNum, translationId, reciterId) {
+  return `${surahNum}:${translationId}:${reciterId}`
+}
+
+export function getCachedSurah(surahNum, translationId, reciterId) {
+  return surahCache.get(getCacheKey(surahNum, translationId, reciterId)) || null
+}
+
+export function cacheSurah(surahNum, translationId, reciterId, data) {
+  const key = getCacheKey(surahNum, translationId, reciterId)
+  if (surahCache.has(key)) surahCache.delete(key)
+  if (surahCache.size >= CACHE_MAX) {
+    const oldest = surahCache.keys().next().value
+    surahCache.delete(oldest)
+  }
+  surahCache.set(key, data)
+}
+
 export async function fetchSurahText(surahNumber, translationId) {
   const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-uthmani,${translationId}`
-  const res = await fetch(url)
-
-  if (!res.ok) throw new Error(`Text API error: ${res.status}`)
+  const res = await fetchWithRetry(url)
 
   const data = await res.json()
 
@@ -33,9 +69,7 @@ export async function fetchSurahText(surahNumber, translationId) {
 
 export async function fetchSurahAudio(cdnReciterId, chapterNumber) {
   const url = `${AUDIO_API}/${cdnReciterId}/audio_files?chapter=${chapterNumber}&segments=true`
-  const res = await fetch(url)
-
-  if (!res.ok) throw new Error(`Audio API error: ${res.status}`)
+  const res = await fetchWithRetry(url)
 
   const data = await res.json()
 
@@ -63,9 +97,7 @@ export async function fetchSurahAudio(cdnReciterId, chapterNumber) {
 
 export async function fetchVerseAudio(cloudReciterId, surahNumber) {
   const url = `${TEXT_API}/surah/${surahNumber}/${cloudReciterId}`
-  const res = await fetch(url)
-
-  if (!res.ok) throw new Error(`Verse audio API error: ${res.status}`)
+  const res = await fetchWithRetry(url)
 
   const data = await res.json()
 

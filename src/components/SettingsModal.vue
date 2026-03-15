@@ -24,6 +24,13 @@ const fontOptions = computed(() =>
   ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` }))
 )
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
+const REPEAT_MODES = [
+  { value: 'none', label: 'Off' },
+  { value: 'verse', label: 'Verse' },
+  { value: 'surah', label: 'Surah' }
+]
+
 function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
 }
@@ -34,14 +41,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 <template>
   <Transition name="modal">
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Settings">
       <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="emit('close')"></div>
 
-      <div class="relative bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+      <div class="relative bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto scrollable">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-lg font-semibold text-body">Settings</h2>
           <button
             class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
+            aria-label="Close settings"
             @click="emit('close')"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -147,6 +155,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                 :key="theme.id"
                 class="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-colors cursor-pointer"
                 :class="store.theme === theme.id ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
+                :aria-label="'Select ' + theme.name + ' theme'"
                 @click="store.setTheme(theme.id)"
               >
                 <span
@@ -155,6 +164,32 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                 ></span>
                 <span class="text-[0.65rem] text-body">{{ theme.name }}</span>
               </button>
+            </div>
+          </div>
+
+          <div class="border-t border-border pt-5">
+            <label class="block text-sm font-medium text-muted mb-3">Playback Speed</label>
+            <div class="flex gap-1.5">
+              <button
+                v-for="s in SPEEDS"
+                :key="s"
+                class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                :class="store.playbackSpeed === s ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                @click="store.setPlaybackSpeed(s)"
+              >{{ s }}x</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-muted mb-3">Repeat Mode</label>
+            <div class="flex gap-1.5">
+              <button
+                v-for="mode in REPEAT_MODES"
+                :key="mode.value"
+                class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                :class="store.repeatMode === mode.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                @click="store.setRepeatMode(mode.value)"
+              >{{ mode.label }}</button>
             </div>
           </div>
 
