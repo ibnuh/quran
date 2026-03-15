@@ -12,7 +12,7 @@ export const usePlayerStore = defineStore('player', {
   state: () => ({
     currentSurahNum: 1,
     currentReciter: 'alafasy',
-    currentTranslation: 'en.sahih',
+    currentTranslation: 'en.itani',
     currentVerseIndex: 0,
     verses: [],
     translationVerses: [],
