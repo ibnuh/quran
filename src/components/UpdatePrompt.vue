@@ -10,11 +10,16 @@ function onUpdateAvailable(e) {
 }
 
 function applyUpdate() {
+  show.value = false
   if (updateFn) updateFn(true)
+  // Fallback reload in case SW controllerchange doesn't fire
+  setTimeout(() => window.location.reload(), 1500)
 }
 
 function dismiss() {
   show.value = false
+  // Don't show again this session even if onNeedRefresh fires again
+  window.removeEventListener('sw-update-available', onUpdateAvailable)
 }
 
 onMounted(() => window.addEventListener('sw-update-available', onUpdateAvailable))
