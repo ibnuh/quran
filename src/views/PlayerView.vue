@@ -585,7 +585,9 @@ onBeforeUnmount(() => {
         paddingTop: (controlsVisible ? headerHeight : 16) + 16 + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
-        paddingBottom: (controlsVisible ? controlsHeight : 16) + 'px',
+        paddingBottom: controlsVisible
+          ? controlsHeight + 'px'
+          : 'max(1rem, env(safe-area-inset-bottom, 0px))',
         transition: 'padding 0.3s ease'
       }"
       @click="onMainClick"
@@ -598,6 +600,7 @@ onBeforeUnmount(() => {
     <div
       ref="controlsRef"
       class="absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm border-t border-border"
+      style="padding-bottom: env(safe-area-inset-bottom, 0px)"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls
@@ -614,7 +617,6 @@ onBeforeUnmount(() => {
         @seek="handleSeek"
         @set-speed="handleSetSpeed"
       />
-      <div class="h-[env(safe-area-inset-bottom,0px)]"></div>
     </div>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
