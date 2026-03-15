@@ -1,8 +1,12 @@
 # Quran Player
 
+![Quran Player](public/og-image.png)
+
 A clean, focused Quran reader and audio player with synchronized word-by-word highlighting. Built with Vue 3, Vite, and Tailwind CSS v4.
 
 **Live:** [quran.ibnuhx.com](https://quran.ibnuhx.com)
+
+![Screenshot](screenshot.png)
 
 ## Features
 
