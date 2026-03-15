@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
             </button>
           </div>
 
-          <div class="p-5 space-y-5">
+          <div class="p-5 space-y-5" style="padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px))">
             <div>
               <label class="block text-sm font-medium text-muted mb-1.5">Surah</label>
               <SearchSelect

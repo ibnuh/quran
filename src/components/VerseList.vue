@@ -71,7 +71,7 @@ watch(() => store.currentVerseIndex, async () => {
             </button>
           </div>
 
-          <div ref="listRef" class="p-3 space-y-2">
+          <div ref="listRef" class="p-3 space-y-2" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px))">
             <VerseItem
               v-for="(verse, i) in store.verses"
               :key="verse.number"
