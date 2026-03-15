@@ -571,7 +571,7 @@ onBeforeUnmount(() => {
   <div class="h-dvh relative bg-surface overflow-hidden" @mousemove="showControls">
     <!-- Offline banner -->
     <Transition name="offline-bar">
-      <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium">
+      <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs pb-1.5 px-4 font-medium" style="padding-top: max(0.375rem, env(safe-area-inset-top, 0px))">
         You are offline. Some features may not be available.
       </div>
     </Transition>

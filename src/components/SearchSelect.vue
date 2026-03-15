@@ -112,7 +112,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
         <div class="absolute inset-0 bg-black/40" @click="isOpen = false"></div>
 
         <div class="relative bg-card w-full sm:max-w-md sm:rounded-2xl rounded-b-2xl sm:rounded-2xl shadow-2xl max-h-[85dvh] flex flex-col">
-          <div class="px-4 pt-4 pb-2">
+          <div class="px-4 pb-2" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">
             <input
               ref="inputRef"
               v-model="query"

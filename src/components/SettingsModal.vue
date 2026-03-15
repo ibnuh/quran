@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
 
       <div ref="panelRef" class="relative w-full sm:max-w-sm h-full shadow-2xl">
         <div class="bg-card h-full overflow-y-auto scrollable">
-          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 py-4 border-b border-border">
+          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pb-4 border-b border-border" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">
             <h2 class="text-base font-semibold text-body">Settings</h2>
             <button
               class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
