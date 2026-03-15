@@ -8,7 +8,7 @@ const store = usePlayerStore()
 const showThemePicker = ref(false)
 
 function handleSettingsClick() {
-  const isDesktop = window.matchMedia('(min-width: 768px)').matches
+  const isDesktop = window.matchMedia('(min-width: 768px) and (min-height: 500px)').matches
   if (isDesktop) {
     emit('toggle-settings-bar')
   } else {
