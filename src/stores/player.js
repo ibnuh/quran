@@ -3,8 +3,19 @@ import { fetchSurahText, fetchSurahTextQuranCom, fetchSurahAudio, fetchVerseAudi
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
+import TRANSLATIONS from '../data/translations.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
+
+function detectTranslationFromLocale() {
+  const locales = navigator.languages || [navigator.language || 'en']
+  for (const locale of locales) {
+    const lang = locale.split('-')[0].toLowerCase()
+    const match = TRANSLATIONS.find(t => t.language === lang)
+    if (match) return match.identifier
+  }
+  return 'en.itani'
+}
 
 let loadAbortController = null
 
@@ -12,7 +23,7 @@ export const usePlayerStore = defineStore('player', {
   state: () => ({
     currentSurahNum: 1,
     currentReciter: 'alafasy',
-    currentTranslation: 'en.itani',
+    currentTranslation: detectTranslationFromLocale(),
     currentVerseIndex: 0,
     verses: [],
     translationVerses: [],
