@@ -14,12 +14,16 @@ export async function fetchSurahText(surahNumber, translationId) {
   }
 
   const [arabicData, translationData] = data.data
+  const stripBismillah = surahNumber !== 1 && surahNumber !== 9
 
   return {
-    verses: arabicData.ayahs.map(a => ({
-      number: a.numberInSurah,
-      text: a.text.replace(/\u0649/g, '\u06CC')
-    })),
+    verses: arabicData.ayahs.map(a => {
+      let text = a.text.replace(/\u0649/g, '\u06CC')
+      if (stripBismillah && a.numberInSurah === 1) {
+        text = text.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '')
+      }
+      return { number: a.numberInSurah, text }
+    }),
     translationVerses: translationData.ayahs.map(a => ({
       number: a.numberInSurah,
       text: a.text
