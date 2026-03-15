@@ -585,7 +585,7 @@ onBeforeUnmount(() => {
         paddingTop: (controlsVisible ? headerHeight : 16) + 16 + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
-        paddingBottom: (controlsVisible ? controlsHeight : 16) + 16 + 'px',
+        paddingBottom: (controlsVisible ? controlsHeight : 16) + 'px',
         transition: 'padding 0.3s ease'
       }"
       @click="onMainClick"
