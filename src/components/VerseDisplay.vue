@@ -47,15 +47,11 @@ const hasWordTimings = computed(() => {
         class="leading-[2] text-arabic mb-5"
         dir="rtl"
         lang="ar"
-        :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }"
-      >
-        <span
-          v-for="(word, i) in verseWords"
-          :key="i"
+        :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
+      ><template v-for="(word, i) in verseWords" :key="i"><span
           class="word-span"
           :class="{ 'word-active': i === store.currentWordIndex }"
-        >{{ word }} </span>
-      </p>
+        >{{ word }}</span>{{ i < verseWords.length - 1 ? ' ' : '' }}</template></p>
       <p
         v-else
         class="leading-[2] text-arabic mb-5"
