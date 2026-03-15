@@ -39,7 +39,7 @@ function selectSpeed(speed) {
 </script>
 
 <template>
-  <div class="px-4 sm:px-12 pb-4 pt-2 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+  <div class="px-4 sm:px-12 pb-2 pt-2 landscape-compact:pb-1 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
