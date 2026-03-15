@@ -15,18 +15,12 @@ let previouslyFocused = null
 
 const appVersion = __APP_VERSION__
 
-// Install app
-const canInstall = ref(false)
-let deferredInstallPrompt = null
+// Install app - capture prompt globally so it's available when modal opens
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
 const showIOSInstructions = ref(false)
-
-function onBeforeInstallPrompt(e) {
-  e.preventDefault()
-  deferredInstallPrompt = e
-  canInstall.value = true
-}
+const canInstall = ref(!!window.__pwaInstallPrompt)
+let deferredInstallPrompt = window.__pwaInstallPrompt || null
 
 async function installApp() {
   if (deferredInstallPrompt) {
@@ -136,11 +130,9 @@ function onKeydown(e) {
 onMounted(() => {
   previouslyFocused = document.activeElement
   document.addEventListener('keydown', onKeydown)
-  window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
-  window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
   if (previouslyFocused) previouslyFocused.focus()
 })
 </script>
