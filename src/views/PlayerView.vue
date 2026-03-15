@@ -420,7 +420,7 @@ onBeforeUnmount(() => {
     </main>
 
     <div
-      class="transition-all duration-300"
+      class="transition-all duration-300 bg-card/80 backdrop-blur-sm"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls

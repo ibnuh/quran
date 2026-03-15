@@ -39,7 +39,7 @@ function selectSpeed(speed) {
 </script>
 
 <template>
-  <div class="px-6 pb-6 pt-4 landscape-compact:pb-2 landscape-compact:pt-2 landscape-compact:px-4 max-w-3xl mx-auto w-full border-t border-border">
+  <div class="px-6 pb-5 pt-3 landscape-compact:pb-2 landscape-compact:pt-2 landscape-compact:px-4 max-w-3xl mx-auto w-full">
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
@@ -48,7 +48,7 @@ function selectSpeed(speed) {
       @seek="emit('seek', $event)"
     />
 
-    <div class="grid grid-cols-[1fr_auto_1fr] items-center mt-3 landscape-compact:mt-1">
+    <div class="grid grid-cols-[1fr_auto_1fr] items-center mt-1 landscape-compact:mt-1">
       <!-- Left group -->
       <div class="flex items-center justify-end gap-1 sm:gap-2">
         <button
@@ -143,7 +143,7 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-    <div class="text-center text-xs text-muted mt-2 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+    <div class="text-center text-xs text-muted mt-1 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
       Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
     </div>
   </div>
