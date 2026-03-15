@@ -4,6 +4,12 @@ import router from './router/index.js'
 import App from './App.vue'
 import './assets/styles/main.css'
 
+// Capture PWA install prompt globally (fires before components mount)
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  window.__pwaInstallPrompt = e
+})
+
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)
