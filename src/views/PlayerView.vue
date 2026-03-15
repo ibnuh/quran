@@ -22,12 +22,17 @@ const showShortcuts = ref(false)
 const isOnline = ref(navigator.onLine)
 const mainRef = ref(null)
 const headerRef = ref(null)
+const controlsRef = ref(null)
 const headerHeight = ref(0)
+const controlsHeight = ref(0)
 
 function updateHeaderHeight() {
   if (headerRef.value) {
     headerHeight.value = headerRef.value.offsetHeight
     document.documentElement.style.setProperty('--header-height', headerHeight.value + 'px')
+  }
+  if (controlsRef.value) {
+    controlsHeight.value = controlsRef.value.offsetHeight
   }
 }
 const showMobileTip = ref(false)
@@ -41,11 +46,10 @@ let headerObserver = null
 onMounted(() => {
   window.addEventListener('online', onOnline)
   window.addEventListener('offline', onOffline)
-  if (headerRef.value) {
-    headerObserver = new ResizeObserver(updateHeaderHeight)
-    headerObserver.observe(headerRef.value)
-    updateHeaderHeight()
-  }
+  headerObserver = new ResizeObserver(updateHeaderHeight)
+  if (headerRef.value) headerObserver.observe(headerRef.value)
+  if (controlsRef.value) headerObserver.observe(controlsRef.value)
+  updateHeaderHeight()
 })
 onBeforeUnmount(() => {
   if (headerObserver) headerObserver.disconnect()
@@ -506,18 +510,18 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-dvh flex flex-col bg-surface overflow-hidden" @mousemove="showControls">
+  <div class="h-dvh relative bg-surface overflow-hidden" @mousemove="showControls">
     <!-- Offline banner -->
     <Transition name="offline-bar">
-      <div v-if="!isOnline" class="bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium">
+      <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium">
         You are offline. Some features may not be available.
       </div>
     </Transition>
 
     <div
       ref="headerRef"
-      class="transition-all duration-300 z-40 w-full"
-      :class="controlsVisible ? 'relative translate-y-0 opacity-100' : 'absolute top-0 -translate-y-full opacity-0 pointer-events-none'"
+      class="absolute top-0 left-0 right-0 z-40 transition-all duration-300"
+      :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
     >
       <AppHeader
         @open-settings="showSettings = true"
@@ -530,8 +534,14 @@ onBeforeUnmount(() => {
 
     <main
       ref="mainRef"
-      class="flex-1 flex items-center justify-center overflow-y-auto scrollable cursor-pointer select-none"
-      style="padding-left: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right)); padding-right: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));"
+      class="h-full flex items-center justify-center overflow-y-auto scrollable cursor-pointer select-none"
+      :style="{
+        paddingTop: controlsVisible ? headerHeight + 'px' : '1rem',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
+        paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
+        paddingBottom: controlsVisible ? controlsHeight + 'px' : '1rem',
+        transition: 'padding 0.3s ease'
+      }"
       @click="onMainClick"
       @touchstart.passive="onTouchStart"
       @touchend.passive="onTouchEnd"
@@ -540,8 +550,9 @@ onBeforeUnmount(() => {
     </main>
 
     <div
-      class="transition-all duration-300 bg-card/80 backdrop-blur-sm w-full"
-      :class="controlsVisible ? 'relative translate-y-0 opacity-100' : 'absolute bottom-0 translate-y-full opacity-0 pointer-events-none'"
+      ref="controlsRef"
+      class="absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm"
+      :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls
         :is-playing="audio.isPlaying.value"
