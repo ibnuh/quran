@@ -35,9 +35,9 @@ export const usePlayerStore = defineStore('player', {
     // Per-verse audio (alquran.cloud fallback)
     audioUrls: [],
     arabicFont: 'amiri-quran',
-    arabicFontSize: 3.2,
-    translationFontSize: 1.3,
-    contentWidth: 80,
+    arabicFontSize: 2.0,
+    translationFontSize: 1.0,
+    contentWidth: 95,
     theme: 'light',
     autoHideControls: true,
     currentWordIndex: -1,
@@ -408,8 +408,12 @@ export const usePlayerStore = defineStore('player', {
         this.arabicFontSize = 2.5
         this.translationFontSize = 1.1
         this.contentWidth = 85
+      } else {
+        // Desktop
+        this.arabicFontSize = 3.2
+        this.translationFontSize = 1.3
+        this.contentWidth = 80
       }
-      // Desktop keeps the state defaults (3.2, 1.3, 80)
     },
 
     loadPreferences() {
