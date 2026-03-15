@@ -22,7 +22,14 @@ const surahOptions = computed(() =>
 const reciterOptions = computed(() =>
   RECITERS.map(r => ({ value: r.id, label: r.name }))
 )
-const currentLang = computed(() => store.currentTranslation.split('.')[0] || 'en')
+const currentLang = computed(() => {
+  const id = store.currentTranslation
+  if (id.startsWith('qdc.')) {
+    const t = TRANSLATIONS.find(t => t.identifier === id)
+    return t ? t.language : 'en'
+  }
+  return id.split('.')[0] || 'en'
+})
 const translationOptions = computed(() =>
   TRANSLATIONS.filter(t => t.language === currentLang.value)
     .map(t => ({ value: t.identifier, label: t.englishName }))

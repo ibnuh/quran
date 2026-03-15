@@ -13,7 +13,15 @@ const emit = defineEmits(['close'])
 const panelRef = ref(null)
 let previouslyFocused = null
 
-const selectedLanguage = ref(store.currentTranslation.split('.')[0] || 'en')
+function getLangFromTranslation(id) {
+  if (id.startsWith('qdc.')) {
+    const t = TRANSLATIONS.find(t => t.identifier === id)
+    return t ? t.language : 'en'
+  }
+  return id.split('.')[0] || 'en'
+}
+
+const selectedLanguage = ref(getLangFromTranslation(store.currentTranslation))
 
 const surahOptions = computed(() =>
   SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName} - ${s.englishNameTranslation}` }))
