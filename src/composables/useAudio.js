@@ -37,6 +37,11 @@ export function useAudio() {
     isPlaying.value = false
   })
 
+  function load(url) {
+    audio.src = url
+    audio.load()
+  }
+
   function loadAndPlay(url) {
     audio.src = url
     audio.play().catch(() => {})
@@ -78,7 +83,7 @@ export function useAudio() {
 
   return {
     isPlaying, progress, currentTimeMs,
-    loadAndPlay, play, pause, stop, seekTo, seek,
+    load, loadAndPlay, play, pause, stop, seekTo, seek,
     onTimeUpdate, onEnded
   }
 }

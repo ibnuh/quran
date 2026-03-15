@@ -191,8 +191,11 @@ watch(() => store.audioUrl, (url) => {
   if (url && store.playbackMode === 'full') {
     const wasPlaying = audio.isPlaying.value
     audio.stop()
-    audio.loadAndPlay(url)
-    if (!wasPlaying) audio.pause()
+    if (wasPlaying) {
+      audio.loadAndPlay(url)
+    } else {
+      audio.load(url)
+    }
   }
 })
 
@@ -208,9 +211,13 @@ useKeyboardShortcuts({
   prevVerse: handlePrevVerse
 })
 
-onMounted(() => {
+onMounted(async () => {
   store.loadPreferences()
-  store.loadSurah()
+  await store.loadSurah()
+  if (store.currentVerseIndex > 0 && store.playbackMode === 'full') {
+    const timing = store.verseTimings[store.currentVerseIndex]
+    if (timing) audio.seekTo(timing.timestampFrom)
+  }
 })
 </script>
 
