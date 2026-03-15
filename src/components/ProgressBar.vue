@@ -119,7 +119,7 @@ function onTouchEnd() {
 <style scoped>
 .progress-wrapper {
   width: 100%;
-  height: 24px;
+  height: 16px;
   cursor: pointer;
   position: relative;
   display: flex;

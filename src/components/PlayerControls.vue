@@ -39,7 +39,7 @@ function selectSpeed(speed) {
 </script>
 
 <template>
-  <div class="px-8 sm:px-12 pb-5 pt-3 landscape-compact:pb-2 landscape-compact:pt-2 landscape-compact:px-4 max-w-5xl mx-auto w-full">
+  <div class="px-8 sm:px-12 pb-4 pt-2 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full">
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
