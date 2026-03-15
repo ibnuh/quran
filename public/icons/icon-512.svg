@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#1a6b4b"/>
-  <text x="256" y="320" text-anchor="middle" font-size="220" font-family="serif" fill="white" font-weight="bold">Q</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#1a6b4b" rx="80"/><text x="256" y="320" fill="#fff" font-family="serif" font-size="220" font-weight="bold" text-anchor="middle">Q</text></svg>
