@@ -346,36 +346,61 @@ export const usePlayerStore = defineStore('player', {
       } catch (e) {}
     },
 
+    applyResponsiveDefaults() {
+      const w = window.innerWidth
+      if (w < 480) {
+        // Small mobile
+        this.arabicFontSize = 1.8
+        this.translationFontSize = 0.95
+        this.contentWidth = 100
+      } else if (w < 768) {
+        // Large mobile
+        this.arabicFontSize = 2.0
+        this.translationFontSize = 1.0
+        this.contentWidth = 95
+      } else if (w < 1024) {
+        // Tablet
+        this.arabicFontSize = 2.5
+        this.translationFontSize = 1.1
+        this.contentWidth = 85
+      }
+      // Desktop keeps the state defaults (3.2, 1.3, 80)
+    },
+
     loadPreferences() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY)
-        if (saved) {
-          const prefs = JSON.parse(saved)
-          if (prefs.surah) this.currentSurahNum = prefs.surah
-          if (prefs.verse !== undefined) this.currentVerseIndex = prefs.verse
-          if (prefs.reciter) {
-            // Handle migration from old numeric cdnId format
-            if (typeof prefs.reciter === 'number') {
-              const found = RECITERS.find(r => r.cdnId === prefs.reciter)
-              if (found) this.currentReciter = found.id
-            } else {
-              this.currentReciter = prefs.reciter
-            }
-          }
-          if (prefs.translation) this.currentTranslation = prefs.translation
-          if (prefs.arabicFont) this.arabicFont = prefs.arabicFont
-          if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
-          if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
-          if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
-          if (prefs.theme) {
-            this.theme = prefs.theme
-            document.documentElement.setAttribute('data-theme', prefs.theme === 'light' ? '' : prefs.theme)
-          }
-          if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
-          if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
-          if (prefs.repeatMode) this.repeatMode = prefs.repeatMode
-          if (prefs.playbackSpeed) this.playbackSpeed = prefs.playbackSpeed
+        if (!saved) {
+          // First visit: apply responsive defaults
+          this.applyResponsiveDefaults()
+          return
         }
+
+        const prefs = JSON.parse(saved)
+        if (prefs.surah) this.currentSurahNum = prefs.surah
+        if (prefs.verse !== undefined) this.currentVerseIndex = prefs.verse
+        if (prefs.reciter) {
+          // Handle migration from old numeric cdnId format
+          if (typeof prefs.reciter === 'number') {
+            const found = RECITERS.find(r => r.cdnId === prefs.reciter)
+            if (found) this.currentReciter = found.id
+          } else {
+            this.currentReciter = prefs.reciter
+          }
+        }
+        if (prefs.translation) this.currentTranslation = prefs.translation
+        if (prefs.arabicFont) this.arabicFont = prefs.arabicFont
+        if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
+        if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
+        if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
+        if (prefs.theme) {
+          this.theme = prefs.theme
+          document.documentElement.setAttribute('data-theme', prefs.theme === 'light' ? '' : prefs.theme)
+        }
+        if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
+        if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
+        if (prefs.repeatMode) this.repeatMode = prefs.repeatMode
+        if (prefs.playbackSpeed) this.playbackSpeed = prefs.playbackSpeed
       } catch (e) {}
     }
   }
