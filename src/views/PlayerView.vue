@@ -539,7 +539,7 @@ onBeforeUnmount(() => {
     <Transition name="tip">
       <div
         v-if="showMobileTip"
-        class="fixed top-14 left-4 right-4 z-40 flex items-center gap-3 bg-card border border-border rounded-xl shadow-xl px-4 py-3 md:hidden"
+        class="fixed top-18 left-4 right-4 z-40 flex items-center gap-3 bg-card border border-border rounded-xl shadow-xl px-4 py-3 md:hidden"
       >
         <svg class="shrink-0 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
