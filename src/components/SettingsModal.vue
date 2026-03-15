@@ -253,6 +253,53 @@ onBeforeUnmount(() => {
                 />
               </label>
             </div>
+
+            <div class="border-t border-border pt-5">
+              <h3 class="text-sm font-semibold text-body mb-3">About</h3>
+              <p class="text-xs text-muted leading-relaxed mb-4">
+                I built this app to make listening to and reading the Quran a simple, beautiful experience that works anywhere. No clutter, no distractions, just the words and their meaning, with precise word-by-word highlighting to help you follow along as you listen.
+              </p>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">MI</div>
+                <div>
+                  <p class="text-sm font-medium text-body">Muhammad Ibnuh</p>
+                  <a href="https://ibnuhx.com" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline">ibnuhx.com</a>
+                </div>
+              </div>
+              <a
+                href="https://ibnuhx.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                Feedback
+              </a>
+
+              <div class="mt-5 pt-4 border-t border-border">
+                <h4 class="text-xs font-semibold text-muted mb-2">Credits</h4>
+                <ul class="space-y-1.5 text-xs text-muted">
+                  <li>
+                    <a href="https://alquran.cloud" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">AlQuran Cloud</a>
+                    - Quran text, translations, and per-verse audio
+                  </li>
+                  <li>
+                    <a href="https://quran.com" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">Quran.com / QDC</a>
+                    - Full surah audio and word-level timing data
+                  </li>
+                  <li>
+                    <a href="https://verses.quran.foundation" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">Quran Foundation</a>
+                    - Uthmanic Hafs font
+                  </li>
+                  <li>
+                    <a href="https://fonts.google.com" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">Google Fonts</a>
+                    - Amiri and Amiri Quran typefaces
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
