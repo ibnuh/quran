@@ -595,12 +595,10 @@ onBeforeUnmount(() => {
       ref="mainRef"
       class="h-full flex flex-col overflow-y-auto scrollable cursor-pointer select-none"
       :style="{
-        paddingTop: (controlsVisible ? headerHeight : 16) + 16 + 'px',
+        paddingTop: ((headerHeight || 16) + 16) + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
-        paddingBottom: controlsVisible
-          ? controlsHeight + 'px'
-          : '1rem'
+        paddingBottom: Math.max(controlsHeight, 16) + 'px'
       }"
       @click="onMainClick"
       @touchstart.passive="onTouchStart"
