@@ -26,6 +26,8 @@ export const usePlayerStore = defineStore('player', {
     contentWidth: 80,
     theme: 'light',
     autoHideControls: true,
+    currentWordIndex: -1,
+    wordHighlight: true,
     isLoading: false,
     error: null
   }),
@@ -122,9 +124,21 @@ export const usePlayerStore = defineStore('player', {
       return 0
     },
 
+    getWordIndexAtTime(timeMs, verseIndex) {
+      const timing = this.verseTimings[verseIndex]
+      if (!timing || !timing.segments) return -1
+      for (let i = timing.segments.length - 1; i >= 0; i--) {
+        if (timeMs >= timing.segments[i].from) {
+          return timing.segments[i].wordIndex
+        }
+      }
+      return -1
+    },
+
     setVerse(index) {
       if (index >= 0 && index < this.verses.length) {
         this.currentVerseIndex = index
+        this.currentWordIndex = -1
         this.savePreferences()
       }
     },
@@ -132,6 +146,7 @@ export const usePlayerStore = defineStore('player', {
     nextVerse() {
       if (this.canNextVerse) {
         this.currentVerseIndex++
+        this.currentWordIndex = -1
         this.savePreferences()
       }
     },
@@ -139,8 +154,14 @@ export const usePlayerStore = defineStore('player', {
     prevVerse() {
       if (this.canPrevVerse) {
         this.currentVerseIndex--
+        this.currentWordIndex = -1
         this.savePreferences()
       }
+    },
+
+    setWordHighlight(val) {
+      this.wordHighlight = val
+      this.savePreferences()
     },
 
     setSurah(num) {
@@ -224,7 +245,8 @@ export const usePlayerStore = defineStore('player', {
           translationFontSize: this.translationFontSize,
           contentWidth: this.contentWidth,
           theme: this.theme,
-          autoHideControls: this.autoHideControls
+          autoHideControls: this.autoHideControls,
+          wordHighlight: this.wordHighlight
         }))
       } catch (e) {}
     },
@@ -255,6 +277,7 @@ export const usePlayerStore = defineStore('player', {
             document.documentElement.setAttribute('data-theme', prefs.theme === 'light' ? '' : prefs.theme)
           }
           if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
+          if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
         }
       } catch (e) {}
     }

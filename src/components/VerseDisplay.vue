@@ -1,8 +1,20 @@
 <script setup>
+import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 
 const emit = defineEmits(['retry'])
 const store = usePlayerStore()
+
+const verseWords = computed(() => {
+  if (!store.currentVerse) return []
+  return store.currentVerse.text.split(/\s+/).filter(Boolean)
+})
+
+const hasWordTimings = computed(() => {
+  if (store.playbackMode !== 'full') return false
+  const timing = store.verseTimings[store.currentVerseIndex]
+  return timing && timing.segments && timing.segments.length > 0
+})
 </script>
 
 <template>
@@ -30,7 +42,27 @@ const store = usePlayerStore()
         </p>
       </div>
 
-      <p class="leading-[2] text-arabic mb-5" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }">
+      <p
+        v-if="store.wordHighlight && hasWordTimings"
+        class="leading-[2] text-arabic mb-5"
+        dir="rtl"
+        lang="ar"
+        :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }"
+      >
+        <span
+          v-for="(word, i) in verseWords"
+          :key="i"
+          class="word-span"
+          :class="{ 'word-active': i === store.currentWordIndex }"
+        >{{ word }} </span>
+      </p>
+      <p
+        v-else
+        class="leading-[2] text-arabic mb-5"
+        dir="rtl"
+        lang="ar"
+        :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }"
+      >
         {{ store.currentVerse.text }}
       </p>
 
@@ -45,3 +77,13 @@ const store = usePlayerStore()
   </div>
 </template>
 
+<style scoped>
+.word-span {
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+  border-radius: 0.25rem;
+}
+.word-active {
+  color: var(--color-primary);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+</style>

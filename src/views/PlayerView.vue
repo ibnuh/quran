@@ -106,7 +106,11 @@ audio.onTimeUpdate((timeMs) => {
     const idx = store.getVerseIndexAtTime(timeMs)
     if (idx !== store.currentVerseIndex) {
       store.currentVerseIndex = idx
+      store.currentWordIndex = -1
       store.savePreferences()
+    }
+    if (store.wordHighlight) {
+      store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
     }
   }
 })
@@ -118,6 +122,7 @@ audio.onEnded(() => {
     preloadAhead()
   } else {
     audio.stop()
+    store.currentWordIndex = -1
   }
 })
 

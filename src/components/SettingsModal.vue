@@ -158,7 +158,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="border-t border-border pt-5">
+          <div class="border-t border-border pt-5 space-y-4">
             <label class="flex items-center justify-between cursor-pointer">
               <span class="text-sm font-medium text-muted">Auto-hide controls during playback</span>
               <input
@@ -166,6 +166,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                 :checked="store.autoHideControls"
                 class="toggle-switch"
                 @change="store.setAutoHideControls($event.target.checked)"
+              />
+            </label>
+            <label class="flex items-center justify-between cursor-pointer">
+              <div>
+                <span class="text-sm font-medium text-muted">Word-by-word highlighting</span>
+                <p class="text-xs text-muted/60 mt-0.5">Highlights each word as it is recited</p>
+              </div>
+              <input
+                type="checkbox"
+                :checked="store.wordHighlight"
+                class="toggle-switch"
+                @change="store.setWordHighlight($event.target.checked)"
               />
             </label>
           </div>

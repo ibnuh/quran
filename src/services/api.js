@@ -51,7 +51,12 @@ export async function fetchSurahAudio(cdnReciterId, chapterNumber) {
     verseTimings: file.verse_timings.map(vt => ({
       verseKey: vt.verse_key,
       timestampFrom: vt.timestamp_from,
-      timestampTo: vt.timestamp_to
+      timestampTo: vt.timestamp_to,
+      segments: (vt.segments || []).map(s => ({
+        wordIndex: s[0] - 1,
+        from: s[1],
+        to: s[2]
+      }))
     }))
   }
 }
