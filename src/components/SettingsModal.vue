@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import SearchSelect from './SearchSelect.vue'
 import SURAHS from '../data/surahs.js'
@@ -20,6 +20,26 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
 const showIOSInstructions = ref(false)
 const canInstall = ref(!!window.__pwaInstallPrompt)
+
+function getActiveThemeColors() {
+  return THEMES.find(t => t.id === store.theme)?.colors || THEMES[0].colors
+}
+
+function setStatusBarColor(color) {
+  if (!isStandalone) return
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) meta.setAttribute('content', color)
+}
+
+function applySettingsStatusBarColor() {
+  setStatusBarColor(getActiveThemeColors().card)
+}
+
+function restoreAppStatusBarColor() {
+  const restore = () => setStatusBarColor(getActiveThemeColors().primary)
+  restore()
+  requestAnimationFrame(restore)
+}
 
 async function installApp() {
   const prompt = window.__pwaInstallPrompt
@@ -137,9 +157,14 @@ function onKeydown(e) {
 onMounted(() => {
   previouslyFocused = document.activeElement
   document.addEventListener('keydown', onKeydown)
+  applySettingsStatusBarColor()
 })
+
+watch(() => store.theme, applySettingsStatusBarColor)
+
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
+  restoreAppStatusBarColor()
   if (previouslyFocused) previouslyFocused.focus()
 })
 </script>
