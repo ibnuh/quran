@@ -101,6 +101,33 @@ function onMainTap() {
   }
 }
 
+// Touch tap detection (distinguishes taps from scrolls/drags)
+let touchStartY = 0
+let touchStartTime = 0
+
+function onTouchStart(e) {
+  touchStartY = e.touches[0].clientY
+  touchStartTime = Date.now()
+}
+
+let isTouchDevice = false
+
+function onTouchEnd(e) {
+  isTouchDevice = true
+  const dy = Math.abs(e.changedTouches[0].clientY - touchStartY)
+  const dt = Date.now() - touchStartTime
+  // Only treat as tap if minimal movement and quick touch
+  if (dy < 10 && dt < 300) {
+    onMainTap()
+  }
+}
+
+function onMainClick() {
+  // On touch devices, let touchend handle it to avoid double-fire
+  if (isTouchDevice) return
+  onMainTap()
+}
+
 watch(() => audio.isPlaying.value, (playing) => {
   if (!playing) {
     controlsVisible.value = true
@@ -467,7 +494,9 @@ onBeforeUnmount(() => {
     <main
       ref="mainRef"
       class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer select-none"
-      @click="onMainTap"
+      @click="onMainClick"
+      @touchstart.passive="onTouchStart"
+      @touchend.passive="onTouchEnd"
     >
       <VerseDisplay @retry="store.loadSurah()" />
     </main>
