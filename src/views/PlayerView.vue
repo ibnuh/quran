@@ -178,6 +178,46 @@ watch(() => store.currentSurahNum, () => {
   preloadedNext = false
 })
 
+// -- RAF-based word highlighting for ~16ms precision --
+let rafId = null
+
+function startWordHighlightLoop() {
+  if (rafId) return
+  function tick() {
+    const timeMs = audio.getLiveTimeMs()
+    const idx = store.getVerseIndexAtTime(timeMs)
+    if (idx !== store.currentVerseIndex) {
+      store.currentVerseIndex = idx
+      store.currentWordIndex = -1
+      store.savePreferences()
+    }
+    store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
+    rafId = requestAnimationFrame(tick)
+  }
+  rafId = requestAnimationFrame(tick)
+}
+
+function stopWordHighlightLoop() {
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+}
+
+// Start/stop RAF loop based on playing state + word highlight + full mode
+watch(
+  [() => audio.isPlaying.value, () => store.wordHighlight, () => store.playbackMode],
+  ([playing, highlight, mode]) => {
+    if (playing && highlight && mode === 'full') {
+      startWordHighlightLoop()
+    } else {
+      stopWordHighlightLoop()
+    }
+  }
+)
+
+onBeforeUnmount(() => stopWordHighlightLoop())
+
 // -- Audio event handlers --
 audio.onTimeUpdate((timeMs) => {
   if (store.playbackMode === 'full') {
@@ -187,7 +227,8 @@ audio.onTimeUpdate((timeMs) => {
       store.currentWordIndex = -1
       store.savePreferences()
     }
-    if (store.wordHighlight) {
+    // Word highlight handled by RAF loop when playing; fallback for paused scrubbing
+    if (store.wordHighlight && !audio.isPlaying.value) {
       store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
     }
   }

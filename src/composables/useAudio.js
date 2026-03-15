@@ -12,8 +12,6 @@ export function useAudio() {
 
   let onTimeUpdateCb = null
   let onEndedCb = null
-  let lastCbTime = 0
-  const THROTTLE_MS = 200
 
   audio.addEventListener('timeupdate', () => {
     currentTimeMs.value = audio.currentTime * 1000
@@ -21,13 +19,7 @@ export function useAudio() {
       progress.value = (audio.currentTime / audio.duration) * 100
       duration.value = audio.duration * 1000
     }
-    if (onTimeUpdateCb) {
-      const now = performance.now()
-      if (now - lastCbTime >= THROTTLE_MS) {
-        lastCbTime = now
-        onTimeUpdateCb(currentTimeMs.value)
-      }
-    }
+    if (onTimeUpdateCb) onTimeUpdateCb(currentTimeMs.value)
   })
 
   audio.addEventListener('progress', () => {
@@ -54,6 +46,11 @@ export function useAudio() {
   audio.addEventListener('error', () => {
     isPlaying.value = false
   })
+
+  // Direct read of audio.currentTime for RAF polling (no event delay)
+  function getLiveTimeMs() {
+    return audio.currentTime * 1000
+  }
 
   function load(url) {
     audio.src = url
@@ -110,7 +107,7 @@ export function useAudio() {
   return {
     isPlaying, progress, currentTimeMs, duration, buffered, playbackRate,
     load, loadAndPlay, play, pause, stop, seekTo, seek,
-    setPlaybackRate,
+    setPlaybackRate, getLiveTimeMs,
     onTimeUpdate, onEnded
   }
 }
