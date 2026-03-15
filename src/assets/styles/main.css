@@ -157,6 +157,10 @@ html, body {
 
 /* Safe area insets for notched devices - applied per-element so backgrounds extend edge-to-edge */
 
+.scrollable {
+  scrollbar-gutter: stable;
+}
+
 .scrollable::-webkit-scrollbar {
   width: 6px;
 }
