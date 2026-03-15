@@ -371,14 +371,66 @@ useKeyboardShortcuts({
   toggleHelp: () => { showShortcuts.value = !showShortcuts.value }
 })
 
+// -- Dynamic document title --
+watch(
+  () => [store.currentSurah, store.currentVerse],
+  ([surah, verse]) => {
+    if (surah && verse) {
+      document.title = `${surah.englishName} ${verse.number} - Quran Player`
+    } else if (surah) {
+      document.title = `${surah.englishName} - Quran Player`
+    } else {
+      document.title = 'Quran Player'
+    }
+  }
+)
+
+// -- Media Session API (lock screen / notification controls) --
+function updateMediaSession() {
+  if (!('mediaSession' in navigator)) return
+  const surah = store.currentSurah
+  const verse = store.currentVerse
+  if (!surah) return
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: `${surah.englishName} - Verse ${verse?.number || 1}`,
+    artist: store.currentReciterData?.name || 'Quran Player',
+    album: surah.englishNameTranslation
+  })
+
+  navigator.mediaSession.setActionHandler('play', togglePlay)
+  navigator.mediaSession.setActionHandler('pause', togglePlay)
+  navigator.mediaSession.setActionHandler('previoustrack', () => {
+    if (store.canPrevVerse) handlePrevVerse()
+  })
+  navigator.mediaSession.setActionHandler('nexttrack', () => {
+    if (store.canNextVerse) handleNextVerse()
+  })
+}
+
+watch(
+  () => [store.currentSurahNum, store.currentVerseIndex, store.currentReciter],
+  () => updateMediaSession()
+)
+
 onMounted(async () => {
   store.loadPreferences()
+
+  // Handle PWA shortcut query param (?surah=36)
+  const params = new URLSearchParams(window.location.search)
+  const surahParam = parseInt(params.get('surah'))
+  if (surahParam >= 1 && surahParam <= 114) {
+    store.currentSurahNum = surahParam
+    store.currentVerseIndex = 0
+  }
+
   audio.setPlaybackRate(store.playbackSpeed)
   await store.loadSurah()
   if (store.currentVerseIndex > 0 && store.playbackMode === 'full') {
     const timing = store.verseTimings[store.currentVerseIndex]
     if (timing) audio.seekTo(timing.timestampFrom)
   }
+  updateMediaSession()
   checkMobileTip()
   window.addEventListener('resize', checkMobileTip)
   orientationCleanup = () => window.removeEventListener('resize', checkMobileTip)

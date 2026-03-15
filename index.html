@@ -3,18 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Quran Player</title>
-  <meta name="description" content="Listen to and read the Quran with word-by-word highlighting">
+  <title>Quran Player - Read & Listen with Word-by-Word Highlighting</title>
+  <meta name="description" content="Read and listen to the Quran with synchronized word-by-word highlighting, 30+ reciters, 55+ translations in 28 languages, and offline support.">
+  <meta name="keywords" content="Quran, Quran player, Quran recitation, word highlighting, Islamic, Quran audio, Quran translation, Quran online">
+  <meta name="author" content="Muhammad Ibnuh">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://quran.ibnuhx.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Quran Player - Read & Listen with Word-by-Word Highlighting">
+  <meta property="og:description" content="Read and listen to the Quran with synchronized word-by-word highlighting, 30+ reciters, 55+ translations in 28 languages, and offline support.">
+  <meta property="og:url" content="https://quran.ibnuhx.com/">
+  <meta property="og:site_name" content="Quran Player">
+  <meta property="og:image" content="https://quran.ibnuhx.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quran Player - Read & Listen with Word-by-Word Highlighting">
+  <meta name="twitter:description" content="Read and listen to the Quran with synchronized word-by-word highlighting, 30+ reciters, and 55+ translations.">
+  <meta name="twitter:image" content="https://quran.ibnuhx.com/og-image.png">
+  <meta name="twitter:creator" content="@ibnuhx">
+
+  <!-- Theme & PWA -->
   <meta name="theme-color" content="#1a6b4b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Quran">
   <link rel="apple-touch-icon" href="/icons/icon-192.svg">
-  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+
+  <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://api.alquran.cloud">
+  <link rel="preconnect" href="https://api.qurancdn.com">
+  <link rel="dns-prefetch" href="https://verses.quran.foundation">
+
+  <!-- Fonts -->
   <link rel="preload" href="https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2" as="font" type="font/woff2" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Quran Player",
+    "description": "Read and listen to the Quran with synchronized word-by-word highlighting, multiple reciters, and translations in 28 languages.",
+    "url": "https://quran.ibnuhx.com/",
+    "applicationCategory": "ReligiousApp",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires a modern web browser",
+    "author": {
+      "@type": "Person",
+      "name": "Muhammad Ibnuh",
+      "url": "https://ibnuhx.com"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Word-by-word highlighting",
+      "30+ reciters",
+      "55+ translations in 28 languages",
+      "Offline support",
+      "Multiple themes",
+      "Adjustable playback speed"
+    ]
+  }
+  </script>
+
   <style>
     @font-face {
       font-family: 'UthmanicHafs';

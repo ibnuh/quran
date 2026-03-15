@@ -77,7 +77,7 @@ const hasWordTimings = computed(() => {
           </p>
 
           <span
-            class="inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mb-5"
+            class="inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mt-3 mb-5"
           >
             {{ store.currentVerse.number }}
           </span>

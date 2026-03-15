@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f8f6f1"/>
+  <rect x="0" y="0" width="1200" height="8" fill="#1a6b4b"/>
+  <text x="600" y="240" text-anchor="middle" font-size="72" font-family="serif" fill="#1a6b4b" font-weight="bold">Quran Player</text>
+  <text x="600" y="310" text-anchor="middle" font-size="28" font-family="sans-serif" fill="#777777">Read &amp; Listen with Word-by-Word Highlighting</text>
+  <text x="600" y="420" text-anchor="middle" font-size="64" font-family="serif" fill="#c8a45c" direction="rtl" unicode-bidi="bidi-override">&#x0628;&#x0650;&#x0633;&#x0652;&#x0645;&#x0650; &#x0627;&#x0644;&#x0644;&#x0651;&#x064E;&#x0647;&#x0650;</text>
+  <text x="600" y="550" text-anchor="middle" font-size="20" font-family="sans-serif" fill="#999999">30+ Reciters | 55+ Translations | 28 Languages | Offline Support</text>
+</svg>
