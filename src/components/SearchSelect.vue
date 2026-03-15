@@ -36,12 +36,16 @@ const filtered = computed(() => {
 // Reset highlighted index when filtered results change
 watch(filtered, () => { highlightedIndex.value = -1 })
 
+function isTouchDevice() {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0
+}
+
 function open() {
   isOpen.value = true
   query.value = ''
   highlightedIndex.value = -1
   nextTick(() => {
-    if (inputRef.value) inputRef.value.focus()
+    if (inputRef.value && !isTouchDevice()) inputRef.value.focus()
   })
 }
 
