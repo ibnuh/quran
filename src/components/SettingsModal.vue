@@ -257,7 +257,7 @@ onBeforeUnmount(() => {
             <div class="border-t border-border pt-5">
               <h3 class="text-sm font-semibold text-body mb-3">About</h3>
               <p class="text-xs text-muted leading-relaxed mb-4">
-                I built this app to make listening to and reading the Quran a simple, beautiful experience that works anywhere. No clutter, no distractions, just the words and their meaning, with precise word-by-word highlighting to help you follow along as you listen.
+                I wanted a Quran player that felt clean and focused, something I could open and immediately start reading or listening. This app pairs each verse with its translation and highlights words in sync with the recitation, so you can follow along naturally.
               </p>
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">MI</div>
@@ -266,38 +266,69 @@ onBeforeUnmount(() => {
                   <a href="https://ibnuhx.com" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline">ibnuhx.com</a>
                 </div>
               </div>
-              <a
-                href="https://ibnuhx.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                </svg>
-                Feedback
-              </a>
+              <div class="flex items-center gap-3">
+                <a
+                  href="mailto:quran@ibnuhx.com"
+                  class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                  quran@ibnuhx.com
+                </a>
+                <a
+                  href="https://x.com/ibnuhx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  @ibnuhx
+                </a>
+              </div>
 
               <div class="mt-5 pt-4 border-t border-border">
-                <h4 class="text-xs font-semibold text-muted mb-2">Credits</h4>
-                <ul class="space-y-1.5 text-xs text-muted">
-                  <li>
-                    <a href="https://alquran.cloud" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">AlQuran Cloud</a>
-                    - Quran text, translations, and per-verse audio
-                  </li>
-                  <li>
-                    <a href="https://quran.com" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">Quran.com / QDC</a>
-                    - Full surah audio and word-level timing data
-                  </li>
-                  <li>
-                    <a href="https://verses.quran.foundation" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">Quran Foundation</a>
-                    - Uthmanic Hafs font
-                  </li>
-                  <li>
-                    <a href="https://fonts.google.com" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">Google Fonts</a>
-                    - Amiri and Amiri Quran typefaces
-                  </li>
-                </ul>
+                <h4 class="text-xs font-semibold text-muted mb-3">Powered by</h4>
+                <div class="space-y-2.5">
+                  <a href="https://alquran.cloud" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
+                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15h14v2H5zm0-4h14v2H5zm0-4h14v2H5z"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">AlQuran Cloud</p>
+                      <p class="text-[0.65rem] text-muted">Quran text, translations, per-verse audio</p>
+                    </div>
+                  </a>
+                  <a href="https://quran.com" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
+                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v9.28a4.39 4.39 0 00-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">Quran.com / QDC</p>
+                      <p class="text-[0.65rem] text-muted">Full surah audio, word-level timing</p>
+                    </div>
+                  </a>
+                  <a href="https://verses.quran.foundation" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
+                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">Quran Foundation</p>
+                      <p class="text-[0.65rem] text-muted">Uthmanic Hafs font</p>
+                    </div>
+                  </a>
+                  <a href="https://fonts.google.com" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
+                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">Google Fonts</p>
+                      <p class="text-[0.65rem] text-muted">Amiri and Amiri Quran typefaces</p>
+                    </div>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
