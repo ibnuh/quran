@@ -516,8 +516,8 @@ onBeforeUnmount(() => {
 
     <div
       ref="headerRef"
-      class="transition-all duration-300 z-40 relative"
-      :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
+      class="transition-all duration-300 z-40 w-full"
+      :class="controlsVisible ? 'relative translate-y-0 opacity-100' : 'absolute top-0 -translate-y-full opacity-0 pointer-events-none'"
     >
       <AppHeader
         @open-settings="showSettings = true"
@@ -540,8 +540,8 @@ onBeforeUnmount(() => {
     </main>
 
     <div
-      class="transition-all duration-300 bg-card/80 backdrop-blur-sm"
-      :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
+      class="transition-all duration-300 bg-card/80 backdrop-blur-sm w-full"
+      :class="controlsVisible ? 'relative translate-y-0 opacity-100' : 'absolute bottom-0 translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls
         :is-playing="audio.isPlaying.value"
