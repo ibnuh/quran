@@ -39,7 +39,7 @@ function selectSpeed(speed) {
 </script>
 
 <template>
-  <div class="px-8 sm:px-12 pb-4 pt-2 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full">
+  <div class="px-4 sm:px-12 pb-4 pt-2 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full">
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
@@ -66,7 +66,7 @@ function selectSpeed(speed) {
         </button>
 
         <button
-          class="ctrl-btn"
+          class="ctrl-btn hidden sm:flex"
           :disabled="!store.canPrevSurah"
           aria-label="Previous surah"
           @click="emit('prev-surah')"
@@ -82,7 +82,7 @@ function selectSpeed(speed) {
           @click="emit('prev-verse')"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-          <span>Prev</span>
+          <span class="hidden sm:inline">Prev</span>
         </button>
       </div>
 
@@ -104,12 +104,12 @@ function selectSpeed(speed) {
           aria-label="Next verse"
           @click="emit('next-verse')"
         >
-          <span>Next</span>
+          <span class="hidden sm:inline">Next</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
         </button>
 
         <button
-          class="ctrl-btn"
+          class="ctrl-btn hidden sm:flex"
           :disabled="!store.canNextSurah"
           aria-label="Next surah"
           @click="emit('next-surah')"
@@ -154,7 +154,7 @@ function selectSpeed(speed) {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem;
   border-radius: 0.5rem;
   border: none;
   background: none;
