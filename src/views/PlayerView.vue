@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useAudio } from '../composables/useAudio.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
 import { useSwipe } from '../composables/useSwipe.js'
+import THEMES from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
 import SettingsModal from '../components/SettingsModal.vue'
@@ -25,6 +26,16 @@ const headerRef = ref(null)
 const controlsRef = ref(null)
 const headerHeight = ref(0)
 const controlsHeight = ref(0)
+
+const activeThemeColors = computed(() =>
+  THEMES.find(t => t.id === store.theme)?.colors || THEMES[0].colors
+)
+
+const statusBarFill = computed(() => {
+  if (showSettings.value || showVerses.value) return activeThemeColors.value.card
+  if (!isOnline.value) return '#d97706'
+  return activeThemeColors.value.primary
+})
 
 function updateHeaderHeight() {
   if (headerRef.value) {
@@ -570,6 +581,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden" @mousemove="showControls">
+    <div
+      class="fixed top-0 left-0 right-0 z-[60] pointer-events-none"
+      :style="{ height: 'env(safe-area-inset-top, 0px)', background: statusBarFill }"
+    ></div>
+
     <!-- Offline banner -->
     <Transition name="offline-bar">
       <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs pb-1.5 px-4 font-medium" style="padding-top: max(0.375rem, env(safe-area-inset-top, 0px))">
