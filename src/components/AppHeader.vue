@@ -31,7 +31,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </script>
 
 <template>
-  <header class="flex items-center justify-between px-3 py-2 landscape-compact:py-1 bg-primary text-white pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]">
+  <header class="flex items-center justify-between px-3 pb-2 landscape-compact:pb-1 bg-primary text-white pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]" style="padding-top: max(0.5rem, env(safe-area-inset-top, 0px))">
     <div class="flex items-center gap-1">
       <button
         class="flex header-btn"

@@ -53,12 +53,12 @@ watch(() => store.currentVerseIndex, async () => {
 
 <template>
   <Transition name="panel" appear>
-    <div class="fixed inset-0 z-50 flex justify-end" role="dialog" aria-label="Verse list" aria-modal="true">
-      <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
+    <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end" role="dialog" aria-label="Verse list" aria-modal="true">
+      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" @click="emit('close')"></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-md h-full shadow-2xl">
         <div class="bg-card h-full overflow-y-auto">
-          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-4 py-3 border-b border-border">
+          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-4 pb-3 border-b border-border" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px))">
             <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">All Verses</h3>
             <button
               class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"

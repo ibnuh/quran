@@ -146,12 +146,12 @@ onBeforeUnmount(() => {
 
 <template>
   <Transition name="settings-panel" appear>
-    <div class="fixed inset-0 z-50 flex justify-start" role="dialog" aria-label="Settings" aria-modal="true">
-      <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
+    <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-start" role="dialog" aria-label="Settings" aria-modal="true">
+      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" @click="emit('close')"></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-sm h-full shadow-2xl">
-        <div class="bg-card h-full overflow-y-auto scrollable">
-          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 py-4 border-b border-border">
+        <div class="bg-card h-full overflow-y-auto scrollable" style="padding-left: env(safe-area-inset-left, 0px)">
+          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pb-4 border-b border-border" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">
             <h2 class="text-base font-semibold text-body">Settings</h2>
             <button
               class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"

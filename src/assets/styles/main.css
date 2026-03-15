@@ -150,7 +150,12 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-html, body {
+html {
+  background: var(--color-surface);
+  height: 100%;
+  overflow: hidden;
+}
+body {
   overflow: hidden;
   height: 100%;
 }

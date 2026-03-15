@@ -38,6 +38,7 @@ function updateHeaderHeight() {
 const showMobileTip = ref(false)
 const tipDismissed = ref(localStorage.getItem('quran-tip-dismissed') === '1')
 
+
 // -- Online/offline detection --
 function onOnline() { isOnline.value = true }
 function onOffline() { isOnline.value = false }
@@ -568,10 +569,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-dvh relative bg-surface overflow-hidden" @mousemove="showControls">
+  <div class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden" @mousemove="showControls">
     <!-- Offline banner -->
     <Transition name="offline-bar">
-      <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium">
+      <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs pb-1.5 px-4 font-medium" style="padding-top: max(0.375rem, env(safe-area-inset-top, 0px))">
         You are offline. Some features may not be available.
       </div>
     </Transition>
@@ -599,7 +600,7 @@ onBeforeUnmount(() => {
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingBottom: controlsVisible
           ? controlsHeight + 'px'
-          : 'max(1rem, env(safe-area-inset-bottom, 0px))'
+          : '1rem'
       }"
       @click="onMainClick"
       @touchstart.passive="onTouchStart"
@@ -610,8 +611,7 @@ onBeforeUnmount(() => {
 
     <div
       ref="controlsRef"
-      class="absolute bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm border-t border-border"
-      style="padding-bottom: env(safe-area-inset-bottom, 0px)"
+      class="fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm border-t border-border"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls
