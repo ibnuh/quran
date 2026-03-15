@@ -1,6 +1,7 @@
 <script setup>
 import { onErrorCaptured, ref } from 'vue'
 import UpdatePrompt from './components/UpdatePrompt.vue'
+import InstallPrompt from './components/InstallPrompt.vue'
 
 const hasError = ref(false)
 const errorMessage = ref('')
@@ -34,6 +35,7 @@ function reload() {
   <router-view v-else />
 
   <UpdatePrompt />
+  <InstallPrompt />
 
   <!-- Screen reader announcements -->
   <div aria-live="polite" aria-atomic="true" class="sr-only" id="sr-announcements"></div>
