@@ -15,5 +15,10 @@ import { registerSW } from 'virtual:pwa-register'
 const updateSW = registerSW({
   onNeedRefresh() {
     window.dispatchEvent(new CustomEvent('sw-update-available', { detail: { updateSW } }))
+  },
+  onRegisteredSW(_, registration) {
+    if (registration) {
+      setInterval(() => registration.update(), 30 * 60 * 1000)
+    }
   }
 })
