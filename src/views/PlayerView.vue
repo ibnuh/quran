@@ -167,27 +167,39 @@ function onMainTap() {
   }
 }
 
-// Touch tap detection (distinguishes taps from scrolls/drags)
+// Root-level touch capture is more reliable on iOS standalone than relying on
+// bubbling from the scroll container or verse text nodes.
 let touchStartX = 0
 let touchStartY = 0
 let touchStartTime = 0
 let lastTouchTapTime = 0
 
-function onTouchStart(e) {
-  touchStartX = e.touches[0].clientX
-  touchStartY = e.touches[0].clientY
+let isTouchDevice = false
+
+function shouldIgnoreMobileToggle(target) {
+  if (showSettings.value || showVerses.value || showShortcuts.value) return true
+  if (!target) return false
+  if (headerRef.value?.contains(target)) return true
+  if (controlsRef.value?.contains(target)) return true
+  if (target.closest?.('[role="dialog"], button, input, select, textarea, a, label')) return true
+  return false
+}
+
+function onRootTouchStart(e) {
+  if (e.touches.length !== 1) return
+  const touch = e.touches[0]
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
   touchStartTime = Date.now()
 }
 
-let isTouchDevice = false
-
-function onTouchEnd(e) {
+function onRootTouchEnd(e) {
   isTouchDevice = true
-  const dx = Math.abs(e.changedTouches[0].clientX - touchStartX)
-  const dy = Math.abs(e.changedTouches[0].clientY - touchStartY)
+  const touch = e.changedTouches[0]
+  const dx = Math.abs(touch.clientX - touchStartX)
+  const dy = Math.abs(touch.clientY - touchStartY)
   const dt = Date.now() - touchStartTime
-  // Only treat as tap if minimal movement in both axes and quick touch
-  if (dx < 12 && dy < 12 && dt < 350) {
+  if (dx < 12 && dy < 12 && dt < 350 && !shouldIgnoreMobileToggle(e.target)) {
     lastTouchTapTime = Date.now()
     onMainTap()
   }
@@ -595,7 +607,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden" @mousemove="showControls">
+  <div
+    class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden"
+    @mousemove="showControls"
+    @touchstart.capture.passive="onRootTouchStart"
+    @touchend.capture.passive="onRootTouchEnd"
+  >
     <div
       class="fixed top-0 left-0 right-0 z-[60] pointer-events-none"
       :style="{ height: 'env(safe-area-inset-top, 0px)', background: statusBarFill }"
@@ -632,8 +649,6 @@ onBeforeUnmount(() => {
         paddingBottom: Math.max(controlsHeight, 16) + 'px'
       }"
       @click="onMainClick"
-      @touchstart.passive="onTouchStart"
-      @touchend.passive="onTouchEnd"
     >
       <VerseDisplay class="m-auto" @retry="store.loadSurah()" />
     </main>
