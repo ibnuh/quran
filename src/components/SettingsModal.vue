@@ -284,7 +284,7 @@ onBeforeUnmount(() => {
                 I wanted a Quran player that felt clean and focused, something I could open and immediately start reading or listening. This app pairs each verse with its translation and highlights words in sync with the recitation, so you can follow along naturally.
               </p>
               <div class="flex items-center gap-3 mb-4">
-                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">MI</div>
+                <img src="/author.jpeg" alt="Muhammad Ibnuh" class="w-10 h-10 rounded-full object-cover shrink-0" />
                 <div>
                   <p class="text-sm font-medium text-body">Muhammad Ibnuh</p>
                   <a href="https://ibnuhx.com" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline">ibnuhx.com</a>
