@@ -66,7 +66,7 @@ function selectSpeed(speed) {
         </button>
 
         <button
-          class="ctrl-btn hidden sm:flex"
+          class="ctrl-btn flex"
           :disabled="!store.canPrevSurah"
           aria-label="Previous surah"
           @click="emit('prev-surah')"
@@ -109,7 +109,7 @@ function selectSpeed(speed) {
         </button>
 
         <button
-          class="ctrl-btn hidden sm:flex"
+          class="ctrl-btn flex"
           :disabled="!store.canNextSurah"
           aria-label="Next surah"
           @click="emit('next-surah')"

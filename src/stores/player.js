@@ -4,6 +4,7 @@ import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
+import THEMES from '../data/themes.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
@@ -326,6 +327,11 @@ export const usePlayerStore = defineStore('player', {
     setTheme(id) {
       this.theme = id
       document.documentElement.setAttribute('data-theme', id === 'light' ? '' : id)
+      const theme = THEMES.find(t => t.id === id)
+      if (theme) {
+        const meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', theme.colors.primary)
+      }
       this.savePreferences()
     },
 
@@ -435,6 +441,11 @@ export const usePlayerStore = defineStore('player', {
         if (prefs.theme) {
           this.theme = prefs.theme
           document.documentElement.setAttribute('data-theme', prefs.theme === 'light' ? '' : prefs.theme)
+          const theme = THEMES.find(t => t.id === prefs.theme)
+          if (theme) {
+            const meta = document.querySelector('meta[name="theme-color"]')
+            if (meta) meta.setAttribute('content', theme.colors.primary)
+          }
         }
         if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
         if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight

@@ -47,6 +47,12 @@ function open() {
   nextTick(() => {
     if (inputRef.value && !isTouchDevice()) inputRef.value.focus()
   })
+  nextTick(() => {
+    setTimeout(() => {
+      const active = document.querySelector('.option-active')
+      if (active) active.scrollIntoView({ block: 'center' })
+    }, 50)
+  })
 }
 
 function select(opt) {

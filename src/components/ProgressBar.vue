@@ -170,4 +170,15 @@ function onTouchEnd() {
 .progress-thumb-active {
   transform: translate(-50%, -50%) scale(1) !important;
 }
+
+@media (pointer: coarse) {
+  .progress-wrapper {
+    height: 44px;
+  }
+  .progress-thumb {
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 </style>

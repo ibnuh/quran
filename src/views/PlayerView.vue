@@ -143,10 +143,12 @@ function onMainTap() {
 }
 
 // Touch tap detection (distinguishes taps from scrolls/drags)
+let touchStartX = 0
 let touchStartY = 0
 let touchStartTime = 0
 
 function onTouchStart(e) {
+  touchStartX = e.touches[0].clientX
   touchStartY = e.touches[0].clientY
   touchStartTime = Date.now()
 }
@@ -155,10 +157,11 @@ let isTouchDevice = false
 
 function onTouchEnd(e) {
   isTouchDevice = true
+  const dx = Math.abs(e.changedTouches[0].clientX - touchStartX)
   const dy = Math.abs(e.changedTouches[0].clientY - touchStartY)
   const dt = Date.now() - touchStartTime
-  // Only treat as tap if minimal movement and quick touch
-  if (dy < 10 && dt < 300) {
+  // Only treat as tap if minimal movement in both axes and quick touch
+  if (dx < 10 && dy < 10 && dt < 300) {
     onMainTap()
   }
 }
@@ -482,6 +485,43 @@ watch(
   () => updateMediaSession()
 )
 
+// -- Screen Wake Lock API (prevent screen dimming during playback) --
+let wakeLock = null
+
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return
+  try {
+    wakeLock = await navigator.wakeLock.request('screen')
+    wakeLock.addEventListener('release', () => {
+      wakeLock = null
+    })
+  } catch (e) {
+    // Wake lock request can fail (e.g. low battery, background tab)
+    wakeLock = null
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release()
+    wakeLock = null
+  }
+}
+
+watch(() => audio.isPlaying.value, (playing) => {
+  if (playing) {
+    acquireWakeLock()
+  } else {
+    releaseWakeLock()
+  }
+})
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible' && audio.isPlaying.value) {
+    acquireWakeLock()
+  }
+}
+
 onMounted(async () => {
   store.loadPreferences()
 
@@ -502,11 +542,16 @@ onMounted(async () => {
   updateMediaSession()
   checkMobileTip()
   window.addEventListener('resize', checkMobileTip)
+  if ('wakeLock' in navigator) {
+    document.addEventListener('visibilitychange', onVisibilityChange)
+  }
   orientationCleanup = () => window.removeEventListener('resize', checkMobileTip)
 })
 
 onBeforeUnmount(() => {
   if (orientationCleanup) orientationCleanup()
+  releaseWakeLock()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>
 
