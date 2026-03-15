@@ -52,7 +52,7 @@ function selectSpeed(speed) {
       <!-- Left group -->
       <div class="flex items-center justify-end gap-1 sm:gap-2">
         <button
-          class="ctrl-btn"
+          class="flex ctrl-btn"
           :class="store.repeatMode !== 'none' ? 'text-primary!' : ''"
           aria-label="Cycle repeat mode"
           @click="cycleRepeat"
@@ -76,7 +76,7 @@ function selectSpeed(speed) {
         </button>
 
         <button
-          class="ctrl-btn"
+          class="flex ctrl-btn"
           :disabled="!store.canPrevVerse"
           aria-label="Previous verse"
           @click="emit('prev-verse')"
@@ -99,7 +99,7 @@ function selectSpeed(speed) {
       <!-- Right group -->
       <div class="flex items-center justify-start gap-1 sm:gap-2">
         <button
-          class="ctrl-btn"
+          class="flex ctrl-btn"
           :disabled="!store.canNextVerse"
           aria-label="Next verse"
           @click="emit('next-verse')"
@@ -121,7 +121,7 @@ function selectSpeed(speed) {
         <!-- Speed -->
         <div class="relative speed-wrapper">
           <button
-            class="ctrl-btn"
+            class="flex ctrl-btn"
             :class="store.playbackSpeed !== 1 ? 'text-primary!' : ''"
             aria-label="Playback speed"
             @click.stop="showSpeedMenu = !showSpeedMenu"
@@ -151,7 +151,6 @@ function selectSpeed(speed) {
 
 <style scoped>
 .ctrl-btn {
-  display: flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem;

@@ -34,7 +34,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
   <header class="flex items-center justify-between px-3 py-2 landscape-compact:py-1 bg-primary text-white">
     <div class="flex items-center gap-1">
       <button
-        class="header-btn"
+        class="flex header-btn"
         aria-label="Settings"
         @click="handleSettingsClick"
       >
@@ -77,7 +77,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       </button>
       <div class="relative theme-picker-wrapper">
         <button
-          class="header-btn"
+          class="flex header-btn"
           aria-label="Change theme"
           @click.stop="toggleThemePicker"
         >
@@ -112,7 +112,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         </Transition>
       </div>
       <button
-        class="header-btn"
+        class="flex header-btn"
         :class="store.autoHideControls ? '' : 'opacity-50'"
         aria-label="Toggle auto-hide controls"
         @click="store.setAutoHideControls(!store.autoHideControls)"
@@ -126,7 +126,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         <span class="hidden sm:inline">Auto-hide</span>
       </button>
       <button
-        class="header-btn"
+        class="flex header-btn"
         aria-label="Show verse list"
         @click="$emit('toggle-verses')"
       >
@@ -141,7 +141,6 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 
 <style scoped>
 .header-btn {
-  display: flex;
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.625rem;
