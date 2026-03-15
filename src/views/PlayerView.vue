@@ -36,7 +36,7 @@ function updateHeaderHeight() {
   }
 }
 const showMobileTip = ref(false)
-const tipDismissed = ref(false)
+const tipDismissed = ref(localStorage.getItem('quran-tip-dismissed') === '1')
 
 // -- Online/offline detection --
 function onOnline() { isOnline.value = true }
@@ -91,22 +91,23 @@ function checkMobileTip() {
 
   if (showMobileTip.value) {
     clearTimeout(tipTimer)
-    tipTimer = setTimeout(() => {
-      showMobileTip.value = false
-      tipDismissed.value = true
-    }, 8000)
+    tipTimer = setTimeout(dismissTipPermanently, 8000)
   }
+}
+
+function dismissTipPermanently() {
+  showMobileTip.value = false
+  tipDismissed.value = true
+  localStorage.setItem('quran-tip-dismissed', '1')
 }
 
 function applyMobileTip() {
   if (!store.autoHideControls) store.setAutoHideControls(true)
-  showMobileTip.value = false
-  tipDismissed.value = true
+  dismissTipPermanently()
 }
 
 function dismissMobileTip() {
-  showMobileTip.value = false
-  tipDismissed.value = true
+  dismissTipPermanently()
 }
 
 let orientationCleanup = null
