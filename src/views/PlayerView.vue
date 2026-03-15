@@ -416,7 +416,7 @@ onBeforeUnmount(() => {
       class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer"
       @click="onMainTap"
     >
-      <VerseDisplay :is-playing="audio.isPlaying.value" @retry="store.loadSurah()" />
+      <VerseDisplay @retry="store.loadSurah()" />
     </main>
 
     <div

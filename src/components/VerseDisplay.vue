@@ -2,9 +2,6 @@
 import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 
-const props = defineProps({
-  isPlaying: Boolean
-})
 const emit = defineEmits(['retry'])
 const store = usePlayerStore()
 
@@ -81,7 +78,6 @@ const hasWordTimings = computed(() => {
 
           <span
             class="inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mb-5"
-            :class="{ 'verse-pulse': isPlaying }"
           >
             {{ store.currentVerse.number }}
           </span>
@@ -105,13 +101,6 @@ const hasWordTimings = computed(() => {
   text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
-.verse-pulse {
-  animation: pulse-ring 2s ease-in-out infinite;
-}
-@keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 0 transparent; }
-  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary) 15%, transparent); }
-}
 
 .verse-fade-enter-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
