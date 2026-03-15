@@ -190,7 +190,7 @@ watch(() => store.autoHideControls, (enabled) => {
   }
 })
 
-onBeforeUnmount(() => { clearTimeout(hideTimer); clearTimeout(tipTimer) })
+onBeforeUnmount(() => { clearTimeout(hideTimer); clearTimeout(tipTimer); clearTimeout(savePrefTimer) })
 
 // -- Swipe gestures --
 useSwipe(mainRef, {
@@ -251,6 +251,12 @@ watch(() => store.currentSurahNum, () => {
 
 // -- RAF-based word highlighting for ~16ms precision --
 let rafId = null
+let savePrefTimer = null
+
+function debouncedSavePrefs() {
+  clearTimeout(savePrefTimer)
+  savePrefTimer = setTimeout(() => store.savePreferences(), 1000)
+}
 
 function startWordHighlightLoop() {
   if (rafId) return
@@ -260,9 +266,15 @@ function startWordHighlightLoop() {
     if (idx !== store.currentVerseIndex) {
       store.currentVerseIndex = idx
       store.currentWordIndex = -1
-      store.savePreferences()
+      debouncedSavePrefs()
     }
     store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
+    // Update progress from RAF for smoother bar movement
+    const dur = audio.duration.value
+    if (dur > 0) {
+      audio.progress.value = (timeMs / dur) * 100
+      audio.currentTimeMs.value = timeMs
+    }
     rafId = requestAnimationFrame(tick)
   }
   rafId = requestAnimationFrame(tick)
@@ -298,7 +310,7 @@ audio.onTimeUpdate((timeMs) => {
     if (idx !== store.currentVerseIndex) {
       store.currentVerseIndex = idx
       store.currentWordIndex = -1
-      store.savePreferences()
+      debouncedSavePrefs()
     }
     if (store.wordHighlight) {
       store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
@@ -587,8 +599,7 @@ onBeforeUnmount(() => {
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingBottom: controlsVisible
           ? controlsHeight + 'px'
-          : 'max(1rem, env(safe-area-inset-bottom, 0px))',
-        transition: 'padding 0.3s ease'
+          : 'max(1rem, env(safe-area-inset-bottom, 0px))'
       }"
       @click="onMainClick"
       @touchstart.passive="onTouchStart"

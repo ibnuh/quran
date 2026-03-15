@@ -102,6 +102,7 @@ export const usePlayerStore = defineStore('player', {
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
         }
+        this.computeWordCounts()
         this.isLoading = false
         return
       }
@@ -159,6 +160,7 @@ export const usePlayerStore = defineStore('player', {
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
         }
+        this.computeWordCounts()
 
         // Cache the result
         cacheSurah(this.currentSurahNum, this.currentTranslation, this.currentReciter, {
@@ -229,19 +231,32 @@ export const usePlayerStore = defineStore('player', {
     },
 
     getVerseIndexAtTime(timeMs) {
-      for (let i = this.verseTimings.length - 1; i >= 0; i--) {
-        if (timeMs >= this.verseTimings[i].timestampFrom) {
-          return i
+      const timings = this.verseTimings
+      if (timings.length === 0) return 0
+      let lo = 0, hi = timings.length - 1
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (timings[mid].timestampFrom <= timeMs) {
+          lo = mid + 1
+        } else {
+          hi = mid - 1
         }
       }
-      return 0
+      return Math.max(0, hi)
+    },
+
+    // Pre-compute word counts per verse (call after loading verses)
+    computeWordCounts() {
+      this._wordCounts = this.verses.map(v =>
+        v.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w)).length - 1
+      )
     },
 
     getWordIndexAtTime(timeMs, verseIndex) {
       const timing = this.verseTimings[verseIndex]
       if (!timing || !timing.segments || timing.segments.length === 0) return -1
-      const verse = this.verses[verseIndex]
-      const maxWordIndex = verse ? verse.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w)).length - 1 : -1
+      const maxWordIndex = this._wordCounts?.[verseIndex] ?? -1
+      if (maxWordIndex < 0) return -1
       for (let i = timing.segments.length - 1; i >= 0; i--) {
         const seg = timing.segments[i]
         if (timeMs >= seg.from) {

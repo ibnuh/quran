@@ -47,8 +47,8 @@ const hasWordTimings = computed(() => {
     </div>
 
     <!-- Verse -->
-    <div v-else-if="store.currentVerse">
-      <Transition name="verse-fade" mode="out-in">
+    <div v-else-if="store.currentVerse" class="relative">
+      <Transition name="verse-fade">
         <div :key="store.currentSurahNum + '-' + store.currentVerseIndex">
           <div v-if="store.showBismillah" class="mb-8">
             <p class="text-xl sm:text-2xl text-accent" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
@@ -103,17 +103,17 @@ const hasWordTimings = computed(() => {
 
 
 .verse-fade-enter-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 .verse-fade-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.1s ease;
+  position: absolute;
+  inset: 0;
 }
 .verse-fade-enter-from {
   opacity: 0;
-  transform: translateY(8px);
 }
 .verse-fade-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
 }
 </style>

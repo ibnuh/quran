@@ -151,7 +151,6 @@ function onTouchEnd() {
   height: 100%;
   border-radius: 3px;
   background: var(--color-primary);
-  transition: width 0.1s linear;
   pointer-events: none;
 }
 .progress-thumb {
