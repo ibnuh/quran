@@ -69,7 +69,6 @@ export default defineConfig({
         theme_color: '#1a6b4b',
         background_color: '#f8f6f1',
         display: 'standalone',
-        orientation: 'any',
         start_url: '/',
         categories: ['education', 'lifestyle'],
         lang: 'en',
