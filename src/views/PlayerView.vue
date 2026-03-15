@@ -37,11 +37,21 @@ onBeforeUnmount(() => {
   window.removeEventListener('offline', onOffline)
 })
 
-// -- Mobile tip: recommend auto-hide --
+// -- Mobile tip: recommend portrait + auto-hide in landscape --
+const tipMessage = ref('')
+
 function checkMobileTip() {
   if (tipDismissed.value) return
-  const isMobile = window.innerWidth < 768
-  if (isMobile && !store.autoHideControls) {
+  const isMobile = window.innerWidth < 768 || window.innerHeight < 768
+  const isLandscape = window.innerWidth > window.innerHeight
+
+  if (isMobile && isLandscape) {
+    tipMessage.value = store.autoHideControls
+      ? 'Rotate to portrait for the best reading experience'
+      : 'Rotate to portrait and enable auto-hide for the best experience'
+    showMobileTip.value = true
+  } else if (isMobile && !store.autoHideControls) {
+    tipMessage.value = 'Enable auto-hide for a better mobile experience'
     showMobileTip.value = true
   } else {
     showMobileTip.value = false
@@ -49,7 +59,7 @@ function checkMobileTip() {
 }
 
 function applyMobileTip() {
-  store.setAutoHideControls(true)
+  if (!store.autoHideControls) store.setAutoHideControls(true)
   showMobileTip.value = false
   tipDismissed.value = true
 }
@@ -59,6 +69,7 @@ function dismissMobileTip() {
   tipDismissed.value = true
 }
 
+let orientationCleanup = null
 watch(() => store.autoHideControls, () => checkMobileTip())
 
 // -- Auto-hide controls (YouTube-style) --
@@ -328,6 +339,12 @@ onMounted(async () => {
     if (timing) audio.seekTo(timing.timestampFrom)
   }
   checkMobileTip()
+  window.addEventListener('resize', checkMobileTip)
+  orientationCleanup = () => window.removeEventListener('resize', checkMobileTip)
+})
+
+onBeforeUnmount(() => {
+  if (orientationCleanup) orientationCleanup()
 })
 </script>
 
@@ -394,8 +411,9 @@ onMounted(async () => {
         <svg class="shrink-0 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
         </svg>
-        <p class="text-xs text-body flex-1">Enable auto-hide for a better mobile experience</p>
+        <p class="text-xs text-body flex-1">{{ tipMessage }}</p>
         <button
+          v-if="!store.autoHideControls"
           class="shrink-0 bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer"
           @click="applyMobileTip"
         >Enable</button>
