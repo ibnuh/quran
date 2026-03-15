@@ -102,10 +102,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
   <Teleport to="body">
     <Transition name="picker">
-      <div v-if="isOpen" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+      <div v-if="isOpen" class="fixed inset-0 z-[60] flex items-start sm:items-center justify-center">
         <div class="absolute inset-0 bg-black/40" @click="isOpen = false"></div>
 
-        <div class="relative bg-card w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col">
+        <div class="relative bg-card w-full sm:max-w-md sm:rounded-2xl rounded-b-2xl sm:rounded-2xl shadow-2xl max-h-[85dvh] flex flex-col">
           <div class="px-4 pt-4 pb-2">
             <input
               ref="inputRef"
@@ -224,10 +224,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   opacity: 0;
 }
 .picker-enter-from > :last-child {
-  transform: translateY(100%);
+  transform: translateY(-100%);
 }
 .picker-leave-to > :last-child {
-  transform: translateY(100%);
+  transform: translateY(-100%);
 }
 @media (min-width: 640px) {
   .picker-enter-from > :last-child {
