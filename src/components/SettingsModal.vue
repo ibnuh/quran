@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
       <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-sm h-full shadow-2xl">
-        <div class="bg-card h-full overflow-y-auto scrollable">
+        <div class="bg-card h-full overflow-y-auto scrollable" style="padding-left: env(safe-area-inset-left, 0px)">
           <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pb-4 border-b border-border" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">
             <h2 class="text-base font-semibold text-body">Settings</h2>
             <button
