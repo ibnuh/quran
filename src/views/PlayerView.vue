@@ -146,6 +146,19 @@ function resetHideTimer() {
 }
 
 function onMainTap() {
+  if (showSettings.value || showVerses.value || showShortcuts.value) return
+
+  const isMobileViewport = window.innerWidth < 768 || window.innerHeight < 768
+  if (isTouchDevice || isMobileViewport) {
+    if (controlsVisible.value) {
+      controlsVisible.value = false
+      clearTimeout(hideTimer)
+    } else {
+      showControls()
+    }
+    return
+  }
+
   if (!store.autoHideControls) return
   if (!controlsVisible.value) {
     showControls()
