@@ -143,9 +143,13 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-    <div class="text-center text-xs text-muted mt-1 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+  </div>
+
+  <!-- Verse info fills the safe area zone so it's not empty space -->
+  <div class="safe-area-bottom">
+    <span class="text-xs text-muted landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
       Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
-    </div>
+    </span>
   </div>
 </template>
 
@@ -181,5 +185,13 @@ function selectSpeed(speed) {
 .speed-pop-leave-to {
   opacity: 0;
   transform: scale(0.95) translateY(4px);
+}
+
+.safe-area-bottom {
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  height: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-top: 0.125rem;
 }
 </style>
