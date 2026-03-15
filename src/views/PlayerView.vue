@@ -513,7 +513,8 @@ onBeforeUnmount(() => {
 
     <main
       ref="mainRef"
-      class="flex-1 flex items-center justify-center px-4 overflow-y-auto scrollable cursor-pointer select-none pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]"
+      class="flex-1 flex items-center justify-center overflow-y-auto scrollable cursor-pointer select-none"
+      style="padding-left: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right)); padding-right: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));"
       @click="onMainClick"
       @touchstart.passive="onTouchStart"
       @touchend.passive="onTouchEnd"
