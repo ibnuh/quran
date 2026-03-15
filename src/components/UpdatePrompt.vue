@@ -25,7 +25,8 @@ onBeforeUnmount(() => window.removeEventListener('sw-update-available', onUpdate
   <Transition name="update-toast">
     <div
       v-if="show"
-      class="fixed top-18 lg:top-30 left-4 right-4 sm:left-auto sm:right-6 sm:w-80 z-30 bg-card border border-border rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3"
+      class="fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-80 z-30 bg-card border border-border rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3"
+      style="top: calc(var(--header-height, 4.5rem) + 0.5rem)"
     >
       <svg class="shrink-0 text-primary" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79s7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 2.48-.92 4.95-2.76 6.81-3.66 3.72-9.64 3.72-13.3.02s-3.67-9.69 0-13.41 9.64-3.72 13.3 0L21 2.78V10.12z"/>

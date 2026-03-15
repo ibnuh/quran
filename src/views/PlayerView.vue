@@ -21,6 +21,15 @@ const showVerses = ref(false)
 const showShortcuts = ref(false)
 const isOnline = ref(navigator.onLine)
 const mainRef = ref(null)
+const headerRef = ref(null)
+const headerHeight = ref(0)
+
+function updateHeaderHeight() {
+  if (headerRef.value) {
+    headerHeight.value = headerRef.value.offsetHeight
+    document.documentElement.style.setProperty('--header-height', headerHeight.value + 'px')
+  }
+}
 const showMobileTip = ref(false)
 const tipDismissed = ref(false)
 
@@ -28,11 +37,18 @@ const tipDismissed = ref(false)
 function onOnline() { isOnline.value = true }
 function onOffline() { isOnline.value = false }
 
+let headerObserver = null
 onMounted(() => {
   window.addEventListener('online', onOnline)
   window.addEventListener('offline', onOffline)
+  if (headerRef.value) {
+    headerObserver = new ResizeObserver(updateHeaderHeight)
+    headerObserver.observe(headerRef.value)
+    updateHeaderHeight()
+  }
 })
 onBeforeUnmount(() => {
+  if (headerObserver) headerObserver.disconnect()
   window.removeEventListener('online', onOnline)
   window.removeEventListener('offline', onOffline)
 })
@@ -499,6 +515,7 @@ onBeforeUnmount(() => {
     </Transition>
 
     <div
+      ref="headerRef"
       class="transition-all duration-300 z-40 relative"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
     >
@@ -550,7 +567,8 @@ onBeforeUnmount(() => {
     <Transition name="tip">
       <div
         v-if="showMobileTip"
-        class="fixed top-18 left-4 right-4 z-30 flex items-center gap-3 bg-card border border-border rounded-xl shadow-xl px-4 py-3 md:hidden"
+        class="fixed left-4 right-4 z-30 flex items-center gap-3 bg-card border border-border rounded-xl shadow-xl px-4 py-3 md:hidden"
+        :style="{ top: (headerHeight + 8) + 'px' }"
       >
         <svg class="shrink-0 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
