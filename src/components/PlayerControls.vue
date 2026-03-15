@@ -143,7 +143,7 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-    <div class="text-center text-xs text-muted mt-1 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+    <div class="text-center text-xs text-muted mt-3 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
       Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
     </div>
   </div>

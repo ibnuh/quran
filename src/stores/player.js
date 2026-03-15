@@ -221,10 +221,13 @@ export const usePlayerStore = defineStore('player', {
 
     getWordIndexAtTime(timeMs, verseIndex) {
       const timing = this.verseTimings[verseIndex]
-      if (!timing || !timing.segments) return -1
+      if (!timing || !timing.segments || timing.segments.length === 0) return -1
+      const verse = this.verses[verseIndex]
+      const maxWordIndex = verse ? verse.text.split(/\s+/).filter(Boolean).length - 1 : -1
       for (let i = timing.segments.length - 1; i >= 0; i--) {
-        if (timeMs >= timing.segments[i].from) {
-          return timing.segments[i].wordIndex
+        const seg = timing.segments[i]
+        if (timeMs >= seg.from) {
+          return Math.min(seg.wordIndex, maxWordIndex)
         }
       }
       return -1

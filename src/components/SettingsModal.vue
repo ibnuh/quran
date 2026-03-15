@@ -4,7 +4,7 @@ import { usePlayerStore } from '../stores/player.js'
 import SearchSelect from './SearchSelect.vue'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
-import TRANSLATIONS from '../data/translations.js'
+import TRANSLATIONS, { LANGUAGES } from '../data/translations.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import THEMES from '../data/themes.js'
 
@@ -13,14 +13,21 @@ const emit = defineEmits(['close'])
 const panelRef = ref(null)
 let previouslyFocused = null
 
+const selectedLanguage = ref(store.currentTranslation.split('.')[0] || 'en')
+
 const surahOptions = computed(() =>
   SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName} - ${s.englishNameTranslation}` }))
 )
 const reciterOptions = computed(() =>
   RECITERS.map(r => ({ value: r.id, label: r.name }))
 )
+const languageOptions = computed(() =>
+  LANGUAGES.filter(l => TRANSLATIONS.some(t => t.language === l.code))
+    .map(l => ({ value: l.code, label: l.name }))
+)
 const translationOptions = computed(() =>
-  TRANSLATIONS.map(t => ({ value: t.identifier, label: t.englishName }))
+  TRANSLATIONS.filter(t => t.language === selectedLanguage.value)
+    .map(t => ({ value: t.identifier, label: t.englishName }))
 )
 const fontOptions = computed(() =>
   ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` }))
@@ -32,6 +39,14 @@ const REPEAT_MODES = [
   { value: 'verse', label: 'Verse' },
   { value: 'surah', label: 'Surah' }
 ]
+
+function onLanguageChange(code) {
+  selectedLanguage.value = code
+  const firstTranslation = TRANSLATIONS.find(t => t.language === code)
+  if (firstTranslation) {
+    store.setTranslation(firstTranslation.identifier)
+  }
+}
 
 function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
@@ -97,6 +112,15 @@ onBeforeUnmount(() => {
                 :options="reciterOptions"
                 placeholder="Search reciter..."
                 @update:model-value="store.setReciter($event)"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-muted mb-1.5">Translation Language</label>
+              <SearchSelect
+                :model-value="selectedLanguage"
+                :options="languageOptions"
+                placeholder="Search language..."
+                @update:model-value="onLanguageChange($event)"
               />
             </div>
             <div>
@@ -171,7 +195,7 @@ onBeforeUnmount(() => {
 
             <div class="border-t border-border pt-5">
               <label class="block text-sm font-medium text-muted mb-3">Theme</label>
-              <div class="grid grid-cols-5 gap-2">
+              <div class="grid grid-cols-5 gap-2 gap-y-3">
                 <button
                   v-for="theme in THEMES"
                   :key="theme.id"

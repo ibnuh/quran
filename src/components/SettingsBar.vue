@@ -22,8 +22,10 @@ const surahOptions = computed(() =>
 const reciterOptions = computed(() =>
   RECITERS.map(r => ({ value: r.id, label: r.name }))
 )
+const currentLang = computed(() => store.currentTranslation.split('.')[0] || 'en')
 const translationOptions = computed(() =>
-  TRANSLATIONS.map(t => ({ value: t.identifier, label: t.englishName }))
+  TRANSLATIONS.filter(t => t.language === currentLang.value)
+    .map(t => ({ value: t.identifier, label: t.englishName }))
 )
 const fontOptions = computed(() =>
   ARABIC_FONTS.map(f => ({ value: f.id, label: f.name }))

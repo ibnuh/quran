@@ -106,6 +106,78 @@ const THEMES = [
       arabic: '#e8f0e8',
       border: '#2e4a2e'
     }
+  },
+  {
+    id: 'ocean',
+    name: 'Ocean',
+    icon: 'wave',
+    colors: {
+      primary: '#2a8fa4',
+      primaryDark: '#1d6e80',
+      primaryLight: '#e4f4f7',
+      accent: '#e0a040',
+      accentLight: '#faf0d8',
+      surface: '#f0f7f9',
+      card: '#ffffff',
+      body: '#1e3a44',
+      muted: '#5a8a96',
+      arabic: '#122830',
+      border: '#c8e0e6'
+    }
+  },
+  {
+    id: 'rose',
+    name: 'Rose',
+    icon: 'flower',
+    colors: {
+      primary: '#b04060',
+      primaryDark: '#8a2e48',
+      primaryLight: '#fce8ee',
+      accent: '#d4a050',
+      accentLight: '#faf0dc',
+      surface: '#fdf5f7',
+      card: '#ffffff',
+      body: '#3a1a24',
+      muted: '#9a7080',
+      arabic: '#2a1018',
+      border: '#f0d8e0'
+    }
+  },
+  {
+    id: 'sunset',
+    name: 'Sunset',
+    icon: 'sun',
+    colors: {
+      primary: '#d47830',
+      primaryDark: '#b06020',
+      primaryLight: '#2a1f18',
+      accent: '#e0a850',
+      accentLight: '#2a2418',
+      surface: '#1a1210',
+      card: '#261c16',
+      body: '#e8d8c8',
+      muted: '#a08878',
+      arabic: '#f0e4d8',
+      border: '#3a2e24'
+    }
+  },
+  {
+    id: 'lavender',
+    name: 'Lavender',
+    icon: 'flower',
+    colors: {
+      primary: '#7a5aaf',
+      primaryDark: '#5e4090',
+      primaryLight: '#f0eaf8',
+      accent: '#c8a050',
+      accentLight: '#f5ecd8',
+      surface: '#f6f2fb',
+      card: '#ffffff',
+      body: '#2e2040',
+      muted: '#887aa0',
+      arabic: '#1e1430',
+      border: '#e0d4ef'
+    }
   }
 ]
 
