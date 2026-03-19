@@ -17,7 +17,7 @@ const store = usePlayerStore()
 const showFontSettings = ref(false)
 
 const surahOptions = computed(() =>
-  SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName}` }))
+  SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName} - ${s.englishNameTranslation}` }))
 )
 const reciterOptions = computed(() =>
   RECITERS.map(r => ({ value: r.id, label: r.name }))
