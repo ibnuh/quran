@@ -24,11 +24,12 @@ const isLastVerse = computed(() =>
 <template>
   <div class="text-center w-full" :style="{ maxWidth: store.contentWidth + 'rem' }">
     <!-- Skeleton loading -->
-    <div v-if="store.isLoading" class="animate-pulse">
+    <div v-if="store.isLoading" class="animate-pulse" style="min-height: 40vh">
       <div class="h-4 w-24 bg-border/50 rounded mx-auto mb-8"></div>
-      <div class="space-y-4 mb-6" dir="rtl">
-        <div class="h-10 bg-border/40 rounded-lg w-[90%] mx-auto"></div>
-        <div class="h-10 bg-border/40 rounded-lg w-[70%] mx-auto"></div>
+      <div class="space-y-5 mb-6" dir="rtl">
+        <div class="h-12 bg-border/40 rounded-lg w-[90%] mx-auto"></div>
+        <div class="h-12 bg-border/40 rounded-lg w-[70%] mx-auto"></div>
+        <div class="h-12 bg-border/40 rounded-lg w-[50%] mx-auto"></div>
       </div>
       <div class="h-8 w-8 bg-border/30 rounded-full mx-auto mb-5"></div>
       <div class="space-y-2">
@@ -51,7 +52,7 @@ const isLastVerse = computed(() =>
     </div>
 
     <!-- Verse -->
-    <div v-else-if="store.currentVerse" class="relative">
+    <div v-else-if="store.currentVerse" class="relative" style="min-height: 40vh">
       <Transition name="verse-fade">
         <div :key="store.currentSurahNum + '-' + store.currentVerseIndex">
           <div v-if="store.showBismillah" class="bismillah mb-8">
@@ -75,7 +76,7 @@ const isLastVerse = computed(() =>
             class="leading-[2] text-arabic mb-5"
             dir="rtl"
             lang="ar"
-            :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem' }"
+            :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
           >
             {{ store.currentVerse.text }}
           </p>

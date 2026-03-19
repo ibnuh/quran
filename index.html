@@ -46,7 +46,7 @@
 
   <!-- Fonts -->
   <link rel="preload" href="https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2" as="font" type="font/woff2" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Inter:wght@300;400;500;600;700&display=fallback" rel="stylesheet">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -86,11 +86,14 @@
       src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2');
       font-weight: 400;
       font-style: normal;
-      font-display: swap;
+      font-display: fallback;
     }
   </style>
 </head>
 <body>
+  <script>
+    try{var p=JSON.parse(localStorage.getItem('quran-player-prefs'));if(p&&p.theme&&p.theme!=='light')document.documentElement.setAttribute('data-theme',p.theme)}catch(e){}
+  </script>
   <div id="app"></div>
   <script type="module" src="/src/main.js"></script>
 </body>

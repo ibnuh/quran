@@ -24,8 +24,8 @@ const isOnline = ref(navigator.onLine)
 const mainRef = ref(null)
 const headerRef = ref(null)
 const controlsRef = ref(null)
-const headerHeight = ref(0)
-const controlsHeight = ref(0)
+const headerHeight = ref(56)
+const controlsHeight = ref(140)
 
 const activeThemeColors = computed(() =>
   THEMES.find(t => t.id === store.theme)?.colors || THEMES[0].colors
@@ -671,6 +671,7 @@ onBeforeUnmount(() => {
       ref="mainRef"
       class="h-full flex flex-col overflow-y-auto scrollable cursor-pointer select-none"
       :style="{
+        transition: 'padding-top 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
         paddingTop: ((headerHeight || 16) + 24) + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
         paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',

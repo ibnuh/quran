@@ -20,6 +20,16 @@ function detectTranslationFromLocale() {
 
 let loadAbortController = null
 
+function getResponsiveDefaults() {
+  const w = window.innerWidth
+  if (w < 480) return { arabicFontSize: 1.8, translationFontSize: 0.95, contentWidth: 100 }
+  if (w < 768) return { arabicFontSize: 2.0, translationFontSize: 1.0, contentWidth: 95 }
+  if (w < 1024) return { arabicFontSize: 2.5, translationFontSize: 1.1, contentWidth: 85 }
+  return { arabicFontSize: 3.2, translationFontSize: 1.3, contentWidth: 80 }
+}
+
+const _responsiveDefaults = getResponsiveDefaults()
+
 export const usePlayerStore = defineStore('player', {
   state: () => ({
     currentSurahNum: 1,
@@ -35,9 +45,9 @@ export const usePlayerStore = defineStore('player', {
     // Per-verse audio (alquran.cloud fallback)
     audioUrls: [],
     arabicFont: 'amiri-quran',
-    arabicFontSize: 2.0,
-    translationFontSize: 1.0,
-    contentWidth: 95,
+    arabicFontSize: _responsiveDefaults.arabicFontSize,
+    translationFontSize: _responsiveDefaults.translationFontSize,
+    contentWidth: _responsiveDefaults.contentWidth,
     theme: 'light',
     autoHideControls: true,
     currentWordIndex: -1,
@@ -407,28 +417,10 @@ export const usePlayerStore = defineStore('player', {
     },
 
     applyResponsiveDefaults() {
-      const w = window.innerWidth
-      if (w < 480) {
-        // Small mobile
-        this.arabicFontSize = 1.8
-        this.translationFontSize = 0.95
-        this.contentWidth = 100
-      } else if (w < 768) {
-        // Large mobile
-        this.arabicFontSize = 2.0
-        this.translationFontSize = 1.0
-        this.contentWidth = 95
-      } else if (w < 1024) {
-        // Tablet
-        this.arabicFontSize = 2.5
-        this.translationFontSize = 1.1
-        this.contentWidth = 85
-      } else {
-        // Desktop
-        this.arabicFontSize = 3.2
-        this.translationFontSize = 1.3
-        this.contentWidth = 80
-      }
+      const d = getResponsiveDefaults()
+      this.arabicFontSize = d.arabicFontSize
+      this.translationFontSize = d.translationFontSize
+      this.contentWidth = d.contentWidth
     },
 
     loadPreferences() {
