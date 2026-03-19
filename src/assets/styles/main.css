@@ -142,12 +142,18 @@
   --color-border: #e0d4ef;
 }
 
+/* Motion curves */
+:root {
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Smooth theme transitions */
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--color-surface);
   color: var(--color-body);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
 }
 
 html {

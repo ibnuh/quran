@@ -221,13 +221,17 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   font-weight: 500;
 }
 
-.picker-enter-active,
-.picker-leave-active {
-  transition: opacity 0.2s ease;
+.picker-enter-active {
+  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.picker-enter-active > :last-child,
+.picker-leave-active {
+  transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.picker-enter-active > :last-child {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .picker-leave-active > :last-child {
-  transition: transform 0.25s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .picker-enter-from,
 .picker-leave-to {

@@ -78,12 +78,26 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.shortcuts-enter-active,
+.shortcuts-enter-active {
+  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
 .shortcuts-leave-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.shortcuts-enter-active > :last-child {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.shortcuts-leave-active > :last-child {
+  transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .shortcuts-enter-from,
 .shortcuts-leave-to {
   opacity: 0;
+}
+.shortcuts-enter-from > :last-child {
+  transform: scale(0.95);
+}
+.shortcuts-leave-to > :last-child {
+  transform: scale(0.95);
 }
 </style>

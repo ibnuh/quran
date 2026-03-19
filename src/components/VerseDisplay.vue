@@ -77,7 +77,7 @@ const hasWordTimings = computed(() => {
           </p>
 
           <span
-            class="inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mt-3 mb-5"
+            class="verse-badge inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mt-3 mb-5"
           >
             {{ store.currentVerse.number }}
           </span>
@@ -93,26 +93,36 @@ const hasWordTimings = computed(() => {
 
 <style scoped>
 .word-span {
-  transition: color 0.15s ease, text-shadow 0.15s ease;
+  transition: color 0.2s cubic-bezier(0.25, 1, 0.5, 1), text-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   border-radius: 0.25rem;
 }
 .word-active {
   color: var(--color-primary);
-  text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .verse-fade-enter-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .verse-fade-leave-active {
-  transition: opacity 0.1s ease;
+  transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1);
   position: absolute;
   inset: 0;
 }
 .verse-fade-enter-from {
   opacity: 0;
+  transform: translateY(8px);
 }
 .verse-fade-leave-to {
   opacity: 0;
+}
+
+.verse-badge {
+  animation: badge-in 0.4s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation-delay: 0.15s;
+}
+@keyframes badge-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>

@@ -170,15 +170,20 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s cubic-bezier(0.25, 1, 0.5, 1), transform 0.1s ease;
 }
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+.header-btn:active {
+  transform: scale(0.93);
+}
 
-.theme-pop-enter-active,
+.theme-pop-enter-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .theme-pop-leave-active {
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .theme-pop-enter-from,
 .theme-pop-leave-to {

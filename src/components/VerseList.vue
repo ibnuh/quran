@@ -90,13 +90,17 @@ watch(() => store.currentVerseIndex, async () => {
 </template>
 
 <style scoped>
-.panel-enter-active,
-.panel-leave-active {
-  transition: opacity 0.2s ease;
+.panel-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.panel-enter-active > :last-child,
+.panel-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.panel-enter-active > :last-child {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .panel-leave-active > :last-child {
-  transition: transform 0.25s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .panel-enter-from,
 .panel-leave-to {

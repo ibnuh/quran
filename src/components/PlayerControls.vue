@@ -104,12 +104,14 @@ function selectSpeed(speed) {
 
       <!-- Center: Play button -->
       <button
-        class="w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 shadow-md hover:bg-primary-dark hover:scale-105 active:scale-[0.97] transition-all duration-200 cursor-pointer shrink-0"
+        class="play-btn w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 cursor-pointer shrink-0"
         :aria-label="isPlaying ? 'Pause' : 'Play'"
         @click="emit('toggle-play')"
       >
-        <svg v-if="!isPlaying" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg v-else width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        <Transition name="play-icon" mode="out-in">
+          <svg v-if="!isPlaying" key="play" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg v-else key="pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </Transition>
       </button>
 
       <!-- Right group -->
@@ -166,6 +168,33 @@ function selectSpeed(speed) {
 </template>
 
 <style scoped>
+.play-btn {
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease, box-shadow 0.2s ease;
+}
+.play-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+.play-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.play-icon-enter-active,
+.play-icon-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.play-icon-enter-from {
+  opacity: 0;
+  transform: scale(0.7);
+}
+.play-icon-leave-to {
+  opacity: 0;
+  transform: scale(0.7);
+}
+
 .ctrl-btn {
   align-items: center;
   gap: 0.25rem;
@@ -179,11 +208,14 @@ function selectSpeed(speed) {
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s cubic-bezier(0.25, 1, 0.5, 1), color 0.15s ease, transform 0.1s ease;
 }
 .ctrl-btn:hover:not(:disabled) {
   background: var(--color-primary-light);
   color: var(--color-primary);
+}
+.ctrl-btn:active:not(:disabled) {
+  transform: scale(0.93);
 }
 .ctrl-btn:disabled {
   opacity: 0.3;
@@ -192,7 +224,7 @@ function selectSpeed(speed) {
 
 .speed-pop-enter-active,
 .speed-pop-leave-active {
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .speed-pop-enter-from,
 .speed-pop-leave-to {

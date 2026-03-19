@@ -131,7 +131,7 @@ function onTouchEnd() {
   border-radius: 3px;
   background: var(--color-border);
   position: relative;
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   transform-origin: center;
 }
 .progress-wrapper:hover .progress-track {
@@ -161,9 +161,9 @@ function onTouchEnd() {
   border-radius: 50%;
   background: var(--color-primary);
   transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   pointer-events: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 .progress-wrapper:hover .progress-thumb,
 .progress-thumb-active {

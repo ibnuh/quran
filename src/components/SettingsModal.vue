@@ -539,7 +539,7 @@ onBeforeUnmount(() => {
   background: var(--color-border);
   position: relative;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   flex-shrink: 0;
 }
 .toggle-switch::after {
@@ -552,7 +552,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   background: white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .toggle-switch:checked {
   background: var(--color-primary);
@@ -565,13 +565,17 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
-.settings-panel-enter-active,
-.settings-panel-leave-active {
-  transition: opacity 0.2s ease;
+.settings-panel-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.settings-panel-enter-active > :last-child,
+.settings-panel-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.settings-panel-enter-active > :last-child {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .settings-panel-leave-active > :last-child {
-  transition: transform 0.25s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .settings-panel-enter-from,
 .settings-panel-leave-to {

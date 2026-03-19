@@ -654,7 +654,8 @@ onBeforeUnmount(() => {
 
     <div
       ref="headerRef"
-      class="absolute top-0 left-0 right-0 z-40 transition-all duration-300"
+      class="absolute top-0 left-0 right-0 z-40"
+      :style="{ transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
     >
       <AppHeader
@@ -682,7 +683,8 @@ onBeforeUnmount(() => {
 
     <div
       ref="controlsRef"
-      class="fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm border-t border-border"
+      class="fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-sm border-t border-border"
+      :style="{ transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }"
       style="padding-bottom: env(safe-area-inset-bottom, 0px)"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
@@ -739,7 +741,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .offline-bar-enter-active,
 .offline-bar-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .offline-bar-enter-from,
 .offline-bar-leave-to {
@@ -749,9 +751,11 @@ onBeforeUnmount(() => {
   padding-bottom: 0;
 }
 
-.tip-enter-active,
+.tip-enter-active {
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
 .tip-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .tip-enter-from,
 .tip-leave-to {
