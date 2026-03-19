@@ -52,6 +52,7 @@ export const usePlayerStore = defineStore('player', {
     autoHideControls: true,
     currentWordIndex: -1,
     wordHighlight: true,
+    highlightStyle: 'glow', // 'glow' | 'background' | 'underline' | 'minimal'
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     playbackSpeed: 1,
     animations: true,
@@ -305,6 +306,11 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setHighlightStyle(style) {
+      this.highlightStyle = style
+      this.savePreferences()
+    },
+
     setRepeatMode(mode) {
       this.repeatMode = mode
       this.savePreferences()
@@ -409,6 +415,7 @@ export const usePlayerStore = defineStore('player', {
           theme: this.theme,
           autoHideControls: this.autoHideControls,
           wordHighlight: this.wordHighlight,
+          highlightStyle: this.highlightStyle,
           repeatMode: this.repeatMode,
           playbackSpeed: this.playbackSpeed,
           animations: this.animations
@@ -460,6 +467,7 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
         if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
+        if (prefs.highlightStyle) this.highlightStyle = prefs.highlightStyle
         if (prefs.repeatMode) this.repeatMode = prefs.repeatMode
         if (prefs.playbackSpeed) this.playbackSpeed = prefs.playbackSpeed
         if (prefs.animations !== undefined) {

@@ -102,6 +102,12 @@ const fontOptions = computed(() =>
   ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` }))
 )
 
+const HIGHLIGHT_STYLES = [
+  { value: 'glow', label: 'Glow' },
+  { value: 'background', label: 'Background' },
+  { value: 'underline', label: 'Underline' },
+  { value: 'minimal', label: 'Minimal' }
+]
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const REPEAT_MODES = [
   { value: 'none', label: 'Off' },
@@ -336,6 +342,18 @@ onBeforeUnmount(() => {
                   @change="store.setWordHighlight($event.target.checked)"
                 />
               </label>
+              <div v-if="store.wordHighlight && store.playbackMode !== 'verse'">
+                <label class="block text-sm font-medium text-muted mb-2">Highlight Style</label>
+                <div class="flex gap-1.5">
+                  <button
+                    v-for="style in HIGHLIGHT_STYLES"
+                    :key="style.value"
+                    class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                    :class="store.highlightStyle === style.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                    @click="store.setHighlightStyle(style.value)"
+                  >{{ style.label }}</button>
+                </div>
+              </div>
               <label class="flex items-center justify-between cursor-pointer">
                 <div>
                   <span class="text-sm font-medium text-muted">Animations</span>

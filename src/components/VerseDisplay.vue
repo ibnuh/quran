@@ -69,7 +69,12 @@ const isLastVerse = computed(() =>
             :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
           ><template v-for="(word, i) in verseWords" :key="i"><span
               class="word-span"
-              :class="{ 'word-active': i === store.currentWordIndex }"
+              :class="{
+                'word-active-glow': i === store.currentWordIndex && store.highlightStyle === 'glow',
+                'word-active-bg': i === store.currentWordIndex && store.highlightStyle === 'background',
+                'word-active-underline': i === store.currentWordIndex && store.highlightStyle === 'underline',
+                'word-active-minimal': i === store.currentWordIndex && store.highlightStyle === 'minimal'
+              }"
             >{{ word }}</span>{{ i < verseWords.length - 1 ? ' ' : '' }}</template></p>
           <p
             v-else
@@ -143,15 +148,41 @@ const isLastVerse = computed(() =>
 
 /* -- Word highlight -- */
 .word-span {
-  transition: color 0.2s cubic-bezier(0.25, 1, 0.5, 1), text-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    text-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    text-decoration-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   border-radius: 0.25rem;
   padding-inline: 0.08em;
   margin-inline: -0.08em;
+  text-decoration-color: transparent;
 }
-.word-active {
+
+/* Glow: color + text-shadow + subtle background */
+.word-active-glow {
   color: var(--color-primary);
   text-shadow: 0 0 24px color-mix(in srgb, var(--color-primary) 35%, transparent);
   background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+/* Background: strong tinted background */
+.word-active-bg {
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+/* Underline: color + thick underline */
+.word-active-underline {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--color-primary);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.15em;
+}
+
+/* Minimal: just a color change */
+.word-active-minimal {
+  color: var(--color-primary);
 }
 
 /* -- Verse transition (between verses) -- */
