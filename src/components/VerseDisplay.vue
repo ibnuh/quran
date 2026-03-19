@@ -81,7 +81,7 @@ const isLastVerse = computed(() =>
           </p>
 
           <span
-            class="verse-badge inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mt-3 mb-5"
+            class="verse-badge inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mt-4 mb-5"
           >
             {{ store.currentVerse.number }}
           </span>
@@ -92,9 +92,9 @@ const isLastVerse = computed(() =>
 
           <div v-if="isLastVerse" class="surah-end mt-8">
             <div class="flex items-center gap-3 justify-center">
-              <div class="h-px w-12 bg-border"></div>
+              <div class="h-px w-16 bg-border"></div>
               <div class="w-1.5 h-1.5 bg-accent/60 rotate-45 rounded-[1px]"></div>
-              <div class="h-px w-12 bg-border"></div>
+              <div class="h-px w-16 bg-border"></div>
             </div>
             <p class="text-[0.65rem] text-muted/50 mt-3">
               End of {{ store.currentSurah?.englishName }}

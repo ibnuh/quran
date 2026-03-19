@@ -55,7 +55,7 @@ function selectSpeed(speed) {
 </script>
 
 <template>
-  <div class="px-4 sm:px-12 pb-0 pt-2 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+  <div class="px-4 sm:px-12 pb-1 pt-3 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
@@ -161,7 +161,7 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-    <div class="text-center text-xs text-muted mt-3 mb-2 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+    <div class="text-center text-xs text-muted mt-2 mb-3 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
       Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
     </div>
   </div>

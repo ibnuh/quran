@@ -109,7 +109,7 @@ function onTouchEnd() {
         :style="{ left: progress + '%' }"
       ></div>
     </div>
-    <div class="flex justify-between mt-1" :class="durationMs > 0 ? '' : 'invisible'">
+    <div class="flex justify-between mt-1.5" :class="durationMs > 0 ? '' : 'invisible'">
       <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(currentTimeMs) }}</span>
       <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(durationMs) }}</span>
     </div>

@@ -50,7 +50,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
   <header class="flex items-center justify-between px-3 pb-2 landscape-compact:pb-1 bg-primary text-white pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]" style="padding-top: max(0.5rem, env(safe-area-inset-top, 0px))">
     <div class="flex items-center gap-1">
       <button
-        class="flex header-btn"
+        class="flex header-btn shrink-0"
         aria-label="Settings"
         @click="handleSettingsClick"
       >
@@ -71,7 +71,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       </button>
     </div>
 
-    <div class="text-center flex-1 min-w-0 px-2">
+    <div class="text-center flex-1 min-w-0 px-3">
       <h1
         class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate"
         :title="store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : ''"
