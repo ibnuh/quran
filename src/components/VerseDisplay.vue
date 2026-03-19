@@ -73,7 +73,9 @@ const isLastVerse = computed(() =>
                 'word-active-glow': i === store.currentWordIndex && store.highlightStyle === 'glow',
                 'word-active-bg': i === store.currentWordIndex && store.highlightStyle === 'background',
                 'word-active-underline': i === store.currentWordIndex && store.highlightStyle === 'underline',
-                'word-active-minimal': i === store.currentWordIndex && store.highlightStyle === 'minimal'
+                'word-active-minimal': i === store.currentWordIndex && store.highlightStyle === 'minimal',
+                'word-active-sweep': i === store.currentWordIndex && store.highlightStyle === 'sweep',
+                'word-read': i < store.currentWordIndex && store.highlightStyle === 'sweep'
               }"
             >{{ word }}</span>{{ i < verseWords.length - 1 ? ' ' : '' }}</template></p>
           <p
@@ -183,6 +185,31 @@ const isLastVerse = computed(() =>
 /* Minimal: just a color change */
 .word-active-minimal {
   color: var(--color-primary);
+}
+
+/* Sweep: running highlight, past words stay colored */
+.word-read {
+  color: var(--color-primary);
+  opacity: 0.55;
+}
+.word-active-sweep {
+  color: var(--color-primary);
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--color-primary) 18%, transparent),
+    color-mix(in srgb, var(--color-primary) 6%, transparent)
+  );
+  animation: sweep-in 0.25s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+@keyframes sweep-in {
+  from {
+    background-size: 0% 100%;
+    background-position: right;
+  }
+  to {
+    background-size: 100% 100%;
+    background-position: right;
+  }
 }
 
 /* -- Verse transition (between verses) -- */
