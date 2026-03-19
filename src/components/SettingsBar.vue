@@ -185,9 +185,12 @@ const fontOptions = computed(() =>
   cursor: pointer;
 }
 
-.bar-enter-active,
+.bar-enter-active {
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
+}
 .bar-leave-active {
-  transition: all 0.25s ease;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   overflow: hidden;
 }
 .bar-enter-from,
@@ -201,9 +204,12 @@ const fontOptions = computed(() =>
   opacity: 1;
 }
 
-.expand-enter-active,
+.expand-enter-active {
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
+}
 .expand-leave-active {
-  transition: all 0.2s ease;
+  transition: all 0.15s cubic-bezier(0.25, 1, 0.5, 1);
   overflow: hidden;
 }
 .expand-enter-from,

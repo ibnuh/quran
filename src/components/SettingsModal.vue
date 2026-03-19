@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
                 <button
                   v-for="theme in THEMES"
                   :key="theme.id"
-                  class="flex flex-col items-center gap-1.5 p-2 rounded-lg transition-colors cursor-pointer"
+                  class="theme-swatch flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-pointer"
                   :class="store.theme === theme.id ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
                   :aria-label="'Select ' + theme.name + ' theme'"
                   @click="store.setTheme(theme.id)"
@@ -503,6 +503,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.theme-swatch {
+  transition: background 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.theme-swatch:active {
+  transform: scale(0.95);
+}
+
 .range-field {
   -webkit-appearance: none;
   appearance: none;

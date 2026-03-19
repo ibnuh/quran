@@ -14,16 +14,16 @@ defineEmits(['select'])
 <template>
   <button
     type="button"
-    class="flex gap-3 p-4 rounded-lg cursor-pointer transition-all duration-200 bg-card border items-start w-full text-left"
+    class="verse-item flex gap-3 p-4 rounded-lg cursor-pointer bg-card border items-start w-full text-left"
     :class="isActive
-      ? 'border-primary bg-primary-light'
+      ? 'border-primary bg-primary-light border-l-[3px]'
       : 'border-transparent hover:border-border hover:shadow-sm'"
     @click="$emit('select')"
   >
     <div
-      class="shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-semibold mt-1"
+      class="verse-badge shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-semibold mt-1"
       :class="isActive
-        ? 'bg-primary text-white border-primary'
+        ? 'bg-primary text-white border-primary badge-active'
         : 'bg-surface text-muted border-border'"
     >{{ verse.number }}</div>
     <div class="flex-1 min-w-0">
@@ -36,3 +36,15 @@ defineEmits(['select'])
     </div>
   </button>
 </template>
+
+<style scoped>
+.verse-item {
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.verse-badge {
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.badge-active {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+</style>

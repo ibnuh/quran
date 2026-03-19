@@ -15,6 +15,10 @@ const hasWordTimings = computed(() => {
   const timing = store.verseTimings[store.currentVerseIndex]
   return timing && timing.segments && timing.segments.length > 0
 })
+
+const isLastVerse = computed(() =>
+  store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
+)
 </script>
 
 <template>
@@ -50,7 +54,7 @@ const hasWordTimings = computed(() => {
     <div v-else-if="store.currentVerse" class="relative">
       <Transition name="verse-fade">
         <div :key="store.currentSurahNum + '-' + store.currentVerseIndex">
-          <div v-if="store.showBismillah" class="mb-8">
+          <div v-if="store.showBismillah" class="bismillah mb-8">
             <p class="text-xl sm:text-2xl text-accent" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
               {{"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}}
             </p>
@@ -85,6 +89,17 @@ const hasWordTimings = computed(() => {
           <p class="leading-relaxed text-muted font-light mx-auto" :style="{ fontSize: store.translationFontSize + 'rem', maxWidth: (store.contentWidth * 0.75) + 'rem' }">
             {{ store.currentTranslationVerse?.text }}
           </p>
+
+          <div v-if="isLastVerse" class="surah-end mt-8">
+            <div class="flex items-center gap-3 justify-center">
+              <div class="h-px w-12 bg-border"></div>
+              <div class="w-1.5 h-1.5 bg-accent/60 rotate-45 rounded-[1px]"></div>
+              <div class="h-px w-12 bg-border"></div>
+            </div>
+            <p class="text-[0.65rem] text-muted/50 mt-3">
+              End of {{ store.currentSurah?.englishName }}
+            </p>
+          </div>
         </div>
       </Transition>
     </div>
@@ -124,5 +139,23 @@ const hasWordTimings = computed(() => {
 @keyframes badge-in {
   from { opacity: 0; transform: scale(0.6); }
   to { opacity: 1; transform: scale(1); }
+}
+
+.bismillah {
+  animation: bismillah-reveal 0.8s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation-delay: 0.05s;
+}
+@keyframes bismillah-reveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.surah-end {
+  animation: surah-end-reveal 0.6s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation-delay: 0.25s;
+}
+@keyframes surah-end-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>
