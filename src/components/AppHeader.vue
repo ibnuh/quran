@@ -73,10 +73,12 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 
     <div class="text-center flex-1 min-w-0 px-3">
       <h1
-        class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate"
+        class="surah-title font-arabic text-lg landscape-compact:text-sm truncate"
+        dir="rtl"
+        lang="ar"
         :title="store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : ''"
       >{{ store.currentSurah ? store.currentSurah.name : 'Quran Player' }}</h1>
-      <p class="text-[0.7rem] truncate hidden sm:block landscape-compact:hidden" :class="store.currentSurah ? 'opacity-75' : 'opacity-0'">
+      <p class="text-[0.65rem] sm:text-[0.7rem] truncate landscape-compact:hidden" :class="store.currentSurah ? 'opacity-70' : 'opacity-0'">
         {{ store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : '&nbsp;' }}
       </p>
     </div>
@@ -158,6 +160,12 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </template>
 
 <style scoped>
+.surah-title {
+  line-height: 1.7;
+  padding-block: 2px;
+  margin-block: -2px;
+}
+
 .header-btn {
   align-items: center;
   gap: 0.375rem;
