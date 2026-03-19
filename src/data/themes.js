@@ -30,7 +30,7 @@ const THEMES = [
       surface: '#121212',
       card: '#1e1e1e',
       body: '#e0e0e0',
-      muted: '#999999',
+      muted: '#aaaaaa',
       arabic: '#f0f0f0',
       border: '#333333'
     }
@@ -48,7 +48,7 @@ const THEMES = [
       surface: '#000000',
       card: '#0a0a0a',
       body: '#e0e0e0',
-      muted: '#888888',
+      muted: '#9a9a9a',
       arabic: '#f0f0f0',
       border: '#1a1a1a'
     }
@@ -156,7 +156,7 @@ const THEMES = [
       surface: '#1a1210',
       card: '#261c16',
       body: '#e8d8c8',
-      muted: '#a08878',
+      muted: '#bca494',
       arabic: '#f0e4d8',
       border: '#3a2e24'
     }

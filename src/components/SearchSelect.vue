@@ -100,6 +100,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     type="button"
     class="trigger"
     :class="compact ? 'trigger-compact' : 'trigger-full'"
+    :aria-expanded="isOpen"
+    aria-haspopup="listbox"
     @click="open"
   >
     <span class="truncate">{{ selectedLabel }}</span>
@@ -109,7 +111,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   <Teleport to="body">
     <Transition name="picker">
       <div v-if="isOpen" class="fixed top-0 right-0 bottom-0 left-0 z-[60] flex items-start sm:items-center justify-center">
-        <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" @click="isOpen = false"></div>
+        <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" role="presentation" @click="isOpen = false"></div>
 
         <div class="relative bg-card w-full sm:max-w-md sm:rounded-2xl rounded-b-2xl sm:rounded-2xl shadow-2xl max-h-[85dvh] flex flex-col">
           <div class="px-4 pb-2" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">
@@ -122,11 +124,13 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             />
           </div>
 
-          <div class="flex-1 overflow-y-auto px-2 pb-3">
+          <div class="flex-1 overflow-y-auto px-2 pb-3" role="listbox">
             <button
               v-for="(opt, i) in filtered"
               :key="opt[valueKey]"
               type="button"
+              role="option"
+              :aria-selected="opt[valueKey] === modelValue"
               class="option-item"
               :class="{ 'option-active': opt[valueKey] === modelValue, 'option-highlighted': i === highlightedIndex }"
               @click="select(opt)"

@@ -26,6 +26,22 @@ function onClickOutside(e) {
   }
 }
 
+function onThemePickerKeydown(e) {
+  if (!showThemePicker.value) return
+  const buttons = Array.from(document.querySelectorAll('.theme-picker-wrapper [role="menu"] button'))
+  if (!buttons.length) return
+  const current = buttons.indexOf(document.activeElement)
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    buttons[Math.min(current + 1, buttons.length - 1)].focus()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    buttons[Math.max(current - 1, 0)].focus()
+  } else if (e.key === 'Escape') {
+    showThemePicker.value = false
+  }
+}
+
 onMounted(() => document.addEventListener('click', onClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </script>
@@ -89,7 +105,9 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         <Transition name="theme-pop">
           <div
             v-if="showThemePicker"
+            role="menu"
             class="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[160px]"
+            @keydown="onThemePickerKeydown"
           >
             <button
               v-for="theme in THEMES"
@@ -144,6 +162,9 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.625rem;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
   border-radius: 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;

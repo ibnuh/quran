@@ -5,9 +5,10 @@ import { useAudio } from '../composables/useAudio.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
 import { useSwipe } from '../composables/useSwipe.js'
 import THEMES from '../data/themes.js'
+import { defineAsyncComponent } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
-import SettingsModal from '../components/SettingsModal.vue'
+const SettingsModal = defineAsyncComponent(() => import('../components/SettingsModal.vue'))
 import VerseDisplay from '../components/VerseDisplay.vue'
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
@@ -31,20 +32,33 @@ const activeThemeColors = computed(() =>
   THEMES.find(t => t.id === store.theme)?.colors || THEMES[0].colors
 )
 
+const WARNING_COLOR = '#d97706'
+
 const statusBarFill = computed(() => {
   if (showSettings.value || showVerses.value) return activeThemeColors.value.card
-  if (!isOnline.value) return '#d97706'
+  if (!isOnline.value) return WARNING_COLOR
   return activeThemeColors.value.primary
 })
 
+function announceToScreenReader(message) {
+  const el = document.getElementById('sr-announcements')
+  if (el) el.textContent = message
+}
+
 function updateHeaderHeight() {
-  if (headerRef.value) {
-    headerHeight.value = headerRef.value.offsetHeight
-    document.documentElement.style.setProperty('--header-height', headerHeight.value + 'px')
-  }
-  if (controlsRef.value) {
-    controlsHeight.value = controlsRef.value.offsetHeight
-  }
+  let newHeaderH = 0
+  let newControlsH = 0
+  if (headerRef.value) newHeaderH = headerRef.value.offsetHeight
+  if (controlsRef.value) newControlsH = controlsRef.value.offsetHeight
+  requestAnimationFrame(() => {
+    if (newHeaderH !== headerHeight.value) {
+      headerHeight.value = newHeaderH
+      document.documentElement.style.setProperty('--header-height', newHeaderH + 'px')
+    }
+    if (newControlsH !== controlsHeight.value) {
+      controlsHeight.value = newControlsH
+    }
+  })
 }
 const showMobileTip = ref(false)
 const tipDismissed = ref(localStorage.getItem('quran-tip-dismissed') === '1')
@@ -255,7 +269,7 @@ function getPreloadCount() {
 function preloadAhead() {
   if (store.playbackMode !== 'verse') return
 
-  preloadCache.forEach(a => { a.src = '' })
+  preloadCache.forEach(a => { a.src = ''; a.load() })
   preloadCache.length = 0
 
   const count = getPreloadCount()
@@ -271,7 +285,7 @@ function preloadAhead() {
 }
 
 onBeforeUnmount(() => {
-  preloadCache.forEach(a => { a.src = '' })
+  preloadCache.forEach(a => { a.src = ''; a.load() })
   preloadCache.length = 0
 })
 
@@ -297,22 +311,33 @@ function debouncedSavePrefs() {
   savePrefTimer = setTimeout(() => store.savePreferences(), 1000)
 }
 
+let lastRafTimeMs = -1
+
 function startWordHighlightLoop() {
   if (rafId) return
+  lastRafTimeMs = -1
   function tick() {
     const timeMs = audio.getLiveTimeMs()
-    const idx = store.getVerseIndexAtTime(timeMs)
-    if (idx !== store.currentVerseIndex) {
-      store.currentVerseIndex = idx
-      store.currentWordIndex = -1
-      debouncedSavePrefs()
-    }
-    store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
-    // Update progress from RAF for smoother bar movement
-    const dur = audio.duration.value
-    if (dur > 0) {
-      audio.progress.value = (timeMs / dur) * 100
-      audio.currentTimeMs.value = timeMs
+    // Skip update if time hasn't changed
+    if (timeMs !== lastRafTimeMs) {
+      lastRafTimeMs = timeMs
+      const idx = store.getVerseIndexAtTime(timeMs)
+      if (idx !== store.currentVerseIndex) {
+        store.currentVerseIndex = idx
+        store.currentWordIndex = -1
+        debouncedSavePrefs()
+        const surah = store.currentSurah
+        if (surah) {
+          announceToScreenReader(`Verse ${store.currentVerse?.number || idx + 1} of ${store.totalVerses}, ${surah.englishName}`)
+        }
+      }
+      store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
+      // Update progress from RAF for smoother bar movement
+      const dur = audio.duration.value
+      if (dur > 0) {
+        audio.progress.value = (timeMs / dur) * 100
+        audio.currentTimeMs.value = timeMs
+      }
     }
     rafId = requestAnimationFrame(tick)
   }
@@ -350,6 +375,10 @@ audio.onTimeUpdate((timeMs) => {
       store.currentVerseIndex = idx
       store.currentWordIndex = -1
       debouncedSavePrefs()
+      const surah = store.currentSurah
+      if (surah) {
+        announceToScreenReader(`Verse ${store.currentVerse?.number || idx + 1} of ${store.totalVerses}, ${surah.englishName}`)
+      }
     }
     if (store.wordHighlight) {
       store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)

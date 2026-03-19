@@ -42,7 +42,7 @@ const fontOptions = computed(() =>
 <template>
   <Transition name="bar">
     <div v-if="visible" class="hidden lg:block landscape-compact:!hidden bg-card border-b border-border">
-    <div class="flex items-center gap-3 px-4 py-2.5 max-w-7xl mx-auto">
+    <div class="flex items-center flex-wrap gap-3 px-4 py-2.5 max-w-7xl mx-auto">
       <div class="flex-1 min-w-0">
         <SearchSelect
           :model-value="store.currentSurahNum"
@@ -116,6 +116,7 @@ const fontOptions = computed(() =>
               max="5"
               step="0.1"
               :value="store.arabicFontSize"
+              :aria-label="'Arabic font size: ' + store.arabicFontSize.toFixed(1)"
               class="range-field flex-1"
               @input="store.setArabicFontSize(parseFloat($event.target.value))"
             />
@@ -129,6 +130,7 @@ const fontOptions = computed(() =>
               max="2.5"
               step="0.05"
               :value="store.translationFontSize"
+              :aria-label="'Translation font size: ' + store.translationFontSize.toFixed(1)"
               class="range-field flex-1"
               @input="store.setTranslationFontSize(parseFloat($event.target.value))"
             />
@@ -142,6 +144,7 @@ const fontOptions = computed(() =>
               max="100"
               step="5"
               :value="store.contentWidth"
+              :aria-label="'Content width: ' + store.contentWidth + '%'"
               class="range-field flex-1"
               @input="store.setContentWidth(parseFloat($event.target.value))"
             />
@@ -167,15 +170,15 @@ const fontOptions = computed(() =>
 .range-field::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--color-primary);
   cursor: pointer;
 }
 .range-field::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: none;
   background: var(--color-primary);

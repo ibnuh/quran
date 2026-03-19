@@ -221,6 +221,7 @@ onBeforeUnmount(() => {
                   max="5"
                   step="0.1"
                   :value="store.arabicFontSize"
+                  :aria-label="'Arabic font size: ' + store.arabicFontSize.toFixed(1)"
                   class="range-field flex-1"
                   @input="store.setArabicFontSize(parseFloat($event.target.value))"
                 />
@@ -238,6 +239,7 @@ onBeforeUnmount(() => {
                   max="2.5"
                   step="0.05"
                   :value="store.translationFontSize"
+                  :aria-label="'Translation font size: ' + store.translationFontSize.toFixed(1)"
                   class="range-field flex-1"
                   @input="store.setTranslationFontSize(parseFloat($event.target.value))"
                 />
@@ -255,6 +257,7 @@ onBeforeUnmount(() => {
                   max="100"
                   step="5"
                   :value="store.contentWidth"
+                  :aria-label="'Content width: ' + store.contentWidth + '%'"
                   class="range-field flex-1"
                   @input="store.setContentWidth(parseFloat($event.target.value))"
                 />

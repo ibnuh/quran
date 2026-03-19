@@ -44,7 +44,7 @@ function onClick(e) {
 
 function onMouseDown(e) {
   isDragging.value = true
-  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mousemove', onMouseMove, { passive: true })
   document.addEventListener('mouseup', onMouseUp)
 }
 
@@ -175,8 +175,8 @@ function onTouchEnd() {
     height: 44px;
   }
   .progress-thumb {
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
     transform: translate(-50%, -50%) scale(1);
   }
 }

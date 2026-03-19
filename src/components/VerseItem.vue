@@ -12,8 +12,9 @@ defineEmits(['select'])
 </script>
 
 <template>
-  <div
-    class="flex gap-3 p-4 rounded-lg cursor-pointer transition-all duration-200 bg-card border items-start"
+  <button
+    type="button"
+    class="flex gap-3 p-4 rounded-lg cursor-pointer transition-all duration-200 bg-card border items-start w-full text-left"
     :class="isActive
       ? 'border-primary bg-primary-light'
       : 'border-transparent hover:border-border hover:shadow-sm'"
@@ -33,5 +34,5 @@ defineEmits(['select'])
         {{ translation.text }}
       </p>
     </div>
-  </div>
+  </button>
 </template>
