@@ -75,7 +75,11 @@ const isLastVerse = computed(() =>
                 'word-active-underline': i === store.currentWordIndex && store.highlightStyle === 'underline',
                 'word-active-minimal': i === store.currentWordIndex && store.highlightStyle === 'minimal',
                 'word-active-sweep': i === store.currentWordIndex && store.highlightStyle === 'sweep',
-                'word-read': i < store.currentWordIndex && store.highlightStyle === 'sweep'
+                'word-read': i < store.currentWordIndex && store.highlightStyle === 'sweep',
+                'word-flow': store.highlightStyle === 'flow',
+                'word-flow-done': i < store.currentWordIndex && store.highlightStyle === 'flow',
+                'word-flow-active': i === store.currentWordIndex && store.highlightStyle === 'flow',
+                'word-flow-next': i === store.currentWordIndex + 1 && store.highlightStyle === 'flow'
               }"
             >{{ word }}</span>{{ i < verseWords.length - 1 ? ' ' : '' }}</template></p>
           <p
@@ -210,6 +214,23 @@ const isLastVerse = computed(() =>
     background-size: 100% 100%;
     background-position: right;
   }
+}
+
+/* Flow: smooth running color wave through text */
+.word-flow {
+  transition: color 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.word-flow-done {
+  color: var(--color-primary);
+  opacity: 0.5;
+}
+.word-flow-active {
+  color: var(--color-primary);
+  opacity: 1;
+}
+.word-flow-next {
+  color: color-mix(in srgb, var(--color-primary) 30%, var(--color-arabic));
 }
 
 /* -- Verse transition (between verses) -- */

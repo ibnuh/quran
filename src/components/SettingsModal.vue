@@ -107,6 +107,7 @@ const HIGHLIGHT_STYLES = [
   { value: 'background', label: 'Background' },
   { value: 'underline', label: 'Underline' },
   { value: 'sweep', label: 'Sweep' },
+  { value: 'flow', label: 'Flow' },
   { value: 'minimal', label: 'Minimal' }
 ]
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
