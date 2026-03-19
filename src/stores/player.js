@@ -52,7 +52,7 @@ export const usePlayerStore = defineStore('player', {
     autoHideControls: true,
     currentWordIndex: -1,
     wordHighlight: true,
-    highlightStyle: 'glow', // 'glow' | 'background' | 'underline' | 'minimal' | 'sweep' | 'flow'
+    highlightStyle: 'flow', // 'glow' | 'background' | 'underline' | 'minimal' | 'sweep' | 'flow'
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     playbackSpeed: 1,
     animations: true,

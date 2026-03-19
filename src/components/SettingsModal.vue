@@ -346,11 +346,11 @@ onBeforeUnmount(() => {
               </label>
               <div v-if="store.wordHighlight && store.playbackMode !== 'verse'">
                 <label class="block text-sm font-medium text-muted mb-2">Highlight Style</label>
-                <div class="flex gap-1.5">
+                <div class="grid grid-cols-3 gap-1.5">
                   <button
                     v-for="style in HIGHLIGHT_STYLES"
                     :key="style.value"
-                    class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                    class="py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                     :class="store.highlightStyle === style.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
                     @click="store.setHighlightStyle(style.value)"
                   >{{ style.label }}</button>
