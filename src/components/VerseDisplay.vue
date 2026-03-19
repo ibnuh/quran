@@ -34,7 +34,7 @@ const hasWordTimings = computed(() => {
     </div>
 
     <!-- Error -->
-    <div v-else-if="store.error" class="text-red-700">
+    <div v-else-if="store.error" class="text-red-500">
       <svg class="w-10 h-10 mx-auto mb-3 opacity-50" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
       </svg>
@@ -100,7 +100,6 @@ const hasWordTimings = computed(() => {
   color: var(--color-primary);
   text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
-
 
 .verse-fade-enter-active {
   transition: opacity 0.15s ease;

@@ -54,7 +54,7 @@ watch(() => store.currentVerseIndex, async () => {
 <template>
   <Transition name="panel" appear>
     <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end" role="dialog" aria-label="Verse list" aria-modal="true">
-      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" @click="emit('close')"></div>
+      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" role="presentation" @click="emit('close')"></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-md h-full shadow-2xl">
         <div class="bg-card h-full overflow-y-auto">

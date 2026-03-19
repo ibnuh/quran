@@ -13,6 +13,22 @@ function onClickOutside(e) {
   }
 }
 
+function onSpeedMenuKeydown(e) {
+  if (!showSpeedMenu.value) return
+  const buttons = Array.from(document.querySelectorAll('.speed-wrapper [role="menu"] button'))
+  if (!buttons.length) return
+  const current = buttons.indexOf(document.activeElement)
+  if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    buttons[Math.max(current - 1, 0)].focus()
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    buttons[Math.min(current + 1, buttons.length - 1)].focus()
+  } else if (e.key === 'Escape') {
+    showSpeedMenu.value = false
+  }
+}
+
 onMounted(() => document.addEventListener('click', onClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 
@@ -129,7 +145,7 @@ function selectSpeed(speed) {
             <span class="text-[0.7rem] font-semibold tabular-nums">{{ store.playbackSpeed }}x</span>
           </button>
           <Transition name="speed-pop">
-            <div v-if="showSpeedMenu" class="absolute bottom-full right-0 mb-2 bg-card rounded-lg shadow-2xl border border-border p-1 z-50 min-w-[4.5rem]">
+            <div v-if="showSpeedMenu" role="menu" class="absolute bottom-full right-0 mb-2 bg-card rounded-lg shadow-2xl border border-border p-1 z-50 min-w-[4.5rem]" @keydown="onSpeedMenuKeydown">
               <button
                 v-for="s in SPEEDS"
                 :key="s"
@@ -154,6 +170,7 @@ function selectSpeed(speed) {
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem;
+  min-height: 44px;
   border-radius: 0.5rem;
   border: none;
   background: none;

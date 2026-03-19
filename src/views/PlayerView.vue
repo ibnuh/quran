@@ -1,11 +1,10 @@
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch, defineAsyncComponent } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useAudio } from '../composables/useAudio.js'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts.js'
 import { useSwipe } from '../composables/useSwipe.js'
 import THEMES from '../data/themes.js'
-import { defineAsyncComponent } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
 const SettingsModal = defineAsyncComponent(() => import('../components/SettingsModal.vue'))
@@ -62,7 +61,6 @@ function updateHeaderHeight() {
 }
 const showMobileTip = ref(false)
 const tipDismissed = ref(localStorage.getItem('quran-tip-dismissed') === '1')
-
 
 // -- Online/offline detection --
 function onOnline() { isOnline.value = true }
@@ -685,6 +683,7 @@ onBeforeUnmount(() => {
     <div
       ref="controlsRef"
       class="fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-card/80 backdrop-blur-sm border-t border-border"
+      style="padding-bottom: env(safe-area-inset-bottom, 0px)"
       :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
     >
       <PlayerControls
