@@ -40,6 +40,10 @@ defineEmits(['select'])
 <style scoped>
 .verse-item {
   transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.verse-item:active:not(.border-primary) {
+  background: var(--color-surface);
 }
 .verse-badge {
   transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);

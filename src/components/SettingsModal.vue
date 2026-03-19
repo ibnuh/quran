@@ -537,6 +537,21 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
+@media (pointer: coarse) {
+  .range-field {
+    height: 8px;
+    border-radius: 4px;
+  }
+  .range-field::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+  .range-field::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 .toggle-switch {
   -webkit-appearance: none;
   appearance: none;

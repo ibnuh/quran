@@ -66,7 +66,7 @@ function selectSpeed(speed) {
 
     <div class="grid grid-cols-[1fr_auto_1fr] items-center mt-1 landscape-compact:mt-1">
       <!-- Left group -->
-      <div class="flex items-center justify-end gap-1 sm:gap-2">
+      <div class="flex items-center justify-end gap-1 sm:gap-2 min-w-0">
         <button
           class="flex ctrl-btn"
           :class="store.repeatMode !== 'none' ? 'text-primary!' : ''"
@@ -115,7 +115,7 @@ function selectSpeed(speed) {
       </button>
 
       <!-- Right group -->
-      <div class="flex items-center justify-start gap-1 sm:gap-2">
+      <div class="flex items-center justify-start gap-1 sm:gap-2 min-w-0">
         <button
           class="flex ctrl-btn"
           :disabled="!store.canNextVerse"

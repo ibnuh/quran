@@ -76,7 +76,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         class="font-arabic text-lg landscape-compact:text-sm leading-tight truncate"
         :title="store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : ''"
       >{{ store.currentSurah ? store.currentSurah.name : 'Quran Player' }}</h1>
-      <p class="text-[0.7rem] truncate landscape-compact:hidden" :class="store.currentSurah ? 'opacity-75' : 'opacity-0'">
+      <p class="text-[0.7rem] truncate hidden sm:block landscape-compact:hidden" :class="store.currentSurah ? 'opacity-75' : 'opacity-0'">
         {{ store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : '&nbsp;' }}
       </p>
     </div>
