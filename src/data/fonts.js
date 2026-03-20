@@ -16,6 +16,30 @@ const ARABIC_FONTS = [
     name: 'Amiri',
     description: 'Classic Naskh',
     family: "'Amiri', serif"
+  },
+  {
+    id: 'scheherazade',
+    name: 'Scheherazade New',
+    description: 'Full Unicode Arabic',
+    family: "'Scheherazade New', serif"
+  },
+  {
+    id: 'noto',
+    name: 'Noto Naskh Arabic',
+    description: 'Modern Naskh',
+    family: "'Noto Naskh Arabic', serif"
+  },
+  {
+    id: 'lateef',
+    name: 'Lateef',
+    description: 'Nastaliq-influenced (limited tashkeel)',
+    family: "'Lateef', serif"
+  },
+  {
+    id: 'reem-kufi',
+    name: 'Reem Kufi',
+    description: 'Decorative Kufi (limited tashkeel)',
+    family: "'Reem Kufi', sans-serif"
   }
 ]
 

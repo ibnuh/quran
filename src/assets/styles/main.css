@@ -186,15 +186,14 @@ body {
   background: var(--color-muted);
 }
 
-/* Arabic text rendering - let HarfBuzz handle OpenType shaping automatically */
+/* Arabic text rendering - explicit mark positioning for correct diacriticals */
 [lang="ar"], [dir="rtl"] {
+  font-feature-settings: "mark" 1, "mkmk" 1, "calt" 1, "liga" 1, "clig" 1;
   font-variant-ligatures: common-ligatures contextual;
   font-kerning: normal;
-  text-rendering: optimizeLegibility;
+  text-rendering: auto;
   letter-spacing: normal;
   word-spacing: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Focus visible styles for keyboard navigation */

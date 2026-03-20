@@ -251,13 +251,15 @@ const isLastVerse = computed(() =>
 }
 
 /* -- Staggered content entrance (children animate in sequence) -- */
+/* Arabic text uses opacity-only animation to avoid GPU compositing layer
+   that can interfere with OpenType mark positioning (harakat/tashkeel) */
 .verse-arabic {
-  animation: content-rise 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation: content-fade 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
   animation-delay: 0.05s;
 }
-@keyframes content-rise {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes content-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .verse-badge {
