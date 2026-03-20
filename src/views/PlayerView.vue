@@ -673,8 +673,8 @@ onBeforeUnmount(() => {
       :style="{
         transition: 'padding-top 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
         paddingTop: ((headerHeight || 16) + 24) + 'px',
-        paddingLeft: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
-        paddingRight: 'max(1rem, env(safe-area-inset-left), env(safe-area-inset-right))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
         paddingBottom: Math.max(controlsHeight, 16) + 'px'
       }"
       @click="onMainClick"
