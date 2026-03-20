@@ -147,12 +147,17 @@ function showControls() {
   resetHideTimer()
 }
 
+function hideControls() {
+  controlsVisible.value = false
+  clearTimeout(hideTimer)
+}
+
 function resetHideTimer() {
   clearTimeout(hideTimer)
   if (!store.autoHideControls || !audio.isPlaying.value) return
   hideTimer = setTimeout(() => {
-    if (store.autoHideControls && audio.isPlaying.value && !showSettings.value && !showVerses.value) {
-      controlsVisible.value = false
+    if (store.autoHideControls && audio.isPlaying.value && !showSettings.value && !showVerses.value && !showShortcuts.value) {
+      hideControls()
     }
   }, AUTO_HIDE_DELAY)
 }
@@ -162,9 +167,9 @@ function onMainTap() {
 
   const isMobileViewport = window.innerWidth < 768 || window.innerHeight < 768
   if (isTouchDevice || isMobileViewport) {
+    if (!store.autoHideControls) return
     if (controlsVisible.value) {
-      controlsVisible.value = false
-      clearTimeout(hideTimer)
+      hideControls()
     } else {
       showControls()
     }
@@ -175,7 +180,7 @@ function onMainTap() {
   if (!controlsVisible.value) {
     showControls()
   } else if (audio.isPlaying.value) {
-    controlsVisible.value = false
+    hideControls()
   }
 }
 
