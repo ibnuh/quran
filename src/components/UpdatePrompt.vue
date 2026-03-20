@@ -60,7 +60,7 @@ onBeforeUnmount(() => window.removeEventListener('sw-update-available', onUpdate
 <style scoped>
 .update-toast-enter-active,
 .update-toast-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 .update-toast-enter-from,
 .update-toast-leave-to {

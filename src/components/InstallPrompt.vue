@@ -81,7 +81,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .install-toast-enter-active,
 .install-toast-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 .install-toast-enter-from,
 .install-toast-leave-to {

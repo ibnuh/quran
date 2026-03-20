@@ -29,6 +29,45 @@ function getResponsiveDefaults() {
 }
 
 const _responsiveDefaults = getResponsiveDefaults()
+const loadedArabicFontFamilies = new Set()
+const pendingArabicFontLoads = new Map()
+let latestArabicFontRequestId = 0
+
+async function ensureArabicFontLoaded(fontId) {
+  if (typeof document === 'undefined' || !document.fonts) return
+
+  const font = ARABIC_FONTS.find(f => f.id === fontId)
+  if (!font) return
+
+  const primaryFamily = font.family.split(',')[0]?.trim()
+  if (!primaryFamily) return
+
+  if (loadedArabicFontFamilies.has(primaryFamily)) return
+
+  let loadPromise = pendingArabicFontLoads.get(primaryFamily)
+  if (!loadPromise) {
+    loadPromise = Promise.race([
+      Promise.all([
+        document.fonts.load(`400 1em ${primaryFamily}`, 'بِسْمِ'),
+        document.fonts.load(`400 2em ${primaryFamily}`, 'الرَّحْمَٰنِ')
+      ]),
+      new Promise(resolve => setTimeout(resolve, 2500))
+    ])
+      .then(() => {
+        loadedArabicFontFamilies.add(primaryFamily)
+      })
+      .catch(() => {
+        // Ignore font loading failures and fall back to the browser stack.
+      })
+      .finally(() => {
+        pendingArabicFontLoads.delete(primaryFamily)
+      })
+
+    pendingArabicFontLoads.set(primaryFamily, loadPromise)
+  }
+
+  await loadPromise
+}
 
 export const usePlayerStore = defineStore('player', {
   state: () => ({
@@ -335,9 +374,17 @@ export const usePlayerStore = defineStore('player', {
       return this.loadSurah()
     },
 
-    setArabicFont(id) {
+    async applyArabicFont(id, { save = true } = {}) {
+      const requestId = ++latestArabicFontRequestId
+      await ensureArabicFontLoaded(id)
+      if (requestId !== latestArabicFontRequestId) return
+
       this.arabicFont = id
-      this.savePreferences()
+      if (save) this.savePreferences()
+    },
+
+    setArabicFont(id) {
+      return this.applyArabicFont(id)
     },
 
     setArabicFontSize(size) {
@@ -436,10 +483,12 @@ export const usePlayerStore = defineStore('player', {
         if (!saved) {
           // First visit: apply responsive defaults
           this.applyResponsiveDefaults()
+          void ensureArabicFontLoaded(this.arabicFont)
           return
         }
 
         const prefs = JSON.parse(saved)
+        const savedArabicFont = prefs.arabicFont
         if (prefs.surah) this.currentSurahNum = prefs.surah
         if (prefs.verse !== undefined) this.currentVerseIndex = prefs.verse
         if (prefs.reciter) {
@@ -452,7 +501,6 @@ export const usePlayerStore = defineStore('player', {
           }
         }
         if (prefs.translation) this.currentTranslation = prefs.translation
-        if (prefs.arabicFont) this.arabicFont = prefs.arabicFont
         if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
         if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
         if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
@@ -473,6 +521,11 @@ export const usePlayerStore = defineStore('player', {
         if (prefs.animations !== undefined) {
           this.animations = prefs.animations
           document.documentElement.classList.toggle('no-animations', !prefs.animations)
+        }
+        if (savedArabicFont) {
+          void this.applyArabicFont(savedArabicFont, { save: false })
+        } else {
+          void ensureArabicFontLoaded(this.arabicFont)
         }
       } catch (e) {}
     }

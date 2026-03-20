@@ -224,7 +224,7 @@ function selectSpeed(speed) {
 
 .speed-pop-enter-active,
 .speed-pop-leave-active {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .speed-pop-enter-from,
 .speed-pop-leave-to {

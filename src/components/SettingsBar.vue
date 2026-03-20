@@ -40,9 +40,13 @@ const fontOptions = computed(() =>
 </script>
 
 <template>
-  <Transition name="bar">
-    <div v-if="visible" class="hidden lg:block landscape-compact:!hidden bg-card border-b border-border">
-    <div class="flex items-center flex-wrap gap-3 px-4 py-2.5 max-w-7xl mx-auto">
+  <div
+    class="settings-bar-shell hidden lg:block landscape-compact:!hidden"
+    :class="visible ? 'settings-bar-shell-open' : 'settings-bar-shell-closed'"
+    :aria-hidden="!visible"
+  >
+    <div class="bg-card border-b border-border">
+      <div class="flex items-center flex-wrap gap-3 px-4 py-2.5 max-w-7xl mx-auto">
       <div class="flex-1 min-w-0">
         <SearchSelect
           :model-value="store.currentSurahNum"
@@ -103,11 +107,12 @@ const fontOptions = computed(() =>
           <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
         </svg>
       </button>
-    </div>
+      </div>
 
-    <Transition name="expand">
-      <div v-if="showFontSettings" class="border-t border-border px-4 py-3 max-w-7xl mx-auto">
-        <div class="flex items-center gap-8">
+      <div class="font-settings-shell" :class="showFontSettings ? 'font-settings-shell-open' : ''">
+        <div class="font-settings-panel">
+          <div class="border-t border-border px-4 py-3 max-w-7xl mx-auto">
+            <div class="flex items-center gap-8">
           <div class="flex items-center gap-3 flex-1">
             <label class="text-xs font-medium text-muted whitespace-nowrap">Arabic Size</label>
             <input
@@ -151,10 +156,11 @@ const fontOptions = computed(() =>
             <span class="text-xs text-muted w-8 text-right">{{ store.contentWidth }}</span>
           </div>
         </div>
+          </div>
+        </div>
       </div>
-    </Transition>
     </div>
-  </Transition>
+  </div>
 </template>
 
 <style scoped>
@@ -185,43 +191,37 @@ const fontOptions = computed(() =>
   cursor: pointer;
 }
 
-.bar-enter-active {
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  overflow: hidden;
+.settings-bar-shell {
+  transform-origin: top center;
+  transition: opacity 0.24s cubic-bezier(0.25, 1, 0.5, 1), transform 0.24s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.bar-leave-active {
-  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-  overflow: hidden;
-}
-.bar-enter-from,
-.bar-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-.bar-enter-to,
-.bar-leave-from {
-  max-height: 8rem;
+.settings-bar-shell-open {
   opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.settings-bar-shell-closed {
+  opacity: 0;
+  transform: translateY(-0.75rem);
+  pointer-events: none;
 }
 
-.expand-enter-active {
-  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-  overflow: hidden;
-}
-.expand-leave-active {
-  transition: all 0.15s cubic-bezier(0.25, 1, 0.5, 1);
-  overflow: hidden;
-}
-.expand-enter-from,
-.expand-leave-to {
+.font-settings-shell {
+  display: grid;
+  grid-template-rows: 0fr;
   opacity: 0;
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  transform: translateY(-0.35rem);
+  transition: grid-template-rows 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.expand-enter-to,
-.expand-leave-from {
+.font-settings-shell-open {
+  grid-template-rows: 1fr;
   opacity: 1;
-  max-height: 4rem;
+  transform: translateY(0);
+}
+.font-settings-panel {
+  overflow: hidden;
+  min-height: 0;
 }
 </style>

@@ -669,7 +669,9 @@ onBeforeUnmount(() => {
         @toggle-verses="showVerses = !showVerses"
         @toggle-shortcuts="showShortcuts = !showShortcuts"
       />
-      <SettingsBar :visible="showSettingsBar" @collapse="showSettingsBar = false" />
+      <div class="absolute top-full left-0 right-0 pointer-events-none">
+        <SettingsBar :visible="showSettingsBar" @collapse="showSettingsBar = false" />
+      </div>
     </div>
 
     <main
@@ -747,21 +749,19 @@ onBeforeUnmount(() => {
 <style scoped>
 .offline-bar-enter-active,
 .offline-bar-leave-active {
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .offline-bar-enter-from,
 .offline-bar-leave-to {
-  max-height: 0;
   opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  transform: translateY(-100%);
 }
 
 .tip-enter-active {
-  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .tip-leave-active {
-  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .tip-enter-from,
 .tip-leave-to {
