@@ -93,7 +93,7 @@ const isLastVerse = computed(() =>
           </p>
 
           <span
-            class="verse-badge inline-block bg-primary/10 text-primary text-xs font-bold w-8 h-8 leading-8 rounded-full mt-4 mb-5"
+            class="verse-badge inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-bold w-8 h-8 rounded-full mt-4 mb-5"
           >
             {{ store.currentVerse.number }}
           </span>
