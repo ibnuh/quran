@@ -30,6 +30,10 @@ function onClickOutside(e) {
   if (showSpeedMenu.value && !e.target.closest('.speed-wrapper')) {
     showSpeedMenu.value = false
   }
+  if (showJumpInput.value && !e.target.closest('.jump-verse-input-wrapper')) {
+    showJumpInput.value = false
+    jumpVerseNum.value = ''
+  }
 }
 
 function onSpeedMenuKeydown(e) {
@@ -181,7 +185,7 @@ function selectSpeed(speed) {
     </div>
 
     <div class="text-center mt-2 mb-3 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
-      <div class="relative inline-flex items-center gap-1 jump-verse-wrapper">
+      <div class="relative inline-flex items-center gap-1 jump-verse-input-wrapper">
         <button
           class="text-xs text-muted hover:text-primary transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-surface"
           aria-label="Jump to verse"
@@ -205,6 +209,7 @@ function selectSpeed(speed) {
               class="w-16 px-2 py-1 text-xs text-center rounded-md border border-border bg-surface text-body focus:outline-none focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="#"
               @keydown.enter="jumpToVerse"
+              @keydown.escape.prevent="() => { showJumpInput = false; jumpVerseNum = '' }"
             />
             <button
               class="text-xs px-2 py-1 bg-primary text-white rounded-md font-medium cursor-pointer hover:bg-primary-dark transition-colors"
