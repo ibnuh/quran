@@ -2,8 +2,9 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import THEMES from '../data/themes.js'
+import JuzPicker from './JuzPicker.vue'
 
-const emit = defineEmits(['open-settings', 'toggle-verses', 'toggle-shortcuts', 'toggle-settings-bar'])
+const emit = defineEmits(['open-settings', 'toggle-verses', 'toggle-shortcuts', 'toggle-settings-bar', 'toggle-bookmarks'])
 const store = usePlayerStore()
 const showThemePicker = ref(false)
 
@@ -69,6 +70,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         </svg>
         <span>Quick Settings</span>
       </button>
+      <JuzPicker />
     </div>
 
     <div class="text-center flex-1 min-w-0 px-3">
@@ -84,6 +86,16 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
     </div>
 
     <div class="flex items-center gap-1">
+      <button
+        class="hidden sm:flex header-btn opacity-60 hover:opacity-100 relative"
+        aria-label="Show bookmarks"
+        @click="$emit('toggle-bookmarks')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+        </svg>
+        <span v-if="store.bookmarks.length > 0" class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-accent text-white text-[8px] font-bold rounded-full flex items-center justify-center">{{ store.bookmarks.length > 9 ? '9+' : store.bookmarks.length }}</span>
+      </button>
       <button
         class="hidden sm:flex header-btn opacity-60 hover:opacity-100"
         aria-label="Show keyboard shortcuts"

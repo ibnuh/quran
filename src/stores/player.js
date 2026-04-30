@@ -5,6 +5,7 @@ import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
 import THEMES from '../data/themes.js'
+import JUZS, { getJuzForVerse } from '../data/juzs.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
@@ -96,7 +97,9 @@ export const usePlayerStore = defineStore('player', {
     playbackSpeed: 1,
     animations: true,
     isLoading: false,
-    error: null
+    error: null,
+    bookmarks: [],
+    recentSurahs: []
   }),
 
   getters: {
@@ -113,7 +116,15 @@ export const usePlayerStore = defineStore('player', {
     arabicFontFamily: (state) => {
       const font = ARABIC_FONTS.find(f => f.id === state.arabicFont)
       return font ? font.family : ARABIC_FONTS[0].family
-    }
+    },
+    currentJuz: (state) => {
+      const verse = state.verses[state.currentVerseIndex]
+      if (!verse) return 1
+      return getJuzForVerse(state.currentSurahNum, verse.number)
+    },
+    isCurrentBookmarked: (state) => state.bookmarks.some(
+      b => b.surahNum === state.currentSurahNum && b.verseIndex === state.currentVerseIndex
+    )
   },
 
   actions: {
@@ -360,11 +371,14 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
-    setSurah(num) {
+    async setSurah(num) {
       this.currentSurahNum = num
       this.currentVerseIndex = 0
       this.savePreferences()
-      return this.loadSurah()
+      await this.loadSurah()
+      if (!this.error) {
+        this.addRecentSurah(num)
+      }
     },
 
     setReciter(id) {
@@ -430,22 +444,77 @@ export const usePlayerStore = defineStore('player', {
       return this.loadSurah()
     },
 
-    nextSurah() {
+    async nextSurah() {
       if (this.canNextSurah) {
         this.currentSurahNum++
         this.currentVerseIndex = 0
         this.savePreferences()
-        return this.loadSurah()
+        await this.loadSurah()
+        if (!this.error) {
+          this.addRecentSurah(this.currentSurahNum)
+        }
       }
     },
 
-    prevSurah() {
+    async prevSurah() {
       if (this.canPrevSurah) {
         this.currentSurahNum--
         this.currentVerseIndex = 0
         this.savePreferences()
-        return this.loadSurah()
+        await this.loadSurah()
+        if (!this.error) {
+          this.addRecentSurah(this.currentSurahNum)
+        }
       }
+    },
+
+    async setJuz(num) {
+      const juz = JUZS.find(j => j.number === num)
+      if (!juz) return
+      await this.setSurah(juz.startSurah)
+      const idx = this.verses.findIndex(v => v.number === juz.startVerse)
+      if (idx >= 0) {
+        this.currentVerseIndex = idx
+        this.currentWordIndex = -1
+      }
+    },
+
+    toggleBookmark() {
+      const verse = this.currentVerse
+      const translation = this.currentTranslationVerse
+      if (!verse) return
+      const existing = this.bookmarks.findIndex(
+        b => b.surahNum === this.currentSurahNum && b.verseIndex === this.currentVerseIndex
+      )
+      if (existing >= 0) {
+        this.bookmarks.splice(existing, 1)
+      } else {
+        this.bookmarks.push({
+          surahNum: this.currentSurahNum,
+          verseIndex: this.currentVerseIndex,
+          surahName: this.currentSurah?.englishName || '',
+          surahArabicName: this.currentSurah?.name || '',
+          verseNumber: verse.number,
+          verseText: verse.text,
+          translationText: translation?.text || '',
+          timestamp: Date.now()
+        })
+      }
+      this.savePreferences()
+    },
+
+    removeBookmark(index) {
+      if (index >= 0 && index < this.bookmarks.length) {
+        this.bookmarks.splice(index, 1)
+        this.savePreferences()
+      }
+    },
+
+    addRecentSurah(num) {
+      this.recentSurahs = this.recentSurahs.filter(n => n !== num)
+      this.recentSurahs.unshift(num)
+      if (this.recentSurahs.length > 10) this.recentSurahs.pop()
+      this.savePreferences()
     },
 
     savePreferences() {
@@ -465,7 +534,9 @@ export const usePlayerStore = defineStore('player', {
           highlightStyle: this.highlightStyle,
           repeatMode: this.repeatMode,
           playbackSpeed: this.playbackSpeed,
-          animations: this.animations
+          animations: this.animations,
+          bookmarks: this.bookmarks,
+          recentSurahs: this.recentSurahs
         }))
       } catch (e) {}
     },
@@ -526,6 +597,12 @@ export const usePlayerStore = defineStore('player', {
           void this.applyArabicFont(savedArabicFont, { save: false })
         } else {
           void ensureArabicFontLoaded(this.arabicFont)
+        }
+        if (Array.isArray(prefs.bookmarks)) {
+          this.bookmarks = prefs.bookmarks
+        }
+        if (Array.isArray(prefs.recentSurahs)) {
+          this.recentSurahs = prefs.recentSurahs
         }
       } catch (e) {}
     }
