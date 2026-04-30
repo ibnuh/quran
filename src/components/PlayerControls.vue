@@ -5,7 +5,26 @@ import ProgressBar from './ProgressBar.vue'
 
 const store = usePlayerStore()
 const showSpeedMenu = ref(false)
+const showJumpInput = ref(false)
+const jumpVerseNum = ref('')
+const jumpInputRef = ref(null)
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
+
+function jumpToVerse() {
+  const num = parseInt(jumpVerseNum.value)
+  if (num >= 1 && num <= store.totalVerses) {
+    emit('jump-to-verse', num - 1)
+  }
+  showJumpInput.value = false
+  jumpVerseNum.value = ''
+}
+
+function onJumpKeydown(e) {
+  if (e.key === 'Escape') {
+    showJumpInput.value = false
+    jumpVerseNum.value = ''
+  }
+}
 
 function onClickOutside(e) {
   if (showSpeedMenu.value && !e.target.closest('.speed-wrapper')) {
@@ -40,7 +59,7 @@ defineProps({
   durationMs: { type: Number, default: 0 }
 })
 
-const emit = defineEmits(['toggle-play', 'prev-verse', 'next-verse', 'prev-surah', 'next-surah', 'seek', 'set-speed'])
+const emit = defineEmits(['toggle-play', 'prev-verse', 'next-verse', 'prev-surah', 'next-surah', 'seek', 'set-speed', 'jump-to-verse'])
 
 function cycleRepeat() {
   const modes = ['none', 'verse', 'surah']
@@ -161,8 +180,39 @@ function selectSpeed(speed) {
       </div>
     </div>
 
-    <div class="text-center text-xs text-muted mt-2 mb-3 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
-      Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
+    <div class="text-center mt-2 mb-3 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+      <div class="relative inline-flex items-center gap-1 jump-verse-wrapper">
+        <button
+          class="text-xs text-muted hover:text-primary transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-surface"
+          aria-label="Jump to verse"
+          @click.stop="showJumpInput = !showJumpInput"
+        >
+          Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
+        </button>
+        <Transition name="speed-pop">
+          <div
+            v-if="showJumpInput"
+            class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-card rounded-lg shadow-2xl border border-border p-2 z-50 flex items-center gap-1.5"
+            @keydown="onJumpKeydown"
+          >
+            <span class="text-[0.65rem] text-muted">Go to</span>
+            <input
+              ref="jumpInputRef"
+              v-model="jumpVerseNum"
+              type="number"
+              min="1"
+              :max="store.totalVerses"
+              class="w-16 px-2 py-1 text-xs text-center rounded-md border border-border bg-surface text-body focus:outline-none focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="#"
+              @keydown.enter="jumpToVerse"
+            />
+            <button
+              class="text-xs px-2 py-1 bg-primary text-white rounded-md font-medium cursor-pointer hover:bg-primary-dark transition-colors"
+              @click="jumpToVerse"
+            >Go</button>
+          </div>
+        </Transition>
+      </div>
     </div>
   </div>
 </template>
