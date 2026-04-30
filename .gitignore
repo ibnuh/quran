@@ -4,3 +4,4 @@ dist
 *.local
 obscura
 test-results/
+playwright-report/
