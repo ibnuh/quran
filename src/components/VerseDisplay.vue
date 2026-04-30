@@ -19,6 +19,22 @@ const hasWordTimings = computed(() => {
 const isLastVerse = computed(() =>
   store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
 )
+
+function shareVerse() {
+  const surah = store.currentSurah
+  const verse = store.currentVerse
+  const translation = store.currentTranslationVerse
+  if (!surah || !verse) return
+
+  const text = `${surah.englishName} - Verse ${verse.number}\n\n${verse.text}\n${translation?.text || ''}`
+  const url = `${window.location.origin}?surah=${store.currentSurahNum}`
+
+  if (navigator.share) {
+    navigator.share({ title: `${surah.englishName} - Verse ${verse.number}`, text, url }).catch(() => {})
+  } else {
+    navigator.clipboard.writeText(text).catch(() => {})
+  }
+}
 </script>
 
 <template>
@@ -92,11 +108,40 @@ const isLastVerse = computed(() =>
             {{ store.currentVerse.text }}
           </p>
 
-          <span
-            class="verse-badge inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-bold w-8 h-8 rounded-full mt-4 mb-5"
-          >
-            {{ store.currentVerse.number }}
-          </span>
+          <div class="flex items-center justify-center gap-2 mt-4 mb-5">
+            <button
+              class="verse-action-btn"
+              :aria-label="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
+              :title="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
+              @click="store.toggleBookmark()"
+            >
+              <svg
+                width="14" height="14" viewBox="0 0 24 24"
+                :fill="store.isCurrentBookmarked ? 'currentColor' : 'none'"
+                :class="store.isCurrentBookmarked ? 'text-accent' : 'text-muted/50'"
+                stroke="currentColor" stroke-width="2"
+              >
+                <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+              </svg>
+            </button>
+
+            <span
+              class="verse-badge inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-bold w-8 h-8 rounded-full"
+            >
+              {{ store.currentVerse.number }}
+            </span>
+
+            <button
+              class="verse-action-btn"
+              aria-label="Share this verse"
+              title="Share this verse"
+              @click="shareVerse"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+              </svg>
+            </button>
+          </div>
 
           <p class="verse-translation leading-relaxed text-muted font-light mx-auto" :style="{ fontSize: store.translationFontSize + 'rem', maxWidth: (store.contentWidth * 0.75) + 'rem' }">
             {{ store.currentTranslationVerse?.text }}
@@ -260,6 +305,20 @@ const isLastVerse = computed(() =>
 @keyframes content-fade {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.verse-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+.verse-action-btn:hover {
+  background: color-mix(in srgb, var(--color-muted) 12%, transparent);
 }
 
 .verse-badge {
