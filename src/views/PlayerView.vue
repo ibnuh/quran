@@ -8,6 +8,7 @@ import THEMES from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
 const SettingsModal = defineAsyncComponent(() => import('../components/SettingsModal.vue'))
+const BookmarksPanel = defineAsyncComponent(() => import('../components/BookmarksPanel.vue'))
 import VerseDisplay from '../components/VerseDisplay.vue'
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
@@ -20,6 +21,8 @@ const showSettings = ref(false)
 const showSettingsBar = ref(true)
 const showVerses = ref(false)
 const showShortcuts = ref(false)
+const showBookmarks = ref(false)
+const continuingPlayback = ref(false)
 const isOnline = ref(navigator.onLine)
 const mainRef = ref(null)
 const headerRef = ref(null)
@@ -34,7 +37,7 @@ const activeThemeColors = computed(() =>
 const WARNING_COLOR = '#d97706'
 
 const statusBarFill = computed(() => {
-  if (showSettings.value || showVerses.value) return activeThemeColors.value.card
+  if (showSettings.value || showVerses.value || showBookmarks.value) return activeThemeColors.value.card
   if (!isOnline.value) return WARNING_COLOR
   return activeThemeColors.value.primary
 })
@@ -156,7 +159,7 @@ function resetHideTimer() {
   clearTimeout(hideTimer)
   if (!store.autoHideControls || !audio.isPlaying.value) return
   hideTimer = setTimeout(() => {
-    if (store.autoHideControls && audio.isPlaying.value && !showSettings.value && !showVerses.value && !showShortcuts.value) {
+    if (store.autoHideControls && audio.isPlaying.value && !showSettings.value && !showVerses.value && !showShortcuts.value && !showBookmarks.value) {
       hideControls()
     }
   }, AUTO_HIDE_DELAY)
@@ -404,11 +407,7 @@ audio.onEnded(() => {
     return
   }
 
-  if (store.playbackMode === 'verse' && store.canNextVerse) {
-    store.nextVerse()
-    audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
-    preloadAhead()
-  } else if (store.repeatMode === 'surah') {
+  if (store.repeatMode === 'surah') {
     // Repeat surah: go back to start
     store.currentVerseIndex = 0
     store.currentWordIndex = -1
@@ -419,10 +418,26 @@ audio.onEnded(() => {
       audio.loadAndPlay(store.audioUrls[0])
       preloadAhead()
     }
-  } else {
-    audio.stop()
-    store.currentWordIndex = -1
+    return
   }
+
+  // Verse mode: advance to next verse
+  if (store.playbackMode === 'verse' && store.canNextVerse) {
+    store.nextVerse()
+    audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+    preloadAhead()
+    return
+  }
+
+  // Try continuous playback: auto-play next surah
+  if (store.canNextSurah) {
+    continuingPlayback.value = true
+    store.nextSurah()
+    return
+  }
+
+  audio.stop()
+  store.currentWordIndex = -1
 })
 
 // -- Controls --
@@ -486,6 +501,38 @@ function handleVerseSelect(index) {
   }
 }
 
+function handleJumpToVerse(index) {
+  store.setVerse(index)
+  const wasPlaying = audio.isPlaying.value
+  if (store.playbackMode === 'full') {
+    const timing = store.verseTimings[index]
+    if (timing) {
+      audio.seekTo(timing.timestampFrom)
+      if (wasPlaying) audio.play()
+    }
+  } else if (store.audioUrls.length) {
+    if (wasPlaying) {
+      audio.loadAndPlay(store.audioUrls[index])
+      preloadAhead()
+    }
+  }
+}
+
+function handleGoToBookmark(surahNum, verseIndex) {
+  if (surahNum !== store.currentSurahNum) {
+    audio.stop()
+    const unsub = watch(() => store.isLoading, (loading) => {
+      if (!loading && !store.error) {
+        handleJumpToVerse(verseIndex)
+        unsub()
+      }
+    })
+    store.setSurah(surahNum)
+    return
+  }
+  handleJumpToVerse(verseIndex)
+}
+
 function handleSeek(ratio) {
   audio.seek(ratio)
 }
@@ -498,8 +545,9 @@ function handleSetSpeed(speed) {
 // Preload full surah audio when URL changes (without auto-playing)
 watch(() => store.audioUrl, (url) => {
   if (url && store.playbackMode === 'full') {
-    const wasPlaying = audio.isPlaying.value
+    const wasPlaying = audio.isPlaying.value || continuingPlayback.value
     audio.stop()
+    continuingPlayback.value = false
     if (wasPlaying) {
       audio.loadAndPlay(url)
     } else {
@@ -668,6 +716,7 @@ onBeforeUnmount(() => {
         @toggle-settings-bar="showSettingsBar = !showSettingsBar"
         @toggle-verses="showVerses = !showVerses"
         @toggle-shortcuts="showShortcuts = !showShortcuts"
+        @toggle-bookmarks="showBookmarks = !showBookmarks"
       />
       <div class="absolute top-full left-0 right-0 pointer-events-none">
         <SettingsBar :visible="showSettingsBar" @collapse="showSettingsBar = false" />
@@ -709,11 +758,13 @@ onBeforeUnmount(() => {
         @next-surah="handleNextSurah"
         @seek="handleSeek"
         @set-speed="handleSetSpeed"
+        @jump-to-verse="handleJumpToVerse"
       />
     </div>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
+    <BookmarksPanel v-if="showBookmarks" @close="showBookmarks = false" @select="handleGoToBookmark" />
     <KeyboardShortcuts v-if="showShortcuts" @close="showShortcuts = false" />
 
     <!-- Mobile tip -->
