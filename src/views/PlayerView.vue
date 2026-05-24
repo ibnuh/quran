@@ -282,11 +282,14 @@ onMounted(async () => {
         paddingTop: ((headerHeight || 16) + 24) + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
         paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
-        paddingBottom: Math.max(controlsHeight, 16) + 'px'
+        paddingBottom: Math.max(controlsHeight, 16) + 'px',
+        // Center the verse when it fits, but fall back to top-aligned and scrollable
+        // when it is taller than the viewport so long ayahs are never clipped.
+        justifyContent: 'safe center'
       }"
       @click="onMainClick"
     >
-      <VerseDisplay class="m-auto" @retry="store.loadSurah()" />
+      <VerseDisplay class="mx-auto" @retry="store.loadSurah()" />
     </main>
 
     <div

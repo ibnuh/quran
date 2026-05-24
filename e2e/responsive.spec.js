@@ -34,6 +34,40 @@ test('wide screens keep the centered surah title', async ({ page }) => {
   await expect(page.locator('header .sm\\:hidden')).toBeHidden()
 })
 
+test('a long verse is not clipped at the top on small screens', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 })
+  // Override with a tall verse that exceeds the viewport height.
+  const longText = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ '.repeat(14).trim()
+  await page.route(/api\.alquran\.cloud\/v1\/surah/, route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: [
+          { edition: { identifier: 'quran-uthmani' }, ayahs: [{ numberInSurah: 1, text: longText }] },
+          { edition: { identifier: 'en.itani' }, ayahs: [{ numberInSurah: 1, text: 'A long verse.' }] }
+        ]
+      })
+    })
+  })
+  await startFresh(page)
+  // At the top of the scroll area, the verse start must be reachable (not clipped above).
+  const notClipped = await page.evaluate(() => {
+    const main = document.querySelector('main')
+    main.scrollTop = 0
+    const verse = document.querySelector('.verse-arabic')
+    return verse.getBoundingClientRect().top >= main.getBoundingClientRect().top - 1
+  })
+  expect(notClipped).toBe(true)
+  // And the content genuinely overflows (so this is a real scroll case).
+  const scrollable = await page.evaluate(() => {
+    const main = document.querySelector('main')
+    return main.scrollHeight > main.clientHeight
+  })
+  expect(scrollable).toBe(true)
+})
+
 test('desktop viewport shows quick settings toggle', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await startFresh(page)
