@@ -85,8 +85,8 @@ onMounted(() => nextTick(() => scrollToActive(false)))
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.7em;
-  height: 1.7em;
+  min-width: 2em;
+  height: 2em;
   margin-inline-start: 0.35em;
   padding: 0 0.2em;
   /* Render the ayah number in the UI font: the Arabic font's Latin digits have odd
@@ -96,7 +96,7 @@ onMounted(() => nextTick(() => scrollToActive(false)))
     system-ui,
     -apple-system,
     sans-serif;
-  font-size: 0.5em;
+  font-size: 0.42em;
   font-weight: 600;
   line-height: 1;
   vertical-align: middle;
