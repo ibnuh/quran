@@ -4,7 +4,14 @@ import { usePlayerStore } from '../stores/player.js'
 import THEMES from '../data/themes.js'
 import JuzPicker from './JuzPicker.vue'
 
-const emit = defineEmits(['open-settings', 'toggle-verses', 'toggle-shortcuts', 'toggle-settings-bar', 'toggle-bookmarks'])
+const emit = defineEmits([
+  'open-settings',
+  'toggle-verses',
+  'toggle-shortcuts',
+  'toggle-settings-bar',
+  'toggle-bookmarks',
+  'toggle-search'
+])
 const store = usePlayerStore()
 const showThemePicker = ref(false)
 
@@ -71,6 +78,16 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         <span>Quick Settings</span>
       </button>
       <JuzPicker />
+      <button
+        class="flex header-btn shrink-0"
+        aria-label="Search"
+        @click="$emit('toggle-search')"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1114 9.5 4.49 4.49 0 019.5 14z"/>
+        </svg>
+        <span class="hidden md:inline">Search</span>
+      </button>
     </div>
 
     <div class="text-center flex-1 min-w-0 px-3">
@@ -123,6 +140,21 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
             class="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[160px]"
             @keydown="onThemePickerKeydown"
           >
+            <button
+              class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-body transition-colors cursor-pointer"
+              :class="store.theme === 'auto' ? 'bg-primary/10 font-medium' : 'hover:bg-surface'"
+              aria-label="Select Auto theme"
+              @click="selectTheme('auto')"
+            >
+              <span class="w-5 h-5 rounded-full border-2 shrink-0 overflow-hidden flex" :style="{ borderColor: 'var(--color-primary)' }">
+                <span class="w-1/2 h-full" style="background:#f8f6f1"></span>
+                <span class="w-1/2 h-full" style="background:#121212"></span>
+              </span>
+              <span>Auto</span>
+              <svg v-if="store.theme === 'auto'" class="ml-auto w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </button>
             <button
               v-for="theme in THEMES"
               :key="theme.id"

@@ -253,6 +253,18 @@ function onLanguageChange(code) {
               <label class="block text-sm font-medium text-muted mb-3">Theme</label>
               <div class="grid grid-cols-5 gap-2 gap-y-3">
                 <button
+                  class="theme-swatch flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-pointer"
+                  :class="store.theme === 'auto' ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
+                  aria-label="Select Auto theme"
+                  @click="store.setTheme('auto')"
+                >
+                  <span class="w-8 h-8 rounded-full border-2 overflow-hidden flex" style="border-color: var(--color-primary)">
+                    <span class="w-1/2 h-full" style="background:#f8f6f1"></span>
+                    <span class="w-1/2 h-full" style="background:#121212"></span>
+                  </span>
+                  <span class="text-[0.65rem] text-body">Auto</span>
+                </button>
+                <button
                   v-for="theme in THEMES"
                   :key="theme.id"
                   class="theme-swatch flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-pointer"

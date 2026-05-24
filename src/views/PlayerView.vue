@@ -13,11 +13,12 @@ import { useWakeLock } from '../composables/useWakeLock.js'
 import { useMobileTip } from '../composables/useMobileTip.js'
 import { useDeepLink } from '../composables/useDeepLink.js'
 import { useSleepTimer } from '../composables/useSleepTimer.js'
-import THEMES from '../data/themes.js'
+import THEMES, { resolveThemeId } from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
 const SettingsModal = defineAsyncComponent(() => import('../components/SettingsModal.vue'))
 const BookmarksPanel = defineAsyncComponent(() => import('../components/BookmarksPanel.vue'))
+const SearchPanel = defineAsyncComponent(() => import('../components/SearchPanel.vue'))
 import VerseDisplay from '../components/VerseDisplay.vue'
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
@@ -33,8 +34,13 @@ const showSettingsBar = ref(true)
 const showVerses = ref(false)
 const showShortcuts = ref(false)
 const showBookmarks = ref(false)
+const showSearch = ref(false)
 const isAnyPanelOpen = () =>
-  showSettings.value || showVerses.value || showShortcuts.value || showBookmarks.value
+  showSettings.value ||
+  showVerses.value ||
+  showShortcuts.value ||
+  showBookmarks.value ||
+  showSearch.value
 
 // -- Layout refs --
 const isOnline = ref(navigator.onLine)
@@ -44,7 +50,9 @@ const controlsRef = ref(null)
 const headerHeight = ref(56)
 const controlsHeight = ref(140)
 
-const activeThemeColors = computed(() => THEMES.find(t => t.id === store.theme)?.colors || THEMES[0].colors)
+const activeThemeColors = computed(
+  () => THEMES.find(t => t.id === resolveThemeId(store.theme))?.colors || THEMES[0].colors
+)
 const WARNING_COLOR = '#d97706'
 const statusBarFill = computed(() => {
   if (showSettings.value || showVerses.value || showBookmarks.value) {
@@ -269,6 +277,7 @@ onMounted(async () => {
         @toggle-verses="showVerses = !showVerses"
         @toggle-shortcuts="showShortcuts = !showShortcuts"
         @toggle-bookmarks="showBookmarks = !showBookmarks"
+        @toggle-search="showSearch = !showSearch"
       />
       <div class="absolute top-full left-0 right-0 pointer-events-none">
         <SettingsBar :visible="showSettingsBar" @collapse="showSettingsBar = false" />
@@ -321,6 +330,12 @@ onMounted(async () => {
     <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
     <BookmarksPanel v-if="showBookmarks" @close="showBookmarks = false" @select="handleGoToBookmark" />
     <KeyboardShortcuts v-if="showShortcuts" @close="showShortcuts = false" />
+    <SearchPanel
+      v-if="showSearch"
+      @close="showSearch = false"
+      @select-surah="applyDeepLink($event)"
+      @select-verse="handleJumpToVerse"
+    />
 
     <!-- Mobile tip -->
     <Transition name="tip">

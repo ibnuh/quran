@@ -12,8 +12,24 @@ import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
-import THEMES from '../data/themes.js'
+import THEMES, { resolveThemeId } from '../data/themes.js'
 import JUZS, { getJuzForVerse } from '../data/juzs.js'
+
+// Apply a theme id to the document (data-theme attribute and theme-color meta),
+// resolving 'auto' to the OS color scheme.
+function applyThemeToDom(id) {
+  const resolved = resolveThemeId(id)
+  document.documentElement.setAttribute('data-theme', resolved === 'light' ? '' : resolved)
+  const theme = THEMES.find(t => t.id === resolved)
+  if (theme) {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) {
+      meta.setAttribute('content', theme.colors.primary)
+    }
+  }
+}
+
+let autoThemeListenerBound = false
 
 function detectTranslationFromLocale() {
   const locales = navigator.languages || [navigator.language || 'en']
@@ -59,7 +75,7 @@ function normalizePrefs(prefs) {
   if (out.reciter && !RECITERS.some(r => r.id === out.reciter)) {
     out.reciter = undefined
   }
-  if (out.theme && !THEMES.some(t => t.id === out.theme)) {
+  if (out.theme && out.theme !== 'auto' && !THEMES.some(t => t.id === out.theme)) {
     out.theme = undefined
   }
   if (out.arabicFont && !ARABIC_FONTS.some(f => f.id === out.arabicFont)) {
@@ -561,15 +577,22 @@ export const usePlayerStore = defineStore('player', {
 
     setTheme(id) {
       this.theme = id
-      document.documentElement.setAttribute('data-theme', id === 'light' ? '' : id)
-      const theme = THEMES.find(t => t.id === id)
-      if (theme) {
-        const meta = document.querySelector('meta[name="theme-color"]')
-        if (meta) {
-          meta.setAttribute('content', theme.colors.primary)
-        }
-      }
+      applyThemeToDom(id)
       this.savePreferences()
+    },
+
+    // Re-apply the theme when the OS color scheme changes (only matters for 'auto').
+    bindAutoTheme() {
+      if (autoThemeListenerBound || typeof window === 'undefined' || !window.matchMedia) {
+        return
+      }
+      autoThemeListenerBound = true
+      const mql = window.matchMedia('(prefers-color-scheme: dark)')
+      mql.addEventListener('change', () => {
+        if (this.theme === 'auto') {
+          applyThemeToDom('auto')
+        }
+      })
     },
 
     setAutoHideControls(val) {
@@ -709,6 +732,7 @@ export const usePlayerStore = defineStore('player', {
     },
 
     loadPreferences() {
+      this.bindAutoTheme()
       try {
         const saved = localStorage.getItem(STORAGE_KEY)
         if (!saved) {
@@ -743,17 +767,7 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.theme) {
           this.theme = prefs.theme
-          document.documentElement.setAttribute(
-            'data-theme',
-            prefs.theme === 'light' ? '' : prefs.theme
-          )
-          const theme = THEMES.find(t => t.id === prefs.theme)
-          if (theme) {
-            const meta = document.querySelector('meta[name="theme-color"]')
-            if (meta) {
-              meta.setAttribute('content', theme.colors.primary)
-            }
-          }
+          applyThemeToDom(prefs.theme)
         }
         if (prefs.autoHideControls !== undefined) {
           this.autoHideControls = prefs.autoHideControls

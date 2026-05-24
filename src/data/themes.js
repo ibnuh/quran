@@ -181,4 +181,16 @@ const THEMES = [
   }
 ]
 
+// Resolve a stored theme id to a concrete theme. 'auto' follows the OS color scheme.
+export function resolveThemeId(id) {
+  if (id === 'auto') {
+    const prefersDark =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
+  }
+  return id
+}
+
 export default THEMES
