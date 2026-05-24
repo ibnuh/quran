@@ -88,6 +88,6 @@ test('error message is displayed on API failure', async ({ page }) => {
   await page.goto('/')
   const error = page.locator('.error-state')
   await expect(error).toBeVisible({ timeout: 30000 })
-  await expect(error).toContainText(/Failed|error|check your connection/i)
+  await expect(error).toContainText(/Failed|error|unavailable|reciter|check your connection/i)
   await expect(error.getByRole('button', { name: 'Retry' })).toBeVisible()
 })

@@ -7,14 +7,13 @@ import {
   getCachedSurah,
   cacheSurah
 } from '../services/api.js'
+import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
 import THEMES from '../data/themes.js'
 import JUZS, { getJuzForVerse } from '../data/juzs.js'
-
-const STORAGE_KEY = 'quran-player-prefs'
 
 function detectTranslationFromLocale() {
   const locales = navigator.languages || [navigator.language || 'en']
@@ -28,21 +27,54 @@ function detectTranslationFromLocale() {
   return 'en.itani'
 }
 
-let loadAbortController = null
-
-function getResponsiveDefaults() {
-  const w = window.innerWidth
-  if (w < 480) {
-    return { arabicFontSize: 1.8, translationFontSize: 0.95, contentWidth: 100 }
+// Map a thrown ApiError to a user-facing, actionable message.
+function errorMessageFor(err, { isAudio = false } = {}) {
+  const kind = err?.kind
+  if (kind === 'not-found') {
+    return isAudio
+      ? 'Audio is unavailable for this reciter and surah.'
+      : 'This surah or translation could not be found.'
   }
-  if (w < 768) {
-    return { arabicFontSize: 2.0, translationFontSize: 1.0, contentWidth: 95 }
+  if (kind === 'network') {
+    return 'Network error. Please check your connection and try again.'
   }
-  if (w < 1024) {
-    return { arabicFontSize: 2.5, translationFontSize: 1.1, contentWidth: 85 }
+  if (kind === 'invalid' || kind === 'http') {
+    return isAudio
+      ? 'The audio service is unavailable right now. Try another reciter.'
+      : 'The text service is unavailable right now. Please try again.'
   }
-  return { arabicFontSize: 3.2, translationFontSize: 1.3, contentWidth: 80 }
+  return 'Failed to load surah. Please check your connection and try again.'
 }
+
+// Migrate and validate persisted preferences across schema versions, dropping
+// values that no longer reference valid reciters/themes/fonts/surahs so the store
+// can fall back to its defaults instead of breaking.
+function normalizePrefs(prefs) {
+  const out = { ...prefs }
+  // v1 -> v2: reciter was stored as a numeric cdnId.
+  if (typeof out.reciter === 'number') {
+    const found = RECITERS.find(r => r.cdnId === out.reciter)
+    out.reciter = found ? found.id : undefined
+  }
+  if (out.reciter && !RECITERS.some(r => r.id === out.reciter)) {
+    out.reciter = undefined
+  }
+  if (out.theme && !THEMES.some(t => t.id === out.theme)) {
+    out.theme = undefined
+  }
+  if (out.arabicFont && !ARABIC_FONTS.some(f => f.id === out.arabicFont)) {
+    out.arabicFont = undefined
+  }
+  if (out.surah !== undefined && (out.surah < 1 || out.surah > TOTAL_SURAHS)) {
+    out.surah = undefined
+  }
+  if (typeof out.playbackSpeed !== 'number' || out.playbackSpeed <= 0) {
+    out.playbackSpeed = undefined
+  }
+  return out
+}
+
+let loadAbortController = null
 
 const _responsiveDefaults = getResponsiveDefaults()
 const loadedArabicFontFamilies = new Set()
@@ -121,6 +153,7 @@ export const usePlayerStore = defineStore('player', {
     animations: true,
     isLoading: false,
     error: null,
+    errorKind: null, // 'text' | 'audio' | null
     bookmarks: [],
     recentSurahs: []
   }),
@@ -165,10 +198,12 @@ export const usePlayerStore = defineStore('player', {
 
       this.isLoading = true
       this.error = null
+      this.errorKind = null
 
       const reciter = this.currentReciterData
       if (!reciter) {
         this.error = 'Unknown reciter selected.'
+        this.errorKind = 'audio'
         this.isLoading = false
         return
       }
@@ -176,6 +211,7 @@ export const usePlayerStore = defineStore('player', {
       // Check if neither audio source is available
       if (!reciter.cdnId && !reciter.cloudId) {
         this.error = 'No audio source available for this reciter.'
+        this.errorKind = 'audio'
         this.isLoading = false
         return
       }
@@ -203,16 +239,24 @@ export const usePlayerStore = defineStore('player', {
 
       try {
         const isQuranCom = this.currentTranslation.startsWith('qdc.')
-        const textPromise = isQuranCom
-          ? fetchSurahTextQuranCom(
-              this.currentSurahNum,
-              parseInt(this.currentTranslation.slice(4)),
-              signal
-            )
-          : fetchSurahText(this.currentSurahNum, this.currentTranslation, signal)
+        // Start the text fetch in parallel; settle to a result/error object so a
+        // text rejection never becomes unhandled if audio fails first.
+        const textSettled = (
+          isQuranCom
+            ? fetchSurahTextQuranCom(
+                this.currentSurahNum,
+                parseInt(this.currentTranslation.slice(4)),
+                signal
+              )
+            : fetchSurahText(this.currentSurahNum, this.currentTranslation, signal)
+        ).then(
+          data => ({ data }),
+          error => ({ error })
+        )
 
-        // Try full surah audio first, then fall back to per-verse
+        // Try full surah audio first, then fall back to per-verse.
         let audioResult = null
+        let audioError = null
 
         if (reciter.cdnId) {
           try {
@@ -227,28 +271,44 @@ export const usePlayerStore = defineStore('player', {
             if (e.name === 'AbortError') {
               throw e
             }
-            // CDN failed, will try per-verse fallback
+            audioError = e
+            // CDN failed, will try per-verse fallback below.
           }
         }
 
         if (!audioResult && reciter.cloudId) {
-          const data = await fetchVerseAudio(reciter.cloudId, this.currentSurahNum, signal)
-          audioResult = {
-            mode: 'verse',
-            audioUrl: null,
-            verseTimings: [],
-            audioUrls: data.audioUrls
+          try {
+            const data = await fetchVerseAudio(reciter.cloudId, this.currentSurahNum, signal)
+            audioResult = {
+              mode: 'verse',
+              audioUrl: null,
+              verseTimings: [],
+              audioUrls: data.audioUrls
+            }
+            audioError = null
+          } catch (e) {
+            if (e.name === 'AbortError') {
+              throw e
+            }
+            audioError = e
           }
         }
 
-        if (!audioResult) {
-          throw new Error('No audio source available for this reciter')
+        const { data: textData, error: textError } = await textSettled
+
+        if (signal.aborted) {
+          return
         }
 
-        const textData = await textPromise
+        if (!audioResult) {
+          this.error = errorMessageFor(audioError, { isAudio: true })
+          this.errorKind = 'audio'
+          return
+        }
 
-        // Check if this load was aborted while awaiting
-        if (signal.aborted) {
+        if (textError) {
+          this.error = errorMessageFor(textError, { isAudio: false })
+          this.errorKind = 'text'
           return
         }
 
@@ -258,6 +318,7 @@ export const usePlayerStore = defineStore('player', {
         this.audioUrl = audioResult.audioUrl
         this.verseTimings = audioResult.verseTimings
         this.audioUrls = audioResult.audioUrls
+        this.errorKind = null
 
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
@@ -277,7 +338,8 @@ export const usePlayerStore = defineStore('player', {
         if (err.name === 'AbortError') {
           return
         }
-        this.error = 'Failed to load surah. Please check your connection and try again.'
+        this.error = errorMessageFor(err)
+        this.errorKind = 'text'
       } finally {
         if (!signal.aborted) {
           this.isLoading = false
@@ -337,7 +399,7 @@ export const usePlayerStore = defineStore('player', {
           translationVerses: textData.translationVerses,
           ...audioResult
         })
-      } catch (e) {
+      } catch {
         // Preload failure is silent
       }
     },
@@ -592,6 +654,7 @@ export const usePlayerStore = defineStore('player', {
         localStorage.setItem(
           STORAGE_KEY,
           JSON.stringify({
+            version: PREFS_VERSION,
             surah: this.currentSurahNum,
             verse: this.currentVerseIndex,
             reciter: this.currentReciter,
@@ -611,7 +674,9 @@ export const usePlayerStore = defineStore('player', {
             recentSurahs: this.recentSurahs
           })
         )
-      } catch (e) {}
+      } catch {
+        // Ignore storage errors (private mode, quota, corrupt JSON).
+      }
     },
 
     applyResponsiveDefaults() {
@@ -631,7 +696,7 @@ export const usePlayerStore = defineStore('player', {
           return
         }
 
-        const prefs = JSON.parse(saved)
+        const prefs = normalizePrefs(JSON.parse(saved))
         const savedArabicFont = prefs.arabicFont
         if (prefs.surah) {
           this.currentSurahNum = prefs.surah
@@ -640,15 +705,7 @@ export const usePlayerStore = defineStore('player', {
           this.currentVerseIndex = prefs.verse
         }
         if (prefs.reciter) {
-          // Handle migration from old numeric cdnId format
-          if (typeof prefs.reciter === 'number') {
-            const found = RECITERS.find(r => r.cdnId === prefs.reciter)
-            if (found) {
-              this.currentReciter = found.id
-            }
-          } else {
-            this.currentReciter = prefs.reciter
-          }
+          this.currentReciter = prefs.reciter
         }
         if (prefs.translation) {
           this.currentTranslation = prefs.translation
@@ -706,7 +763,9 @@ export const usePlayerStore = defineStore('player', {
         if (Array.isArray(prefs.recentSurahs)) {
           this.recentSurahs = prefs.recentSurahs
         }
-      } catch (e) {}
+      } catch {
+        // Ignore storage errors (private mode, quota, corrupt JSON).
+      }
     }
   }
 })

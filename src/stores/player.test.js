@@ -109,4 +109,33 @@ describe('preferences persistence', () => {
     expect(fresh.currentReciter).toBe('sudais')
     expect(fresh.playbackSpeed).toBe(1.5)
   })
+
+  it('migrates a legacy numeric reciter (cdnId) to its id', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ reciter: 7 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentReciter).toBe('alafasy')
+  })
+
+  it('drops an unknown reciter and keeps the default', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ reciter: 'does-not-exist' }))
+    const store = usePlayerStore()
+    const original = store.currentReciter
+    store.loadPreferences()
+    expect(store.currentReciter).toBe(original)
+  })
+
+  it('ignores an out-of-range surah', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ surah: 999 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentSurahNum).toBe(1)
+  })
+
+  it('ignores an unknown theme', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ theme: 'neon' }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.theme).toBe('light')
+  })
 })
