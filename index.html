@@ -30,6 +30,38 @@
 
   <!-- Theme & PWA -->
   <meta name="theme-color" content="#1a6b4b">
+  <!--
+    Apply the saved theme to <html data-theme> and the theme-color meta in a
+    blocking script BEFORE first paint. A deferred module (main.js) runs after the
+    browser snapshots theme-color for the OS/PWA status bar, which left it on the
+    default green. Keep THEME_PRIMARY in sync with src/data/themes.js.
+  -->
+  <script>
+    (function () {
+      try {
+        var THEME_PRIMARY = {
+          light: '#1a6b4b', dark: '#2d9b6e', black: '#2d9b6e', sepia: '#8b6914',
+          midnight: '#5b8def', nature: '#4a9b6e', ocean: '#2a8fa4', rose: '#b04060',
+          sunset: '#d47830', lavender: '#7a5aaf'
+        }
+        var prefs = JSON.parse(localStorage.getItem('quran-player-prefs') || '{}')
+        var theme = prefs.theme
+        if (theme === 'auto') {
+          theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        if (theme && THEME_PRIMARY[theme]) {
+          document.documentElement.setAttribute('data-theme', theme === 'light' ? '' : theme)
+          var meta = document.querySelector('meta[name="theme-color"]')
+          if (meta) {
+            meta.setAttribute('content', THEME_PRIMARY[theme])
+          }
+        }
+        if (prefs.animations === false) {
+          document.documentElement.classList.add('no-animations')
+        }
+      } catch (e) {}
+    })()
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Quran">

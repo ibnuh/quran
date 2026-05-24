@@ -2,25 +2,11 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router/index.js'
 import App from './App.vue'
-import { STORAGE_KEY } from './config.js'
-import { applyThemeToDocument } from './data/themes.js'
 import './assets/styles/main.css'
 
-// Apply saved display preferences before the app mounts so the OS/browser status
-// bar (theme-color meta), CSS variables, and the animations setting are correct on
-// first paint, instead of briefly showing the defaults (green status bar, entrance
-// animations) before the store applies them in onMounted.
-try {
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-  if (saved.theme) {
-    applyThemeToDocument(saved.theme)
-  }
-  if (saved.animations === false) {
-    document.documentElement.classList.add('no-animations')
-  }
-} catch {
-  // Ignore corrupt/unavailable storage; the store applies these on load too.
-}
+// Note: the saved theme (data-theme + theme-color meta) and animations setting are
+// applied before first paint by a blocking inline script in index.html, so the
+// OS/PWA status bar never snapshots the default green. The store re-applies on load.
 
 // Capture PWA install prompt globally (fires before components mount)
 window.addEventListener('beforeinstallprompt', e => {
