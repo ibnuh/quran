@@ -1,30 +1,15 @@
 <script setup>
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import { useFocusTrap } from '../composables/useFocusTrap.js'
 import VerseItem from './VerseItem.vue'
 
 const store = usePlayerStore()
 const listRef = ref(null)
 const panelRef = ref(null)
 const emit = defineEmits(['close', 'select'])
-let previouslyFocused = null
 
-function onKeydown(e) {
-  if (e.key === 'Escape') {emit('close')}
-  if (e.key === 'Tab' && panelRef.value) {
-    const focusable = panelRef.value.querySelectorAll('button, [tabindex]:not([tabindex="-1"])')
-    if (focusable.length === 0) {return}
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault()
-      first.focus()
-    }
-  }
-}
+useFocusTrap(panelRef, { onEscape: () => emit('close'), autoFocus: false })
 
 function scrollToActive(smooth = false) {
   if (!listRef.value) {return}
@@ -35,14 +20,7 @@ function scrollToActive(smooth = false) {
 }
 
 onMounted(() => {
-  previouslyFocused = document.activeElement
-  document.addEventListener('keydown', onKeydown)
   nextTick(() => scrollToActive())
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown)
-  if (previouslyFocused) {previouslyFocused.focus()}
 })
 
 watch(() => store.currentVerseIndex, async () => {

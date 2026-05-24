@@ -1,7 +1,10 @@
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useFocusTrap } from '../composables/useFocusTrap.js'
 
 const emit = defineEmits(['close'])
+const panelRef = ref(null)
+useFocusTrap(panelRef)
 
 const shortcuts = [
   { keys: ['Space'], action: 'Play / Pause' },
@@ -26,7 +29,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Keyboard shortcuts">
       <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40 backdrop-blur-sm" @click="emit('close')"></div>
 
-      <div class="relative bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div ref="panelRef" class="relative bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-base font-semibold text-body">Keyboard Shortcuts</h2>
           <button

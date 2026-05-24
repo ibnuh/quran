@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import { useFocusTrap } from '../composables/useFocusTrap.js'
 import SearchSelect from './SearchSelect.vue'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
@@ -11,7 +12,7 @@ import THEMES from '../data/themes.js'
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
 const panelRef = ref(null)
-let previouslyFocused = null
+useFocusTrap(panelRef, { onEscape: () => emit('close'), autoFocus: false })
 
 const appVersion = __APP_VERSION__
 
@@ -125,31 +126,6 @@ function onLanguageChange(code) {
   }
 }
 
-function onKeydown(e) {
-  if (e.key === 'Escape') {emit('close')}
-  if (e.key === 'Tab' && panelRef.value) {
-    const focusable = panelRef.value.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])')
-    if (focusable.length === 0) {return}
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault()
-      first.focus()
-    }
-  }
-}
-
-onMounted(() => {
-  previouslyFocused = document.activeElement
-  document.addEventListener('keydown', onKeydown)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown)
-  if (previouslyFocused) {previouslyFocused.focus()}
-})
 </script>
 
 <template>
