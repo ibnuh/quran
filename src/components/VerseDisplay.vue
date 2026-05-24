@@ -226,12 +226,7 @@ function copyVerse() {
           >
             <template v-if="tajweedHighlightActive"
               ><template v-for="(w, i) in tajweedWords" :key="i"
-                ><span
-                  class="word-span"
-                  :class="{
-                    'word-tajweed-active': i === store.currentWordIndex,
-                    'word-tajweed-done': i < store.currentWordIndex
-                  }"
+                ><span class="word-span word-tajweed" :class="wordHighlightClass(w.wordIndex)"
                   ><span
                     v-for="(piece, pi) in w.pieces"
                     :key="pi"
@@ -532,13 +527,13 @@ function copyVerse() {
   box-decoration-break: clone;
 }
 
-/* Tajweed + word highlight: keep per-letter tajweed colors, mark the active word with a
-   background box and dim already-recited words so progress is visible. */
-.word-tajweed-active {
-  background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
-}
-.word-tajweed-done {
-  opacity: 0.55;
+/* Tajweed + word highlight: the chosen highlight style still applies (glow, underline,
+   sweep, flow, etc.); per-letter tajweed colors win because they are set as inline styles
+   on the inner spans, so only the non-colored letters take the highlight color. The
+   "minimal" style is color-only, so give the active word a faint background as a fallback
+   for fully-colored words where the color change would otherwise be invisible. */
+.word-tajweed.word-active-minimal {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 /* Glow: color + text-shadow + subtle background */

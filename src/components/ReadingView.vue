@@ -59,7 +59,9 @@ onMounted(() => nextTick(() => scrollToActive(false)))
         }"
       >
         <span>{{ toDisplayArabic(verse.text) }}</span>
-        <span class="reading-ayah-num">{{ verse.number }}</span>
+        <span class="reading-ayah-num"
+          ><span class="reading-ayah-num-inner">{{ verse.number }}</span></span
+        >
       </p>
       <p
         class="text-muted font-light mt-2 text-left leading-relaxed"
@@ -94,5 +96,11 @@ onMounted(() => nextTick(() => scrollToActive(false)))
   border-radius: 9999px;
   border: 1.5px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
   color: var(--color-accent);
+}
+/* Digits sit low in their em box, so nudge them up to optically center in the circle. */
+.reading-ayah-num-inner {
+  display: block;
+  line-height: 1;
+  transform: translateY(-0.1em);
 }
 </style>
