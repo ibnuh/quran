@@ -40,12 +40,14 @@ const fontOptions = computed(() =>
 </script>
 
 <template>
-  <div
-    class="settings-bar-shell hidden lg:block landscape-compact:!hidden"
-    :class="visible ? 'settings-bar-shell-open' : 'settings-bar-shell-closed'"
-    :aria-hidden="!visible"
-  >
-    <div class="bg-card border-b border-border">
+  <div class="hidden lg:block landscape-compact:!hidden">
+    <div
+      class="settings-bar-shell"
+      :class="visible ? 'settings-bar-shell-open' : ''"
+      :aria-hidden="!visible"
+    >
+      <div class="settings-bar-panel">
+        <div class="bg-card border-b border-border">
       <div class="flex items-center flex-wrap gap-3 px-4 py-2.5 max-w-7xl mx-auto">
       <div class="flex-1 min-w-0">
         <SearchSelect
@@ -159,6 +161,8 @@ const fontOptions = computed(() =>
           </div>
         </div>
       </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -191,19 +195,23 @@ const fontOptions = computed(() =>
   cursor: pointer;
 }
 
+/* Smooth height reveal, matching the Display panel below (grid-rows 0fr -> 1fr). */
 .settings-bar-shell {
-  transform-origin: top center;
-  transition: opacity 0.24s cubic-bezier(0.25, 1, 0.5, 1), transform 0.24s cubic-bezier(0.25, 1, 0.5, 1);
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+  transition: grid-template-rows 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .settings-bar-shell-open {
+  grid-template-rows: 1fr;
   opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
 }
-.settings-bar-shell-closed {
-  opacity: 0;
-  transform: translateY(-0.75rem);
-  pointer-events: none;
+.settings-bar-panel {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .font-settings-shell {
