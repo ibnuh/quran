@@ -58,12 +58,12 @@ onBeforeUnmount(() => clearInterval(timer))
 
 <template>
   <div
-    class="fixed left-2 right-2 z-[200] rounded-lg bg-black/85 text-green-300 text-[11px] leading-snug font-mono p-2 shadow-2xl pointer-events-auto"
-    style="top: max(0.5rem, env(safe-area-inset-top, 0px))"
+    class="fixed left-2 right-2 z-[200] rounded-lg bg-black/85 text-green-300 text-[11px] leading-snug font-mono p-2 shadow-2xl pointer-events-none"
+    style="bottom: max(0.5rem, env(safe-area-inset-bottom, 0px))"
   >
     <!-- Probe element to read the actual safe-area inset value -->
     <div ref="probeRef" style="height: env(safe-area-inset-top, 0px); width: 0; position: absolute"></div>
-    <div class="flex items-center justify-between mb-1">
+    <div class="flex items-center justify-between mb-1 pointer-events-auto">
       <span class="text-green-400 font-bold">DEBUG</span>
       <span class="flex gap-2">
         <button class="underline" @click="copy">{{ copied ? 'copied' : 'copy' }}</button>
