@@ -69,7 +69,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         <span class="hidden sm:inline">Settings</span>
       </button>
       <button
-        class="hidden lg:flex header-btn opacity-60 hover:opacity-100 landscape-compact:!hidden"
+        class="hidden lg:flex header-btn opacity-80 hover:opacity-100 landscape-compact:!hidden"
         aria-label="Toggle quick settings bar"
         @click="$emit('toggle-settings-bar')"
       >
@@ -98,7 +98,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         lang="ar"
         :title="store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : ''"
       >{{ store.currentSurah ? store.currentSurah.name : 'Quran Player' }}</h1>
-      <p class="text-[0.65rem] sm:text-[0.7rem] truncate landscape-compact:hidden" :class="store.currentSurah ? 'opacity-70' : 'opacity-0'">
+      <p class="text-[0.65rem] sm:text-[0.7rem] truncate landscape-compact:hidden" :class="store.currentSurah ? 'opacity-90' : 'opacity-0'">
         {{ store.currentSurah ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation : '&nbsp;' }}
       </p>
     </div>

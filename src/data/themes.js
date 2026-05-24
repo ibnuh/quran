@@ -12,7 +12,7 @@ const THEMES = [
       surface: '#f8f6f1',
       card: '#ffffff',
       body: '#2c2c2c',
-      muted: '#777777',
+      muted: '#6b6b6b',
       arabic: '#1a1a1a',
       border: '#e8e4dd'
     }
