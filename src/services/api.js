@@ -197,6 +197,28 @@ export async function fetchSurahTajweed(surahNumber, signal) {
   }
 }
 
+// Fetch one or more additional translation editions (alquran.cloud) for a surah.
+// Returns parallel verse arrays so they can be stacked under the primary translation.
+export async function fetchTranslations(surahNumber, editionIds, signal) {
+  if (!editionIds.length) {
+    return { translations: [] }
+  }
+  const url = `${TEXT_API}/surah/${surahNumber}/editions/${editionIds.join(',')}`
+  const data = await fetchJsonDeduped(url, signal)
+  if (data.code !== 200 || !Array.isArray(data.data)) {
+    throw new ApiError('invalid', 'Invalid translations response')
+  }
+  return {
+    translations: data.data
+      .filter(ed => Array.isArray(ed?.ayahs))
+      .map(ed => ({
+        id: ed.edition?.identifier,
+        name: ed.edition?.englishName || ed.edition?.name || ed.edition?.identifier,
+        verses: ed.ayahs.map(a => ({ number: a.numberInSurah, text: a.text }))
+      }))
+  }
+}
+
 // Per-verse tafsir (commentary) HTML from quran.com for a given tafsir source.
 export async function fetchTafsir(tafsirId, surahNumber, ayahNumber, signal) {
   const url = `${QURANCOM_API}/tafsirs/${tafsirId}/by_ayah/${surahNumber}:${ayahNumber}`

@@ -100,6 +100,22 @@ const translationOptions = computed(() =>
   TRANSLATIONS.filter(t => t.language === selectedLanguage.value)
     .map(t => ({ value: t.identifier, label: t.englishName }))
 )
+// Extra translations are alquran.cloud editions (quran.com qdc.* are excluded), and
+// exclude the current primary and any already added.
+const extraTranslationOptions = computed(() =>
+  TRANSLATIONS.filter(
+    t =>
+      !t.identifier.startsWith('qdc.') &&
+      t.identifier !== store.currentTranslation &&
+      !store.extraTranslations.includes(t.identifier)
+  ).map(t => ({ value: t.identifier, label: `${t.englishName} (${t.language})` }))
+)
+const extraTranslationChips = computed(() =>
+  store.extraTranslations.map(id => {
+    const t = TRANSLATIONS.find(x => x.identifier === id)
+    return { id, label: t ? t.englishName : id }
+  })
+)
 const fontOptions = computed(() =>
   ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` }))
 )
@@ -191,6 +207,31 @@ function onLanguageChange(code) {
                 placeholder="Search translation..."
                 @update:model-value="store.setTranslation($event)"
               />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-muted mb-1.5">Additional translations</label>
+              <SearchSelect
+                :model-value="null"
+                :options="extraTranslationOptions"
+                placeholder="Add a translation..."
+                @update:model-value="store.addExtraTranslation($event)"
+              />
+              <div v-if="extraTranslationChips.length" class="flex flex-wrap gap-1.5 mt-2">
+                <span
+                  v-for="chip in extraTranslationChips"
+                  :key="chip.id"
+                  class="inline-flex items-center gap-1 text-xs bg-surface border border-border rounded-full pl-2.5 pr-1 py-1 text-body"
+                >
+                  {{ chip.label }}
+                  <button
+                    class="w-4 h-4 rounded-full flex items-center justify-center hover:bg-border text-muted cursor-pointer"
+                    :aria-label="'Remove ' + chip.label"
+                    @click="store.removeExtraTranslation(chip.id)"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                  </button>
+                </span>
+              </div>
             </div>
 
             <div class="border-t border-border pt-5">

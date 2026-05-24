@@ -17,10 +17,13 @@ const query = ref('')
 const inputRef = ref(null)
 const highlightedIndex = ref(-1)
 
-const selectedLabel = computed(() => {
-  const opt = props.options.find(o => o[props.valueKey] === props.modelValue)
-  return opt ? opt[props.labelKey] : ''
-})
+const selectedOption = computed(() =>
+  props.options.find(o => o[props.valueKey] === props.modelValue)
+)
+// Fall back to the placeholder so the trigger always has a visible, accessible name.
+const selectedLabel = computed(() =>
+  selectedOption.value ? selectedOption.value[props.labelKey] : props.placeholder
+)
 
 function fuzzyMatch(text, q) {
   const lower = text.toLowerCase()
@@ -104,7 +107,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     aria-haspopup="listbox"
     @click="open"
   >
-    <span class="truncate">{{ selectedLabel }}</span>
+    <span class="truncate" :class="{ 'opacity-60': !selectedOption }">{{ selectedLabel }}</span>
     <svg class="shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
   </button>
 

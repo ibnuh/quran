@@ -257,6 +257,18 @@ function copyVerse() {
             {{ store.currentTranslationVerse?.text }}
           </p>
 
+          <div
+            v-for="extra in store.currentExtraTranslations"
+            :key="extra.name"
+            class="verse-translation mx-auto mt-4"
+            :style="{ maxWidth: (store.contentWidth * 0.75) + 'rem' }"
+          >
+            <p class="text-[0.65rem] uppercase tracking-wide text-muted/60 mb-1">{{ extra.name }}</p>
+            <p class="leading-relaxed text-muted font-light" :style="{ fontSize: store.translationFontSize + 'rem' }">
+              {{ extra.text }}
+            </p>
+          </div>
+
           <div v-if="isLastVerse" class="surah-end mt-8">
             <div class="flex items-center gap-3 justify-center">
               <div class="end-line-left h-px w-16 bg-border"></div>

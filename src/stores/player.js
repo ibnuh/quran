@@ -5,6 +5,7 @@ import {
   fetchSurahAudio,
   fetchVerseAudio,
   fetchSurahTajweed,
+  fetchTranslations,
   getCachedSurah,
   cacheSurah
 } from '../services/api.js'
@@ -137,6 +138,9 @@ export const usePlayerStore = defineStore('player', {
     currentVerseIndex: 0,
     verses: [],
     translationVerses: [],
+    // Additional translations stacked under the primary one (alquran.cloud edition ids).
+    extraTranslations: [],
+    extraTranslationVerses: [], // [{ id, name, verses }]
     // Full surah audio (qurancdn.com)
     playbackMode: null, // 'full' | 'verse'
     audioUrl: null,
@@ -179,6 +183,10 @@ export const usePlayerStore = defineStore('player', {
     currentReciterData: state => RECITERS.find(r => r.id === state.currentReciter),
     currentVerse: state => state.verses[state.currentVerseIndex] || null,
     currentTranslationVerse: state => state.translationVerses[state.currentVerseIndex] || null,
+    currentExtraTranslations: state =>
+      state.extraTranslationVerses
+        .map(t => ({ name: t.name, text: t.verses[state.currentVerseIndex]?.text || '' }))
+        .filter(t => t.text),
     totalVerses: state => state.verses.length,
     showBismillah: state =>
       state.currentSurahNum !== 1 && state.currentSurahNum !== 9 && state.currentVerseIndex === 0,
@@ -220,8 +228,9 @@ export const usePlayerStore = defineStore('player', {
       this.isLoading = true
       this.error = null
       this.errorKind = null
-      // Tajweed text is surah-specific; clear and reload it for the new surah.
+      // Tajweed text and extra translations are surah-specific; reload per surah.
       this.tajweedVerses = []
+      this.extraTranslationVerses = []
 
       const reciter = this.currentReciterData
       if (!reciter) {
@@ -259,6 +268,9 @@ export const usePlayerStore = defineStore('player', {
         this.isLoading = false
         if (this.tajweed) {
           void this.loadTajweed()
+        }
+        if (this.extraTranslations.length) {
+          void this.loadExtraTranslations()
         }
         return
       }
@@ -363,6 +375,9 @@ export const usePlayerStore = defineStore('player', {
 
         if (this.tajweed) {
           void this.loadTajweed()
+        }
+        if (this.extraTranslations.length) {
+          void this.loadExtraTranslations()
         }
       } catch (err) {
         if (err.name === 'AbortError') {
@@ -672,6 +687,37 @@ export const usePlayerStore = defineStore('player', {
       return this.loadSurah()
     },
 
+    async loadExtraTranslations() {
+      const ids = this.extraTranslations
+      const surah = this.currentSurahNum
+      if (!ids.length) {
+        this.extraTranslationVerses = []
+        return
+      }
+      try {
+        const data = await fetchTranslations(surah, ids)
+        if (this.currentSurahNum === surah) {
+          this.extraTranslationVerses = data.translations
+        }
+      } catch {
+        this.extraTranslationVerses = []
+      }
+    },
+
+    addExtraTranslation(id) {
+      if (id && !this.extraTranslations.includes(id) && id !== this.currentTranslation) {
+        this.extraTranslations.push(id)
+        this.savePreferences()
+        void this.loadExtraTranslations()
+      }
+    },
+
+    removeExtraTranslation(id) {
+      this.extraTranslations = this.extraTranslations.filter(t => t !== id)
+      this.extraTranslationVerses = this.extraTranslationVerses.filter(t => t.id !== id)
+      this.savePreferences()
+    },
+
     async nextSurah() {
       if (this.canNextSurah) {
         this.currentSurahNum++
@@ -763,6 +809,7 @@ export const usePlayerStore = defineStore('player', {
             verse: this.currentVerseIndex,
             reciter: this.currentReciter,
             translation: this.currentTranslation,
+            extraTranslations: this.extraTranslations,
             arabicFont: this.arabicFont,
             arabicFontSize: this.arabicFontSize,
             translationFontSize: this.translationFontSize,
@@ -820,6 +867,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.translation) {
           this.currentTranslation = prefs.translation
+        }
+        if (Array.isArray(prefs.extraTranslations)) {
+          this.extraTranslations = prefs.extraTranslations.filter(id => typeof id === 'string')
         }
         if (prefs.arabicFontSize) {
           this.arabicFontSize = prefs.arabicFontSize
