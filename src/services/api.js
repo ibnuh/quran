@@ -119,8 +119,11 @@ export async function fetchSurahText(surahNumber, translationId, signal) {
   const stripBismillah = surahNumber !== 1 && surahNumber !== 9
 
   return {
+    // Keep the canonical Uthmani code points intact (e.g. U+0649 alef maqsura);
+    // any font-specific display substitution happens at render time, not here, so
+    // copy, share, and search use the original text.
     verses: arabicData.ayahs.map(a => {
-      let text = a.text.replace(/ى/g, 'ی')
+      let text = a.text
       if (stripBismillah && a.numberInSurah === 1) {
         text = stripBismillahFromVerse(text)
       }
@@ -190,8 +193,9 @@ export async function fetchSurahTextQuranCom(surahNumber, translationId, signal)
   const stripBismillah = surahNumber !== 1 && surahNumber !== 9
 
   return {
+    // Canonical code points preserved; display substitution happens at render time.
     verses: data.verses.map(v => {
-      let text = v.text_uthmani.replace(/ى/g, 'ی')
+      let text = v.text_uthmani
       if (stripBismillah && v.verse_number === 1) {
         text = stripBismillahFromVerse(text)
       }

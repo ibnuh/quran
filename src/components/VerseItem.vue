@@ -1,5 +1,6 @@
 <script setup>
 import { usePlayerStore } from '../stores/player.js'
+import { toDisplayArabic } from '../utils/arabicText.js'
 
 const store = usePlayerStore()
 
@@ -28,7 +29,7 @@ defineEmits(['select'])
     >{{ verse.number }}</div>
     <div class="flex-1 min-w-0">
       <p class="text-xl sm:text-[1.35rem] leading-[1.8] text-arabic text-right mb-1" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
-        {{ verse.text }}
+        {{ toDisplayArabic(verse.text) }}
       </p>
       <p class="text-sm sm:text-[0.85rem] leading-normal text-muted">
         {{ translation.text }}

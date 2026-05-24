@@ -2,16 +2,21 @@
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
+import { toDisplayArabic, toVerseTokens } from '../utils/arabicText.js'
 
 const emit = defineEmits(['retry'])
 const store = usePlayerStore()
 
 const copied = ref(false)
 
-const verseWords = computed(() => {
+// Display tokens: one per highlightable word (index aligns with timing segments),
+// with standalone waqf marks attached so no glyphs are dropped in highlight mode.
+const verseTokens = computed(() => {
   if (!store.currentVerse) {return []}
-  return store.currentVerse.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w))
+  return toVerseTokens(store.currentVerse.text)
 })
+
+const verseDisplayText = computed(() => toDisplayArabic(store.currentVerse?.text || ''))
 
 const hasWordTimings = computed(() => {
   if (store.playbackMode !== 'full') {return false}
@@ -117,7 +122,7 @@ function copyVerse() {
             dir="rtl"
             lang="ar"
             :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
-          ><template v-for="(word, i) in verseWords" :key="i"><span
+          ><template v-for="(token, i) in verseTokens" :key="i"><span
               class="word-span"
               :class="{
                 'word-active-glow': i === store.currentWordIndex && store.highlightStyle === 'glow',
@@ -131,7 +136,7 @@ function copyVerse() {
                 'word-flow-active': i === store.currentWordIndex && store.highlightStyle === 'flow',
                 'word-flow-next': i === store.currentWordIndex + 1 && store.highlightStyle === 'flow'
               }"
-            >{{ word }}</span>{{ i < verseWords.length - 1 ? ' ' : '' }}</template></p>
+            >{{ token.display }}</span>{{ i < verseTokens.length - 1 ? ' ' : '' }}</template></p>
           <p
             v-else
             class="verse-arabic leading-[2] text-arabic mb-5"
@@ -139,7 +144,7 @@ function copyVerse() {
             lang="ar"
             :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
           >
-            {{ store.currentVerse.text }}
+            {{ verseDisplayText }}
           </p>
 
           <div class="flex flex-col items-center gap-2.5 mt-4 mb-5">

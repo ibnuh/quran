@@ -430,8 +430,10 @@ export const usePlayerStore = defineStore('player', {
 
     // Pre-compute word counts per verse (call after loading verses)
     computeWordCounts() {
+      // Count real words only (standalone waqf marks U+06D6..U+06ED are not words),
+      // matching the token splitter in utils/arabicText.js so highlight indices align.
       this._wordCounts = this.verses.map(
-        v => v.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w)).length - 1
+        v => v.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]+$/.test(w)).length - 1
       )
     },
 
