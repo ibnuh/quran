@@ -85,10 +85,17 @@ onMounted(() => nextTick(() => scrollToActive(false)))
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.6em;
-  height: 1.6em;
+  min-width: 1.7em;
+  height: 1.7em;
   margin-inline-start: 0.35em;
   padding: 0 0.2em;
+  /* Render the ayah number in the UI font: the Arabic font's Latin digits have odd
+     metrics and never center cleanly in the circle. */
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.5em;
   font-weight: 600;
   line-height: 1;
@@ -97,10 +104,8 @@ onMounted(() => nextTick(() => scrollToActive(false)))
   border: 1.5px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
   color: var(--color-accent);
 }
-/* Digits sit low in their em box, so nudge them up to optically center in the circle. */
 .reading-ayah-num-inner {
   display: block;
   line-height: 1;
-  transform: translateY(-0.1em);
 }
 </style>
