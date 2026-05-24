@@ -267,8 +267,14 @@ function copyVerse() {
     text-decoration-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   border-radius: 0.25rem;
   padding-inline: 0.08em;
+  /* Small vertical padding so active backgrounds cover tall harakat (superscript
+     alef, maddah) without clipping; inline padding does not shift the line layout. */
+  padding-block: 0.12em;
   margin-inline: -0.08em;
   text-decoration-color: transparent;
+  /* Render backgrounds/borders cleanly when a word wraps across two lines. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* Glow: color + text-shadow + subtle background */
