@@ -11,7 +11,6 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
   let touchStartY = 0
   let touchStartTime = 0
   let lastTouchTapTime = 0
-  let isTouchDevice = false
 
   function showControls() {
     controlsVisible.value = true
@@ -35,35 +34,31 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
     }, AUTO_HIDE_DELAY)
   }
 
-  function onMainTap() {
+  // Tap/click in the empty reading area toggles the header and controls so the user
+  // always has an easy way to reveal or hide them, independent of the auto-hide setting.
+  function toggleControls() {
     if (isAnyPanelOpen()) {
       return
     }
-    const isMobileViewport = window.innerWidth < 768 || window.innerHeight < 768
-    if (isTouchDevice || isMobileViewport) {
-      if (!store.autoHideControls) {
-        return
-      }
-      if (controlsVisible.value) {
-        hideControls()
-      } else {
-        showControls()
-      }
-      return
-    }
-    if (!store.autoHideControls) {
-      return
-    }
-    if (!controlsVisible.value) {
-      showControls()
-    } else if (audio.isPlaying.value) {
+    if (controlsVisible.value) {
       hideControls()
+    } else {
+      showControls()
     }
   }
 
-  function onMainClick() {
+  function onMainTap() {
+    toggleControls()
+  }
+
+  function onMainClick(e) {
     // Ignore the synthetic click right after a touch tap to avoid a double-fire.
     if (Date.now() - lastTouchTapTime < 400) {
+      return
+    }
+    // Ignore clicks on interactive elements (buttons, links, the verse rows in
+    // reading mode, etc.) so only taps on empty space toggle the controls.
+    if (shouldIgnoreMobileToggle(e?.target)) {
       return
     }
     onMainTap()
@@ -99,7 +94,6 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
   }
 
   function onRootTouchEnd(e) {
-    isTouchDevice = true
     const touch = e.changedTouches[0]
     const dx = Math.abs(touch.clientX - touchStartX)
     const dy = Math.abs(touch.clientY - touchStartY)
@@ -140,6 +134,7 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
     controlsVisible,
     showControls,
     hideControls,
+    toggleControls,
     onMainTap,
     onMainClick,
     onRootTouchStart,

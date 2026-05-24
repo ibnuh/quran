@@ -93,8 +93,24 @@ const mediaSession = useMediaSession(store, {
 })
 
 // -- Auto-hide controls --
-const { controlsVisible, showControls, onMainClick, onRootTouchStart, onRootTouchEnd } =
-  useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, controlsRef })
+const {
+  controlsVisible,
+  showControls,
+  toggleControls,
+  onMainClick,
+  onRootTouchStart,
+  onRootTouchEnd
+} = useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, controlsRef })
+
+// In reading mode, tapping the already-active verse toggles the controls (an easy way
+// to reveal/hide them); tapping any other verse selects and plays it.
+function onReadingSelect(i) {
+  if (i === store.currentVerseIndex) {
+    toggleControls()
+  } else {
+    handleVerseSelect(i)
+  }
+}
 
 // -- Mobile tip --
 const { showMobileTip, tipMessage, tipAction, checkMobileTip, applyMobileTip, dismissMobileTip } =
@@ -310,7 +326,7 @@ onMounted(async () => {
         @retry="store.loadSurah()"
         @open-tafsir="showTafsir = true"
       />
-      <ReadingView v-else @select="handleVerseSelect" />
+      <ReadingView v-else @select="onReadingSelect" />
     </main>
 
     <div
