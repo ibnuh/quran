@@ -129,6 +129,7 @@ export default {
     tajweed: 'Tajweed colors',
     tajweedHint: 'Color-code letters by pronunciation rule',
     tajweedUnavailableQcf: 'Not available with the mushaf (QCF) font',
+    justifyUnavailableQcf: 'The mushaf (QCF) font already spaces words for the page',
     endOrnamentUnavailableQcf: 'The mushaf (QCF) font shows its own ayah numbers',
     justify: 'Justify Arabic text',
     justifyHint: 'Spread long verses to both edges (mushaf style)',

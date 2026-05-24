@@ -8,12 +8,14 @@ const emit = defineEmits(['select'])
 const rowsRef = ref(null)
 
 // Reading rows use a slightly smaller Arabic size; alignment follows the justify setting.
+// Justify is ignored with the mushaf (QCF) font (its glyphs are pre-spaced for the page).
+const justify = computed(() => store.justifyText && !store.mushafMode)
 const readingStyle = computed(() => ({
   fontFamily: store.arabicFontFamily,
   fontSize: store.arabicFontSize * store.arabicFontMetrics.sizeFactor * 0.7 + 'rem',
   lineHeight: store.arabicFontMetrics.lineHeight,
-  textAlign: store.justifyText ? 'justify' : 'right',
-  textAlignLast: store.justifyText ? 'right' : 'auto'
+  textAlign: justify.value ? 'justify' : 'right',
+  textAlignLast: justify.value ? 'right' : 'auto'
 }))
 
 function scrollToActive(smooth = true) {

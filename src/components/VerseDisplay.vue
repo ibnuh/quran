@@ -11,13 +11,16 @@ const copied = ref(false)
 
 // Per-font display metrics: the size slider multiplies the font's sizeFactor, and the
 // font's lineHeight gives tall-mark scripts room so harakat never overlap.
+// Justify is ignored with the mushaf (QCF) font: its glyphs are already spaced for the
+// printed page, so justifying per verse produces large uneven gaps.
+const justify = computed(() => store.justifyText && !store.mushafMode)
 const arabicStyle = computed(() => ({
   fontFamily: store.arabicFontFamily,
   fontSize: store.arabicFontSize * store.arabicFontMetrics.sizeFactor + 'rem',
   lineHeight: store.arabicFontMetrics.lineHeight,
   overflowWrap: 'break-word',
-  textAlign: store.justifyText ? 'justify' : 'center',
-  textAlignLast: store.justifyText ? 'center' : 'auto'
+  textAlign: justify.value ? 'justify' : 'center',
+  textAlignLast: justify.value ? 'center' : 'auto'
 }))
 
 const isLastVerse = computed(

@@ -130,6 +130,7 @@ export default {
     tajweed: 'تجوید کے رنگ',
     tajweedHint: 'حروف کو تجوید کے قواعد کے مطابق رنگ دیں',
     tajweedUnavailableQcf: 'مصحف (QCF) فونٹ کے ساتھ دستیاب نہیں',
+    justifyUnavailableQcf: 'مصحف (QCF) فونٹ پہلے سے الفاظ کا وقفہ صفحے کے مطابق رکھتا ہے',
     endOrnamentUnavailableQcf: 'مصحف (QCF) فونٹ اپنے آیت نمبر دکھاتا ہے',
     justify: 'عربی متن کو دونوں طرف ترتیب دیں',
     justifyHint: 'لمبی آیات کو دونوں کناروں تک پھیلائیں (مصحف انداز)',

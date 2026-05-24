@@ -587,6 +587,8 @@ function onLanguageChange(code) {
                   :label="$t('settings.justify')"
                   :hint="$t('settings.justifyHint')"
                   :model-value="store.justifyText"
+                  :disabled="store.mushafMode"
+                  :disabled-reason="$t('settings.justifyUnavailableQcf')"
                   @update:model-value="store.setJustifyText($event)"
                 />
                 <!-- Tajweed colors are letter-level; the mushaf (QCF) font renders whole-word

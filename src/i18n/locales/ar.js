@@ -129,6 +129,7 @@ export default {
     tajweed: 'ألوان التجويد',
     tajweedHint: 'تلوين الحروف حسب أحكام التجويد',
     tajweedUnavailableQcf: 'غير متاح مع خط المصحف (QCF)',
+    justifyUnavailableQcf: 'خط المصحف (QCF) ينسّق تباعد الكلمات للصفحة تلقائياً',
     endOrnamentUnavailableQcf: 'خط المصحف (QCF) يعرض أرقام الآيات الخاصة به',
     justify: 'ضبط النص العربي',
     justifyHint: 'توزيع الآيات الطويلة على الحافتين (نمط المصحف)',
