@@ -1,10 +1,26 @@
 <script setup>
-import { onErrorCaptured, ref } from 'vue'
+import { onErrorCaptured, ref, defineAsyncComponent } from 'vue'
 import UpdatePrompt from './components/UpdatePrompt.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 
+const DebugPanel = defineAsyncComponent(() => import('./components/DebugPanel.vue'))
+
 const hasError = ref(false)
 const errorMessage = ref('')
+
+// Debug overlay: ?debug=1 enables (and persists), ?debug=0 disables.
+const showDebug = ref(false)
+try {
+  const flag = new URLSearchParams(window.location.search).get('debug')
+  if (flag === '1') {
+    localStorage.setItem('quran-debug', '1')
+  } else if (flag === '0') {
+    localStorage.removeItem('quran-debug')
+  }
+  showDebug.value = localStorage.getItem('quran-debug') === '1'
+} catch {
+  showDebug.value = false
+}
 
 onErrorCaptured((err) => {
   console.error('App error:', err)
@@ -36,6 +52,7 @@ function reload() {
 
   <UpdatePrompt />
   <InstallPrompt />
+  <DebugPanel v-if="showDebug" />
 
   <!-- Screen reader announcements -->
   <div aria-live="polite" aria-atomic="true" class="sr-only" id="sr-announcements"></div>
