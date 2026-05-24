@@ -12,6 +12,12 @@ export function toDisplayArabic(text) {
   return text.replace(/ى/g, 'ی')
 }
 
+// Render a number in Arabic-Indic digits (e.g. 45 -> ٤٥) for the end-of-ayah ornament.
+const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']
+export function toArabicDigits(value) {
+  return String(value).replace(/\d/g, d => ARABIC_DIGITS[Number(d)])
+}
+
 // True when a whitespace-delimited token is purely Quranic waqf (pause) / small high
 // marks (U+06D6..U+06ED). These must be displayed but are not separately highlightable
 // words, so they get attached to the preceding word.

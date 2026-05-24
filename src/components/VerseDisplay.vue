@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
-import { toDisplayArabic, toVerseTokens } from '../utils/arabicText.js'
+import { toDisplayArabic, toVerseTokens, toArabicDigits } from '../utils/arabicText.js'
 
 const emit = defineEmits(['retry'])
 const store = usePlayerStore()
@@ -145,19 +145,26 @@ function copyVerse() {
                 'word-flow-active': i === store.currentWordIndex && store.highlightStyle === 'flow',
                 'word-flow-next': i === store.currentWordIndex + 1 && store.highlightStyle === 'flow'
               }"
-            >{{ token.display }}</span>{{ i < verseTokens.length - 1 ? ' ' : '' }}</template></p>
+            >{{ token.display }}</span>{{ i < verseTokens.length - 1 ? ' ' : '' }}</template><span
+              v-if="store.verseEndOrnament"
+              class="ayah-ornament"
+              aria-hidden="true"
+            >{{ toArabicDigits(store.currentVerse.number) }}</span></p>
           <p
             v-else
             class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"
             :style="arabicStyle"
-          >
-            {{ verseDisplayText }}
-          </p>
+          ><span>{{ verseDisplayText }}</span><span
+              v-if="store.verseEndOrnament"
+              class="ayah-ornament"
+              aria-hidden="true"
+            >{{ toArabicDigits(store.currentVerse.number) }}</span></p>
 
           <div class="flex flex-col items-center gap-2.5 mt-4 mb-5">
             <span
+              v-if="!store.verseEndOrnament"
               class="verse-badge inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-bold w-8 h-8 rounded-full"
             >
               {{ store.currentVerse.number }}
@@ -266,6 +273,25 @@ function copyVerse() {
 @keyframes error-in {
   from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* -- Inline end-of-ayah ornament -- */
+.ayah-ornament {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  height: 1.7em;
+  padding: 0 0.25em;
+  margin-inline-start: 0.35em;
+  font-size: 0.5em;
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
 /* -- Word highlight -- */

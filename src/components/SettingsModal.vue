@@ -381,6 +381,18 @@ function onLanguageChange(code) {
                     @change="store.setVerseAction(action.key, $event.target.checked)"
                   />
                 </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span class="text-sm text-body">End-of-verse ornament</span>
+                    <p class="text-xs text-muted/60 mt-0.5">Show the ayah number inline instead of the badge</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    :checked="store.verseEndOrnament"
+                    class="toggle-switch"
+                    @change="store.setVerseEndOrnament($event.target.checked)"
+                  />
+                </label>
               </div>
             </div>
 

@@ -152,6 +152,8 @@ export const usePlayerStore = defineStore('player', {
     highlightStyle: 'flow', // 'glow' | 'background' | 'underline' | 'minimal' | 'sweep' | 'flow'
     // Per-verse action button visibility (under the verse number).
     verseActions: { bookmark: true, share: true, copy: true },
+    // Render the traditional end-of-ayah ornament inline instead of the number badge.
+    verseEndOrnament: false,
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     abRepeat: null, // { start: verseIndex, end: verseIndex } for A-B memorization loop
     playbackSpeed: 1,
@@ -497,6 +499,11 @@ export const usePlayerStore = defineStore('player', {
       }
     },
 
+    setVerseEndOrnament(value) {
+      this.verseEndOrnament = !!value
+      this.savePreferences()
+    },
+
     setRepeatMode(mode) {
       this.repeatMode = mode
       this.savePreferences()
@@ -710,6 +717,7 @@ export const usePlayerStore = defineStore('player', {
             wordHighlight: this.wordHighlight,
             highlightStyle: this.highlightStyle,
             verseActions: this.verseActions,
+            verseEndOrnament: this.verseEndOrnament,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
             volume: this.volume,
@@ -783,6 +791,9 @@ export const usePlayerStore = defineStore('player', {
             share: prefs.verseActions.share !== false,
             copy: prefs.verseActions.copy !== false
           }
+        }
+        if (prefs.verseEndOrnament !== undefined) {
+          this.verseEndOrnament = !!prefs.verseEndOrnament
         }
         if (prefs.repeatMode) {
           this.repeatMode = prefs.repeatMode
