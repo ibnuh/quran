@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-primary: #1a6b4b;
@@ -16,7 +16,7 @@
 }
 
 /* Theme overrides */
-[data-theme="dark"] {
+[data-theme='dark'] {
   --color-primary: #2d9b6e;
   --color-primary-dark: #1a6b4b;
   --color-primary-light: #1a3a2a;
@@ -30,7 +30,7 @@
   --color-border: #333333;
 }
 
-[data-theme="black"] {
+[data-theme='black'] {
   --color-primary: #2d9b6e;
   --color-primary-dark: #1a6b4b;
   --color-primary-light: #0a1f14;
@@ -44,7 +44,7 @@
   --color-border: #1a1a1a;
 }
 
-[data-theme="sepia"] {
+[data-theme='sepia'] {
   --color-primary: #8b6914;
   --color-primary-dark: #6b4f0e;
   --color-primary-light: #f5ecd7;
@@ -58,7 +58,7 @@
   --color-border: #e0d4b0;
 }
 
-[data-theme="midnight"] {
+[data-theme='midnight'] {
   --color-primary: #5b8def;
   --color-primary-dark: #3a6bd4;
   --color-primary-light: #1a2744;
@@ -72,7 +72,7 @@
   --color-border: #2a3a55;
 }
 
-[data-theme="nature"] {
+[data-theme='nature'] {
   --color-primary: #4a9b6e;
   --color-primary-dark: #2d7a4e;
   --color-primary-light: #1a3828;
@@ -86,7 +86,7 @@
   --color-border: #2e4a2e;
 }
 
-[data-theme="ocean"] {
+[data-theme='ocean'] {
   --color-primary: #2a8fa4;
   --color-primary-dark: #1d6e80;
   --color-primary-light: #e4f4f7;
@@ -100,7 +100,7 @@
   --color-border: #c8e0e6;
 }
 
-[data-theme="rose"] {
+[data-theme='rose'] {
   --color-primary: #b04060;
   --color-primary-dark: #8a2e48;
   --color-primary-light: #fce8ee;
@@ -114,7 +114,7 @@
   --color-border: #f0d8e0;
 }
 
-[data-theme="sunset"] {
+[data-theme='sunset'] {
   --color-primary: #d47830;
   --color-primary-dark: #b06020;
   --color-primary-light: #2a1f18;
@@ -128,7 +128,7 @@
   --color-border: #3a2e24;
 }
 
-[data-theme="lavender"] {
+[data-theme='lavender'] {
   --color-primary: #7a5aaf;
   --color-primary-dark: #5e4090;
   --color-primary-light: #f0eaf8;
@@ -150,10 +150,16 @@
 
 /* Smooth theme transitions */
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   background: var(--color-surface);
   color: var(--color-body);
-  transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
+  transition:
+    background-color 0.3s var(--ease-out),
+    color 0.3s var(--ease-out);
 }
 
 html {
@@ -190,8 +196,14 @@ body {
 }
 
 /* Arabic text rendering - explicit mark positioning for correct diacriticals */
-[lang="ar"], [dir="rtl"] {
-  font-feature-settings: "mark" 1, "mkmk" 1, "calt" 1, "liga" 1, "clig" 1;
+[lang='ar'],
+[dir='rtl'] {
+  font-feature-settings:
+    'mark' 1,
+    'mkmk' 1,
+    'calt' 1,
+    'liga' 1,
+    'clig' 1;
   font-variant-ligatures: common-ligatures contextual;
   font-kerning: normal;
   text-rendering: auto;
@@ -212,7 +224,9 @@ button:focus:not(:focus-visible) {
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -221,7 +235,9 @@ button:focus:not(:focus-visible) {
 }
 
 /* User-toggled animations off */
-.no-animations *, .no-animations *::before, .no-animations *::after {
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;

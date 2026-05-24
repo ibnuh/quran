@@ -62,7 +62,10 @@ onBeforeUnmount(() => clearInterval(timer))
     style="bottom: max(0.5rem, env(safe-area-inset-bottom, 0px))"
   >
     <!-- Probe element to read the actual safe-area inset value -->
-    <div ref="probeRef" style="height: env(safe-area-inset-top, 0px); width: 0; position: absolute"></div>
+    <div
+      ref="probeRef"
+      style="height: env(safe-area-inset-top, 0px); width: 0; position: absolute"
+    ></div>
     <div class="flex items-center justify-between mb-1 pointer-events-auto">
       <span class="text-green-400 font-bold">DEBUG</span>
       <span class="flex gap-2">

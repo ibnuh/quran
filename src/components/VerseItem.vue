@@ -16,19 +16,30 @@ defineEmits(['select'])
   <button
     type="button"
     class="verse-item flex gap-3 p-4 rounded-lg cursor-pointer bg-card border border-l-[3px] items-start w-full text-left"
-    :class="isActive
-      ? 'border-primary bg-primary-light'
-      : 'border-transparent hover:border-border hover:shadow-sm'"
+    :class="
+      isActive
+        ? 'border-primary bg-primary-light'
+        : 'border-transparent hover:border-border hover:shadow-sm'
+    "
     @click="$emit('select')"
   >
     <div
       class="verse-badge shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-semibold mt-1"
-      :class="isActive
-        ? 'bg-primary text-white border-primary badge-active'
-        : 'bg-surface text-muted border-border'"
-    >{{ verse.number }}</div>
+      :class="
+        isActive
+          ? 'bg-primary text-white border-primary badge-active'
+          : 'bg-surface text-muted border-border'
+      "
+    >
+      {{ verse.number }}
+    </div>
     <div class="flex-1 min-w-0">
-      <p class="text-xl sm:text-[1.35rem] leading-[1.8] text-arabic text-right mb-1" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
+      <p
+        class="text-xl sm:text-[1.35rem] leading-[1.8] text-arabic text-right mb-1"
+        dir="rtl"
+        lang="ar"
+        :style="{ fontFamily: store.arabicFontFamily }"
+      >
         {{ toDisplayArabic(verse.text) }}
       </p>
       <p class="text-sm sm:text-[0.85rem] leading-normal text-muted">
@@ -40,7 +51,8 @@ defineEmits(['select'])
 
 <style scoped>
 .verse-item {
-  transition: background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+  transition:
+    background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     border-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     box-shadow 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   -webkit-tap-highlight-color: transparent;
@@ -49,7 +61,8 @@ defineEmits(['select'])
   background: var(--color-surface);
 }
 .verse-badge {
-  transition: background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+  transition:
+    background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     border-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     box-shadow 0.2s cubic-bezier(0.25, 1, 0.5, 1);

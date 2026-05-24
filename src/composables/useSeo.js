@@ -16,8 +16,7 @@ export function useSeo(store) {
     const surah = store.currentSurah
     const verse = store.currentVerse
     let title = 'Quran Player'
-    let description =
-      'Read and listen to the Quran with synchronized word-by-word highlighting.'
+    let description = 'Read and listen to the Quran with synchronized word-by-word highlighting.'
     let url = ORIGIN + '/'
 
     if (surah) {
