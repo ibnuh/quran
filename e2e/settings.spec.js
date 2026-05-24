@@ -17,7 +17,8 @@ test('theme picker dropdown opens and shows themes', async ({ page }) => {
   await expect(menu).toBeVisible()
   const buttons = menu.locator('button')
   const count = await buttons.count()
-  expect(count).toBe(10)
+  // 10 built-in themes plus the Auto (follow OS) option.
+  expect(count).toBe(11)
 })
 
 test('theme selection changes data-theme attribute', async ({ page }) => {
