@@ -29,6 +29,14 @@ const matchedSurahs = computed(() => {
   }).slice(0, 8)
 })
 
+// Recently opened surahs, shown when the query is empty.
+const recentSurahs = computed(() => {
+  return store.recentSurahs
+    .map(num => SURAHS.find(s => s.number === num))
+    .filter(Boolean)
+    .slice(0, 8)
+})
+
 // Match verses within the currently loaded surah by translation text.
 const matchedVerses = computed(() => {
   const q = normalized.value
@@ -96,6 +104,22 @@ function pickVerse(index) {
           <p v-if="normalized && !matchedSurahs.length && !matchedVerses.length" class="px-4 py-6 text-sm text-muted text-center">
             No matches. Verse search covers the current surah only.
           </p>
+
+          <div v-if="!normalized && recentSurahs.length">
+            <p class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Recent</p>
+            <button
+              v-for="s in recentSurahs"
+              :key="s.number"
+              class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface cursor-pointer transition-colors"
+              @click="pickSurah(s.number)"
+            >
+              <span class="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{{ s.number }}</span>
+              <span class="min-w-0">
+                <span class="block text-sm text-body truncate">{{ s.englishName }}</span>
+                <span class="block text-xs text-muted truncate">{{ s.englishNameTranslation }}</span>
+              </span>
+            </button>
+          </div>
 
           <div v-if="matchedSurahs.length">
             <p class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Surahs</p>
