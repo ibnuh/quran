@@ -2,30 +2,12 @@
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
-import {
-  toDisplayArabic,
-  toVerseTokens,
-  toTajweedWords,
-  toArabicDigits,
-  tajweedColor
-} from '../utils/arabicText.js'
-import { qcfFontFamily } from '../utils/qcfFonts.js'
+import VerseArabic from './VerseArabic.vue'
 
 const emit = defineEmits(['retry', 'open-tafsir'])
 const store = usePlayerStore()
 
 const copied = ref(false)
-
-// Display tokens: one per highlightable word (index aligns with timing segments),
-// with standalone waqf marks attached so no glyphs are dropped in highlight mode.
-const verseTokens = computed(() => {
-  if (!store.currentVerse) {
-    return []
-  }
-  return toVerseTokens(store.currentVerse.text)
-})
-
-const verseDisplayText = computed(() => toDisplayArabic(store.currentVerse?.text || ''))
 
 // Per-font display metrics: the size slider multiplies the font's sizeFactor, and the
 // font's lineHeight gives tall-mark scripts room so harakat never overlap.
@@ -37,56 +19,6 @@ const arabicStyle = computed(() => ({
   textAlign: store.justifyText ? 'justify' : 'center',
   textAlignLast: store.justifyText ? 'center' : 'auto'
 }))
-
-const hasWordTimings = computed(() => {
-  if (store.playbackMode !== 'full') {
-    return false
-  }
-  const timing = store.verseTimings[store.currentVerseIndex]
-  return timing && timing.segments && timing.segments.length > 0
-})
-
-const tajweedActive = computed(() => store.tajweed && store.currentTajweedSegments.length > 0)
-
-// Tajweed text grouped into highlightable words, used when word-by-word highlighting is
-// also on so the active word gets a background while keeping its tajweed letter colors.
-const tajweedWords = computed(() => toTajweedWords(store.currentTajweedSegments))
-
-const tajweedHighlightActive = computed(
-  () => tajweedActive.value && store.wordHighlight && hasWordTimings.value
-)
-
-const mushafActive = computed(() => store.mushafMode && store.currentQcfWords.length > 0)
-
-// QCF words with a word index assigned to real words (end-of-ayah glyph excluded from
-// indexing) so word highlighting still maps to the audio timing segments.
-const qcfTokens = computed(() => {
-  let wordIndex = -1
-  return store.currentQcfWords.map(w => {
-    if (!w.isEnd) {
-      wordIndex++
-    }
-    return { code: w.code, page: w.page, isEnd: w.isEnd, wordIndex: w.isEnd ? -1 : wordIndex }
-  })
-})
-
-// Shared active-word highlight classes (used by the text and QCF render paths).
-function wordHighlightClass(i) {
-  const s = store.highlightStyle
-  const cur = store.currentWordIndex
-  return {
-    'word-active-glow': i === cur && s === 'glow',
-    'word-active-bg': i === cur && s === 'background',
-    'word-active-underline': i === cur && s === 'underline',
-    'word-active-minimal': i === cur && s === 'minimal',
-    'word-active-sweep': i === cur && s === 'sweep',
-    'word-read': i < cur && s === 'sweep',
-    'word-flow': s === 'flow',
-    'word-flow-done': i < cur && s === 'flow',
-    'word-flow-active': i === cur && s === 'flow',
-    'word-flow-next': i === cur + 1 && s === 'flow'
-  }
-}
 
 const isLastVerse = computed(
   () => store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
@@ -201,77 +133,12 @@ function copyVerse() {
             </p>
           </div>
 
-          <p
-            v-if="mushafActive"
-            class="verse-arabic verse-qcf text-arabic mb-5"
-            dir="rtl"
-            lang="ar"
-            :style="arabicStyle"
-          >
-            <template v-for="(w, i) in qcfTokens" :key="i"
-              ><span
-                class="word-span"
-                :class="w.isEnd ? null : wordHighlightClass(w.wordIndex)"
-                :style="{ fontFamily: qcfFontFamily(w.page) }"
-                >{{ w.code }}</span
-              >{{ i < qcfTokens.length - 1 ? ' ' : '' }}</template
-            >
-          </p>
-          <p
-            v-else-if="tajweedActive"
-            class="verse-arabic text-arabic mb-5"
-            dir="rtl"
-            lang="ar"
-            :style="arabicStyle"
-          >
-            <template v-if="tajweedHighlightActive"
-              ><template v-for="(w, i) in tajweedWords" :key="i"
-                ><span class="word-span word-tajweed" :class="wordHighlightClass(w.wordIndex)"
-                  ><span
-                    v-for="(piece, pi) in w.pieces"
-                    :key="pi"
-                    :style="piece.rule ? { color: tajweedColor(piece.rule) } : null"
-                    >{{ piece.text }}</span
-                  ></span
-                >{{ i < tajweedWords.length - 1 ? ' ' : '' }}</template
-              ></template
-            ><template v-else
-              ><span
-                v-for="(seg, i) in store.currentTajweedSegments"
-                :key="i"
-                :style="seg.rule ? { color: tajweedColor(seg.rule) } : null"
-                >{{ seg.text }}</span
-              ></template
-            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true"
-              ><span class="ayah-ornament-num">{{
-                toArabicDigits(store.currentVerse.number)
-              }}</span></span
-            >
-          </p>
-          <p
-            v-else-if="store.wordHighlight && hasWordTimings"
-            class="verse-arabic text-arabic mb-5"
-            dir="rtl"
-            lang="ar"
-            :style="arabicStyle"
-          >
-            <template v-for="(token, i) in verseTokens" :key="i"
-              ><span class="word-span" :class="wordHighlightClass(i)">{{ token.display }}</span
-              >{{ i < verseTokens.length - 1 ? ' ' : '' }}</template
-            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true"
-              ><span class="ayah-ornament-num">{{
-                toArabicDigits(store.currentVerse.number)
-              }}</span></span
-            >
-          </p>
-          <p v-else class="verse-arabic text-arabic mb-5" dir="rtl" lang="ar" :style="arabicStyle">
-            <span>{{ verseDisplayText }}</span
-            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true"
-              ><span class="ayah-ornament-num">{{
-                toArabicDigits(store.currentVerse.number)
-              }}</span></span
-            >
-          </p>
+          <VerseArabic
+            :index="store.currentVerseIndex"
+            :p-style="arabicStyle"
+            p-class="mb-5"
+            animate
+          />
 
           <div class="flex flex-col items-center gap-2.5 mt-4 mb-5">
             <span
@@ -482,130 +349,6 @@ function copyVerse() {
   }
 }
 
-/* -- Inline end-of-ayah ornament -- */
-.ayah-ornament {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.7em;
-  height: 1.7em;
-  padding: 0 0.25em;
-  margin-inline-start: 0.35em;
-  font-size: 0.5em;
-  font-weight: 600;
-  line-height: 1;
-  vertical-align: middle;
-  border-radius: 9999px;
-  border: 1.5px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-}
-/* Arabic-Indic numerals sit low in their em box, so flex centering leaves them below
-   the circle's center; nudge them up to optically center the number in the ornament. */
-.ayah-ornament-num {
-  display: block;
-  line-height: 1;
-  transform: translateY(-0.15em);
-}
-
-/* -- Word highlight -- */
-.word-span {
-  transition:
-    color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
-    text-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-    background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-    text-decoration-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-  border-radius: 0.25rem;
-  padding-inline: 0.08em;
-  /* Small vertical padding so active backgrounds cover tall harakat (superscript
-     alef, maddah) without clipping; inline padding does not shift the line layout. */
-  padding-block: 0.12em;
-  margin-inline: -0.08em;
-  text-decoration-color: transparent;
-  /* Render backgrounds/borders cleanly when a word wraps across two lines. */
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
-/* Tajweed + word highlight: the chosen highlight style still applies (glow, underline,
-   sweep, flow, etc.); per-letter tajweed colors win because they are set as inline styles
-   on the inner spans, so only the non-colored letters take the highlight color. The
-   "minimal" style is color-only, so give the active word a faint background as a fallback
-   for fully-colored words where the color change would otherwise be invisible. */
-.word-tajweed.word-active-minimal {
-  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
-}
-
-/* Glow: color + text-shadow + subtle background */
-.word-active-glow {
-  color: var(--color-primary);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--color-primary) 35%, transparent);
-  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
-
-/* Background: strong tinted background */
-.word-active-bg {
-  color: var(--color-primary);
-  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-
-/* Underline: color + thick underline */
-.word-active-underline {
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-decoration-color: var(--color-primary);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.15em;
-}
-
-/* Minimal: just a color change */
-.word-active-minimal {
-  color: var(--color-primary);
-}
-
-/* Sweep: running highlight, past words stay colored */
-.word-read {
-  color: var(--color-primary);
-  opacity: 0.55;
-}
-.word-active-sweep {
-  color: var(--color-primary);
-  background: linear-gradient(
-    to left,
-    color-mix(in srgb, var(--color-primary) 18%, transparent),
-    color-mix(in srgb, var(--color-primary) 6%, transparent)
-  );
-  animation: sweep-in 0.25s cubic-bezier(0.25, 1, 0.5, 1) both;
-}
-@keyframes sweep-in {
-  from {
-    background-size: 0% 100%;
-    background-position: right;
-  }
-  to {
-    background-size: 100% 100%;
-    background-position: right;
-  }
-}
-
-/* Flow: smooth running color wave through text */
-.word-flow {
-  transition:
-    color 0.45s cubic-bezier(0.25, 1, 0.5, 1),
-    opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.word-flow-done {
-  color: var(--color-primary);
-  opacity: 0.5;
-}
-.word-flow-active {
-  color: var(--color-primary);
-  opacity: 1;
-}
-.word-flow-next {
-  color: color-mix(in srgb, var(--color-primary) 30%, var(--color-arabic));
-}
-
 /* -- Verse transition (between verses) -- */
 .verse-fade-enter-active {
   transition:
@@ -623,22 +366,6 @@ function copyVerse() {
 }
 .verse-fade-leave-to {
   opacity: 0;
-}
-
-/* -- Staggered content entrance (children animate in sequence) -- */
-/* Arabic text uses opacity-only animation to avoid GPU compositing layer
-   that can interfere with OpenType mark positioning (harakat/tashkeel) */
-.verse-arabic {
-  animation: content-fade 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
-  animation-delay: 0.05s;
-}
-@keyframes content-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .verse-action-btn {

@@ -1,11 +1,20 @@
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
-import { toDisplayArabic } from '../utils/arabicText.js'
+import VerseArabic from './VerseArabic.vue'
 
 const store = usePlayerStore()
 const emit = defineEmits(['select'])
 const rowsRef = ref(null)
+
+// Reading rows use a slightly smaller Arabic size; alignment follows the justify setting.
+const readingStyle = computed(() => ({
+  fontFamily: store.arabicFontFamily,
+  fontSize: store.arabicFontSize * store.arabicFontMetrics.sizeFactor * 0.7 + 'rem',
+  lineHeight: store.arabicFontMetrics.lineHeight,
+  textAlign: store.justifyText ? 'justify' : 'right',
+  textAlignLast: store.justifyText ? 'right' : 'auto'
+}))
 
 function scrollToActive(smooth = true) {
   const el = rowsRef.value?.querySelector('.reading-row-active')
@@ -48,21 +57,13 @@ onMounted(() => nextTick(() => scrollToActive(false)))
       :aria-current="i === store.currentVerseIndex ? 'true' : undefined"
       @click="emit('select', i)"
     >
-      <p
-        class="text-arabic leading-[2]"
-        dir="rtl"
-        lang="ar"
-        :style="{
-          fontFamily: store.arabicFontFamily,
-          fontSize: store.arabicFontSize * store.arabicFontMetrics.sizeFactor * 0.7 + 'rem',
-          lineHeight: store.arabicFontMetrics.lineHeight
-        }"
-      >
-        <span>{{ toDisplayArabic(verse.text) }}</span>
-        <span class="reading-ayah-num"
-          ><span class="reading-ayah-num-inner">{{ verse.number }}</span></span
-        >
-      </p>
+      <VerseArabic :index="i" :p-style="readingStyle">
+        <template #trailing>
+          <span class="reading-ayah-num"
+            ><span class="reading-ayah-num-inner">{{ verse.number }}</span></span
+          >
+        </template>
+      </VerseArabic>
       <p
         class="text-muted font-light mt-2 text-left leading-relaxed"
         :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
