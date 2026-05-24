@@ -633,31 +633,35 @@ function onLanguageChange(code) {
                     @change="store.setJustifyText($event.target.checked)"
                   />
                 </label>
-                <label class="flex items-center justify-between cursor-pointer">
-                  <div>
-                    <span class="text-sm text-body">{{ $t('settings.tajweed') }}</span>
-                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.tajweedHint') }}</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    :checked="store.tajweed"
-                    class="toggle-switch"
-                    @change="store.setTajweed($event.target.checked)"
-                  />
-                </label>
-                <div v-if="store.tajweed" class="flex flex-wrap gap-x-3 gap-y-1.5 pt-1">
-                  <span
-                    v-for="rule in TAJWEED_RULES"
-                    :key="rule.key"
-                    class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted"
-                  >
+                <!-- Tajweed colors are letter-level; the mushaf (QCF) font renders whole-word
+                     glyphs, so the two cannot combine. Hide the toggle in QCF mode. -->
+                <template v-if="!store.mushafMode">
+                  <label class="flex items-center justify-between cursor-pointer">
+                    <div>
+                      <span class="text-sm text-body">{{ $t('settings.tajweed') }}</span>
+                      <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.tajweedHint') }}</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      :checked="store.tajweed"
+                      class="toggle-switch"
+                      @change="store.setTajweed($event.target.checked)"
+                    />
+                  </label>
+                  <div v-if="store.tajweed" class="flex flex-wrap gap-x-3 gap-y-1.5 pt-1">
                     <span
-                      class="w-2.5 h-2.5 rounded-full"
-                      :style="{ background: tajweedColor(rule.key) }"
-                    ></span>
-                    {{ rule.label }}
-                  </span>
-                </div>
+                      v-for="rule in TAJWEED_RULES"
+                      :key="rule.key"
+                      class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted"
+                    >
+                      <span
+                        class="w-2.5 h-2.5 rounded-full"
+                        :style="{ background: tajweedColor(rule.key) }"
+                      ></span>
+                      {{ rule.label }}
+                    </span>
+                  </div>
+                </template>
               </div>
             </div>
 
