@@ -55,8 +55,9 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </script>
 
 <template>
-  <header class="flex items-center justify-between px-3 pb-2 landscape-compact:pb-1 bg-primary text-white pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]" style="padding-top: max(0.5rem, env(safe-area-inset-top, 0px))">
-    <div class="flex items-center gap-1">
+  <header class="bg-primary text-white px-3 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]" style="padding-top: max(0.5rem, env(safe-area-inset-top, 0px))">
+    <div class="flex items-center justify-between pb-2 landscape-compact:pb-1">
+      <div class="flex items-center gap-1">
       <button
         class="flex header-btn shrink-0"
         aria-label="Settings"
@@ -90,7 +91,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
       </button>
     </div>
 
-    <div class="text-center flex-1 min-w-0 px-3">
+    <div class="hidden sm:block landscape-compact:block text-center flex-1 min-w-0 px-3">
       <h1
         class="surah-title font-arabic text-lg landscape-compact:text-sm truncate"
         dir="rtl"
@@ -199,6 +200,22 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         </svg>
         <span class="hidden sm:inline">Verses</span>
       </button>
+      </div>
+    </div>
+
+    <!-- Compact surah indicator for small screens: Latin on the left, Arabic on the right -->
+    <div
+      v-if="store.currentSurah"
+      class="sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1.5"
+    >
+      <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
+        {{ store.currentSurah.englishName }}<span class="opacity-60"> · {{ store.currentSurah.englishNameTranslation }}</span>
+      </span>
+      <span
+        class="surah-title-sm min-w-0 flex-1 truncate text-right font-arabic text-[0.95rem]"
+        dir="rtl"
+        lang="ar"
+      >{{ store.currentSurah.name }}</span>
     </div>
   </header>
 </template>
@@ -208,6 +225,11 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
   line-height: 1.7;
   padding-block: 2px;
   margin-block: -2px;
+}
+
+/* Small-screen surah line: taller line box so truncate does not clip harakat. */
+.surah-title-sm {
+  line-height: 1.7;
 }
 
 .header-btn {
