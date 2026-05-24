@@ -1,14 +1,15 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import { SPEEDS, SLEEP_TIMER_OPTIONS } from '../config.js'
 import ProgressBar from './ProgressBar.vue'
 
 const store = usePlayerStore()
 const showSpeedMenu = ref(false)
 const showJumpInput = ref(false)
+const showToolsMenu = ref(false)
 const jumpVerseNum = ref('')
 const jumpInputRef = ref(null)
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
 function jumpToVerse() {
   const num = parseInt(jumpVerseNum.value)
@@ -34,6 +35,9 @@ function onClickOutside(e) {
     showJumpInput.value = false
     jumpVerseNum.value = ''
   }
+  if (showToolsMenu.value && !e.target.closest('.tools-wrapper')) {
+    showToolsMenu.value = false
+  }
 }
 
 function onSpeedMenuKeydown(e) {
@@ -55,15 +59,27 @@ function onSpeedMenuKeydown(e) {
 onMounted(() => document.addEventListener('click', onClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 
-defineProps({
+const props = defineProps({
   isPlaying: Boolean,
   progress: { type: Number, default: 0 },
   buffered: { type: Number, default: 0 },
   currentTimeMs: { type: Number, default: 0 },
-  durationMs: { type: Number, default: 0 }
+  durationMs: { type: Number, default: 0 },
+  sleepMinutes: { type: Number, default: 0 },
+  sleepRemainingMs: { type: Number, default: 0 }
 })
 
-const emit = defineEmits(['toggle-play', 'prev-verse', 'next-verse', 'prev-surah', 'next-surah', 'seek', 'set-speed', 'jump-to-verse'])
+const emit = defineEmits([
+  'toggle-play',
+  'prev-verse',
+  'next-verse',
+  'prev-surah',
+  'next-surah',
+  'seek',
+  'set-speed',
+  'jump-to-verse',
+  'set-sleep'
+])
 
 function cycleRepeat() {
   const modes = ['none', 'verse', 'surah']
@@ -74,6 +90,45 @@ function cycleRepeat() {
 function selectSpeed(speed) {
   emit('set-speed', speed)
   showSpeedMenu.value = false
+}
+
+// -- Tools: volume, sleep timer, A-B repeat --
+const volumePercent = computed(() => Math.round(store.volume * 100))
+
+function onVolumeInput(e) {
+  store.setVolume(Number(e.target.value) / 100)
+}
+
+function selectSleep(minutes) {
+  emit('set-sleep', props.sleepMinutes === minutes ? 0 : minutes)
+}
+
+const sleepLabel = computed(() => {
+  if (!props.sleepMinutes) {
+    return ''
+  }
+  const totalSec = Math.ceil(props.sleepRemainingMs / 1000)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+})
+
+const toolsActive = computed(
+  () => store.volume < 1 || !!store.abRepeat || props.sleepMinutes > 0
+)
+
+function setRepeatA() {
+  const end = store.abRepeat ? store.abRepeat.end : store.currentVerseIndex
+  store.setAbRepeat(store.currentVerseIndex, Math.max(store.currentVerseIndex, end))
+}
+
+function setRepeatB() {
+  const start = store.abRepeat ? store.abRepeat.start : store.currentVerseIndex
+  store.setAbRepeat(Math.min(start, store.currentVerseIndex), store.currentVerseIndex)
+}
+
+function clearRepeat() {
+  store.clearAbRepeat()
 }
 </script>
 
@@ -178,6 +233,74 @@ function selectSpeed(speed) {
                 :class="store.playbackSpeed === s ? 'bg-primary/10 text-primary font-semibold' : 'text-body hover:bg-surface'"
                 @click="selectSpeed(s)"
               >{{ s }}x</button>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Tools: volume, sleep timer, A-B repeat -->
+        <div class="relative tools-wrapper">
+          <button
+            class="flex ctrl-btn"
+            :class="toolsActive ? 'text-primary!' : ''"
+            aria-label="Audio tools"
+            @click.stop="showToolsMenu = !showToolsMenu"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+            <span v-if="sleepLabel" class="text-[0.7rem] font-semibold tabular-nums">{{ sleepLabel }}</span>
+          </button>
+          <Transition name="speed-pop">
+            <div v-if="showToolsMenu" class="absolute bottom-full right-0 mb-2 bg-card rounded-xl shadow-2xl border border-border p-3 z-50 w-60 text-left space-y-4">
+              <!-- Volume -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Volume</span>
+                  <span class="text-[0.7rem] text-muted tabular-nums">{{ volumePercent }}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  :value="volumePercent"
+                  class="w-full accent-[var(--color-primary)] cursor-pointer"
+                  aria-label="Volume"
+                  @input="onVolumeInput"
+                />
+              </div>
+
+              <!-- A-B repeat -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Repeat range</span>
+                  <span v-if="store.abRepeat" class="text-[0.7rem] text-primary tabular-nums">{{ store.abRepeat.start + 1 }}-{{ store.abRepeat.end + 1 }}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button class="flex-1 text-xs py-1.5 rounded-md bg-surface text-body hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors" @click="setRepeatA">Set A</button>
+                  <button class="flex-1 text-xs py-1.5 rounded-md bg-surface text-body hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors" @click="setRepeatB">Set B</button>
+                  <button
+                    class="flex-1 text-xs py-1.5 rounded-md cursor-pointer transition-colors"
+                    :class="store.abRepeat ? 'bg-primary/10 text-primary' : 'bg-surface text-muted'"
+                    :disabled="!store.abRepeat"
+                    @click="clearRepeat"
+                  >Clear</button>
+                </div>
+              </div>
+
+              <!-- Sleep timer -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Sleep timer</span>
+                  <span v-if="sleepLabel" class="text-[0.7rem] text-primary tabular-nums">{{ sleepLabel }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button
+                    v-for="m in SLEEP_TIMER_OPTIONS"
+                    :key="m"
+                    class="text-xs py-1.5 rounded-md cursor-pointer transition-colors"
+                    :class="sleepMinutes === m ? 'bg-primary/10 text-primary font-semibold' : 'bg-surface text-body hover:bg-primary/10 hover:text-primary'"
+                    @click="selectSleep(m)"
+                  >{{ m }}m</button>
+                </div>
+              </div>
             </div>
           </Transition>
         </div>

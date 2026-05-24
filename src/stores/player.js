@@ -149,7 +149,9 @@ export const usePlayerStore = defineStore('player', {
     wordHighlight: true,
     highlightStyle: 'flow', // 'glow' | 'background' | 'underline' | 'minimal' | 'sweep' | 'flow'
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
+    abRepeat: null, // { start: verseIndex, end: verseIndex } for A-B memorization loop
     playbackSpeed: 1,
+    volume: 1,
     animations: true,
     isLoading: false,
     error: null,
@@ -491,9 +493,26 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setVolume(value) {
+      this.volume = Math.max(0, Math.min(1, value))
+      this.savePreferences()
+    },
+
+    // A-B repeat (memorization): loop a verse range. start/end are verse indices.
+    setAbRepeat(start, end) {
+      const lo = Math.min(start, end)
+      const hi = Math.max(start, end)
+      this.abRepeat = { start: lo, end: hi }
+    },
+
+    clearAbRepeat() {
+      this.abRepeat = null
+    },
+
     async setSurah(num) {
       this.currentSurahNum = num
       this.currentVerseIndex = 0
+      this.abRepeat = null
       this.savePreferences()
       await this.loadSurah()
       if (!this.error) {
@@ -574,6 +593,7 @@ export const usePlayerStore = defineStore('player', {
       if (this.canNextSurah) {
         this.currentSurahNum++
         this.currentVerseIndex = 0
+        this.abRepeat = null
         this.savePreferences()
         await this.loadSurah()
         if (!this.error) {
@@ -586,6 +606,7 @@ export const usePlayerStore = defineStore('player', {
       if (this.canPrevSurah) {
         this.currentSurahNum--
         this.currentVerseIndex = 0
+        this.abRepeat = null
         this.savePreferences()
         await this.loadSurah()
         if (!this.error) {
@@ -669,6 +690,7 @@ export const usePlayerStore = defineStore('player', {
             highlightStyle: this.highlightStyle,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
+            volume: this.volume,
             animations: this.animations,
             bookmarks: this.bookmarks,
             recentSurahs: this.recentSurahs
@@ -747,6 +769,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.playbackSpeed) {
           this.playbackSpeed = prefs.playbackSpeed
+        }
+        if (typeof prefs.volume === 'number') {
+          this.volume = Math.max(0, Math.min(1, prefs.volume))
         }
         if (prefs.animations !== undefined) {
           this.animations = prefs.animations

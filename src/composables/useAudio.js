@@ -9,6 +9,7 @@ export function useAudio() {
   const duration = ref(0)
   const buffered = ref(0)
   const playbackRate = ref(1)
+  const volume = ref(1)
 
   let onTimeUpdateCb = null
   let onEndedCb = null
@@ -100,6 +101,12 @@ export function useAudio() {
     audio.playbackRate = rate
   }
 
+  function setVolume(value) {
+    const v = Math.max(0, Math.min(1, value))
+    volume.value = v
+    audio.volume = v
+  }
+
   function onTimeUpdate(cb) {
     onTimeUpdateCb = cb
   }
@@ -119,6 +126,7 @@ export function useAudio() {
     duration,
     buffered,
     playbackRate,
+    volume,
     load,
     loadAndPlay,
     play,
@@ -127,6 +135,7 @@ export function useAudio() {
     seekTo,
     seek,
     setPlaybackRate,
+    setVolume,
     getLiveTimeMs,
     onTimeUpdate,
     onEnded

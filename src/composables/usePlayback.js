@@ -165,6 +165,30 @@ export function usePlayback(store, audio) {
 
   // -- Audio "ended" handling: repeat modes, verse advance, continuous playback --
   audio.onEnded(() => {
+    // A-B repeat (memorization) takes precedence over other repeat modes.
+    const ab = store.abRepeat
+    if (ab) {
+      if (store.playbackMode === 'full') {
+        const timing = store.verseTimings[ab.start]
+        if (timing) {
+          store.currentVerseIndex = ab.start
+          store.currentWordIndex = -1
+          audio.seekTo(timing.timestampFrom)
+          audio.play()
+        }
+        return
+      }
+      if (store.currentVerseIndex >= ab.end) {
+        store.currentVerseIndex = ab.start
+        store.currentWordIndex = -1
+      } else {
+        store.nextVerse()
+      }
+      audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+      preloadAhead()
+      return
+    }
+
     if (store.repeatMode === 'verse') {
       if (store.playbackMode === 'full') {
         const timing = store.verseTimings[store.currentVerseIndex]
@@ -238,6 +262,34 @@ export function usePlayback(store, audio) {
     () => store.playbackSpeed,
     speed => {
       audio.setPlaybackRate(speed)
+    }
+  )
+
+  // Keep the audio element's volume in sync with the stored volume.
+  watch(
+    () => store.volume,
+    v => {
+      audio.setVolume(v)
+    }
+  )
+
+  // A-B repeat: loop a verse range while playing (full-mode boundary handling;
+  // verse-mode loop is handled in the onEnded handler below).
+  watch(
+    () => store.currentVerseIndex,
+    idx => {
+      const ab = store.abRepeat
+      if (!ab || store.playbackMode !== 'full' || !audio.isPlaying.value) {
+        return
+      }
+      if (idx > ab.end || idx < ab.start) {
+        const timing = store.verseTimings[ab.start]
+        if (timing) {
+          store.currentVerseIndex = ab.start
+          store.currentWordIndex = -1
+          audio.seekTo(timing.timestampFrom)
+        }
+      }
     }
   )
 

@@ -94,6 +94,41 @@ describe('recent surahs', () => {
   })
 })
 
+describe('volume', () => {
+  it('clamps volume to the 0..1 range', () => {
+    const store = usePlayerStore()
+    store.setVolume(1.5)
+    expect(store.volume).toBe(1)
+    store.setVolume(-0.2)
+    expect(store.volume).toBe(0)
+    store.setVolume(0.4)
+    expect(store.volume).toBe(0.4)
+  })
+})
+
+describe('A-B repeat', () => {
+  it('orders start and end regardless of argument order', () => {
+    const store = usePlayerStore()
+    store.setAbRepeat(5, 2)
+    expect(store.abRepeat).toEqual({ start: 2, end: 5 })
+  })
+
+  it('clears the repeat range', () => {
+    const store = usePlayerStore()
+    store.setAbRepeat(1, 3)
+    store.clearAbRepeat()
+    expect(store.abRepeat).toBe(null)
+  })
+
+  it('resets the repeat range when the surah changes', async () => {
+    const store = usePlayerStore()
+    store.loadSurah = async () => {} // avoid real network in unit test
+    store.abRepeat = { start: 0, end: 0 }
+    await store.nextSurah()
+    expect(store.abRepeat).toBe(null)
+  })
+})
+
 describe('preferences persistence', () => {
   it('round-trips saved preferences through localStorage', () => {
     const store = usePlayerStore()

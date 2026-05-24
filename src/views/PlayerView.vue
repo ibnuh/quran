@@ -12,6 +12,7 @@ import { useMediaSession } from '../composables/useMediaSession.js'
 import { useWakeLock } from '../composables/useWakeLock.js'
 import { useMobileTip } from '../composables/useMobileTip.js'
 import { useDeepLink } from '../composables/useDeepLink.js'
+import { useSleepTimer } from '../composables/useSleepTimer.js'
 import THEMES from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
@@ -118,6 +119,9 @@ function applyDeepLink(surah, ayah) {
 
 const deepLink = useDeepLink(applyDeepLink)
 
+// -- Sleep timer --
+const sleepTimer = useSleepTimer(() => audio.pause())
+
 // -- Swipe gestures --
 useSwipe(mainRef, {
   onSwipeLeft: () => {
@@ -204,6 +208,7 @@ onMounted(async () => {
   }
 
   audio.setPlaybackRate(store.playbackSpeed)
+  audio.setVolume(store.volume)
   await store.loadSurah()
   if (surah && ayah) {
     const idx = store.verses.findIndex(v => v.number === ayah)
@@ -298,6 +303,8 @@ onMounted(async () => {
         :buffered="audio.buffered.value"
         :current-time-ms="audio.currentTimeMs.value"
         :duration-ms="audio.duration.value"
+        :sleep-minutes="sleepTimer.activeMinutes.value"
+        :sleep-remaining-ms="sleepTimer.remainingMs.value"
         @toggle-play="togglePlay"
         @prev-verse="handlePrevVerse"
         @next-verse="handleNextVerse"
@@ -306,6 +313,7 @@ onMounted(async () => {
         @seek="handleSeek"
         @set-speed="handleSetSpeed"
         @jump-to-verse="handleJumpToVerse"
+        @set-sleep="sleepTimer.start"
       />
     </div>
 
