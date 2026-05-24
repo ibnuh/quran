@@ -3,7 +3,14 @@ import vue from 'eslint-plugin-vue'
 
 export default [
   {
-    ignores: ['dist/**', 'dev-dist/**', 'node_modules/**', 'playwright-report/**', 'test-results/**', 'obscura']
+    ignores: [
+      'dist/**',
+      'dev-dist/**',
+      'node_modules/**',
+      'playwright-report/**',
+      'test-results/**',
+      'obscura'
+    ]
   },
   js.configs.recommended,
   ...vue.configs['flat/recommended'],
@@ -38,7 +45,7 @@ export default [
       'no-empty': ['warn', { allowEmptyCatch: true }],
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
-      'curly': ['error', 'all'],
+      curly: ['error', 'all'],
       // Formatting is owned by Prettier; disable layout rules to avoid conflicts
       // and churn against the existing hand-tuned (whitespace-sensitive) templates.
       'vue/html-indent': 'off',
@@ -70,7 +77,13 @@ export default [
     }
   },
   {
-    files: ['*.config.js', 'vite.config.js', 'vitest.config.js', 'playwright.config.js', 'eslint.config.js'],
+    files: [
+      '*.config.js',
+      'vite.config.js',
+      'vitest.config.js',
+      'playwright.config.js',
+      'eslint.config.js'
+    ],
     languageOptions: {
       globals: {
         process: 'readonly',

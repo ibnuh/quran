@@ -5,7 +5,7 @@ import App from './App.vue'
 import './assets/styles/main.css'
 
 // Capture PWA install prompt globally (fires before components mount)
-window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault()
   window.__pwaInstallPrompt = e
 })

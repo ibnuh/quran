@@ -56,7 +56,10 @@ export function useMobileTip(store) {
     dismissPermanently()
   }
 
-  watch(() => store.autoHideControls, () => checkMobileTip())
+  watch(
+    () => store.autoHideControls,
+    () => checkMobileTip()
+  )
 
   onMounted(() => {
     window.addEventListener('resize', checkMobileTip)

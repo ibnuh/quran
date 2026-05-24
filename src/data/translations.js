@@ -116,12 +116,20 @@ export default [
   { identifier: 'ur.ahmedali', englishName: 'Ahmed Ali (Urdu)', language: 'ur' },
   { identifier: 'ur.maududi', englishName: 'Abul Ala Maududi (Urdu)', language: 'ur' },
   // Hindi
-  { identifier: 'hi.hindi', englishName: 'Suhel Farooq Khan & Saifur Rahman Nadwi', language: 'hi' },
+  {
+    identifier: 'hi.hindi',
+    englishName: 'Suhel Farooq Khan & Saifur Rahman Nadwi',
+    language: 'hi'
+  },
   // Bengali
   { identifier: 'bn.bengali', englishName: 'Muhiuddin Khan', language: 'bn' },
   { identifier: 'bn.muhiuddin', englishName: 'Muhiuddin Khan (alt)', language: 'bn' },
   // Indonesian
-  { identifier: 'id.indonesian', englishName: 'Indonesian Ministry of Religious Affairs', language: 'id' },
+  {
+    identifier: 'id.indonesian',
+    englishName: 'Indonesian Ministry of Religious Affairs',
+    language: 'id'
+  },
   { identifier: 'id.muntakhab', englishName: 'Muhammad Quraish Shihab', language: 'id' },
   // Malay
   { identifier: 'ms.basmeih', englishName: 'Abdullah Muhammad Basmeih', language: 'ms' },
@@ -145,7 +153,11 @@ export default [
   // Albanian
   { identifier: 'sq.ahmeti', englishName: 'Sherif Ahmeti', language: 'sq' },
   // Azerbaijani
-  { identifier: 'az.mammadaliyev', englishName: 'Vasim Mammadaliyev & Ziya Bunyadov', language: 'az' },
+  {
+    identifier: 'az.mammadaliyev',
+    englishName: 'Vasim Mammadaliyev & Ziya Bunyadov',
+    language: 'az'
+  },
   // Somali
   { identifier: 'so.abduh', englishName: 'Mahmud Muhammad Abduh', language: 'so' },
   // Hausa
@@ -210,7 +222,11 @@ export default [
   // Thai
   { identifier: 'qdc.230', englishName: 'Society of Institutes and Universities', language: 'th' },
   // Swahili
-  { identifier: 'qdc.231', englishName: 'Dr. Abdullah Muhammad Abu Bakr & Sheikh Nasir Khamis', language: 'sw' },
+  {
+    identifier: 'qdc.231',
+    englishName: 'Dr. Abdullah Muhammad Abu Bakr & Sheikh Nasir Khamis',
+    language: 'sw'
+  },
   // Bosnian
   { identifier: 'qdc.25', englishName: 'Muhamed Mehanovic', language: 'bs' },
   { identifier: 'qdc.214', englishName: 'Dar Al-Salam Center (Bosnian)', language: 'bs' },

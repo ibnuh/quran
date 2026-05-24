@@ -154,7 +154,9 @@ export async function fetchSurahAudio(cdnReciterId, chapterNumber, signal) {
       timestampFrom: vt.timestamp_from,
       timestampTo: vt.timestamp_to,
       segments: (vt.segments || [])
-        .filter(s => Array.isArray(s) && s.length >= 3 && s[0] != null && s[1] != null && s[2] != null)
+        .filter(
+          s => Array.isArray(s) && s.length >= 3 && s[0] != null && s[1] != null && s[2] != null
+        )
         .map(s => ({
           wordIndex: s[0] - 1,
           from: s[1],

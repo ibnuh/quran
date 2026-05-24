@@ -65,7 +65,8 @@ export default defineConfig({
       manifest: {
         name: 'Quran Player',
         short_name: 'Quran',
-        description: 'Read and listen to the Quran with word-by-word highlighting, 30+ reciters, and translations in 28 languages.',
+        description:
+          'Read and listen to the Quran with word-by-word highlighting, 30+ reciters, and translations in 28 languages.',
         theme_color: '#1a6b4b',
         background_color: '#f8f6f1',
         display: 'standalone',

@@ -39,8 +39,12 @@ export const RESPONSIVE_DEFAULTS = [
   { maxWidth: Infinity, arabicFontSize: 3.2, translationFontSize: 1.3, contentWidth: 80 }
 ]
 
-export function getResponsiveDefaults(width = typeof window !== 'undefined' ? window.innerWidth : 1280) {
-  const match = RESPONSIVE_DEFAULTS.find(d => width < d.maxWidth) || RESPONSIVE_DEFAULTS[RESPONSIVE_DEFAULTS.length - 1]
+export function getResponsiveDefaults(
+  width = typeof window !== 'undefined' ? window.innerWidth : 1280
+) {
+  const match =
+    RESPONSIVE_DEFAULTS.find(d => width < d.maxWidth) ||
+    RESPONSIVE_DEFAULTS[RESPONSIVE_DEFAULTS.length - 1]
   return {
     arabicFontSize: match.arabicFontSize,
     translationFontSize: match.translationFontSize,
@@ -49,7 +53,9 @@ export function getResponsiveDefaults(width = typeof window !== 'undefined' ? wi
 }
 
 // Verse-mode preload count by connection quality.
-export function getPreloadCount(connection = typeof navigator !== 'undefined' ? navigator.connection : null) {
+export function getPreloadCount(
+  connection = typeof navigator !== 'undefined' ? navigator.connection : null
+) {
   if (!connection) {
     return 3
   }

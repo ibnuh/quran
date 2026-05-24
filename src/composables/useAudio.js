@@ -19,7 +19,9 @@ export function useAudio() {
       progress.value = (audio.currentTime / audio.duration) * 100
       duration.value = audio.duration * 1000
     }
-    if (onTimeUpdateCb) {onTimeUpdateCb(currentTimeMs.value)}
+    if (onTimeUpdateCb) {
+      onTimeUpdateCb(currentTimeMs.value)
+    }
   })
 
   audio.addEventListener('progress', () => {
@@ -32,7 +34,9 @@ export function useAudio() {
     isPlaying.value = false
     progress.value = 0
     currentTimeMs.value = 0
-    if (onEndedCb) {onEndedCb()}
+    if (onEndedCb) {
+      onEndedCb()
+    }
   })
 
   audio.addEventListener('play', () => {
@@ -96,8 +100,12 @@ export function useAudio() {
     audio.playbackRate = rate
   }
 
-  function onTimeUpdate(cb) { onTimeUpdateCb = cb }
-  function onEnded(cb) { onEndedCb = cb }
+  function onTimeUpdate(cb) {
+    onTimeUpdateCb = cb
+  }
+  function onEnded(cb) {
+    onEndedCb = cb
+  }
 
   onBeforeUnmount(() => {
     audio.pause()
@@ -105,9 +113,22 @@ export function useAudio() {
   })
 
   return {
-    isPlaying, progress, currentTimeMs, duration, buffered, playbackRate,
-    load, loadAndPlay, play, pause, stop, seekTo, seek,
-    setPlaybackRate, getLiveTimeMs,
-    onTimeUpdate, onEnded
+    isPlaying,
+    progress,
+    currentTimeMs,
+    duration,
+    buffered,
+    playbackRate,
+    load,
+    loadAndPlay,
+    play,
+    pause,
+    stop,
+    seekTo,
+    seek,
+    setPlaybackRate,
+    getLiveTimeMs,
+    onTimeUpdate,
+    onEnded
   }
 }

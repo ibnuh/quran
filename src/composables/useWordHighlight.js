@@ -17,7 +17,9 @@ export function useWordHighlight(store, audio, announce) {
   function announceVerse(idx) {
     const surah = store.currentSurah
     if (surah) {
-      announce(`Verse ${store.currentVerse?.number || idx + 1} of ${store.totalVerses}, ${surah.englishName}`)
+      announce(
+        `Verse ${store.currentVerse?.number || idx + 1} of ${store.totalVerses}, ${surah.englishName}`
+      )
     }
   }
 
