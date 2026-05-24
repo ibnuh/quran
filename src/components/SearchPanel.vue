@@ -75,71 +75,111 @@ function pickVerse(index) {
       aria-label="Search"
       aria-modal="true"
     >
-      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40 backdrop-blur-sm" role="presentation" @click="emit('close')"></div>
+      <div
+        class="absolute top-0 right-0 bottom-0 left-0 bg-black/40 backdrop-blur-sm"
+        role="presentation"
+        @click="emit('close')"
+      ></div>
 
-      <div ref="panelRef" class="relative bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+      <div
+        ref="panelRef"
+        class="relative bg-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+      >
         <div class="flex items-center gap-2 px-4 border-b border-border">
-          <svg class="shrink-0 text-muted" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1114 9.5 4.49 4.49 0 019.5 14z"/>
+          <svg
+            class="shrink-0 text-muted"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1114 9.5 4.49 4.49 0 019.5 14z"
+            />
           </svg>
           <input
             v-model="query"
             type="text"
             class="flex-1 bg-transparent py-3.5 text-sm text-body focus:outline-none"
-            placeholder="Search surahs or verses in this surah"
-            aria-label="Search query"
+            :placeholder="$t('panels.searchPlaceholder')"
+            :aria-label="$t('panels.searchQuery')"
           />
           <button
             class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface text-muted cursor-pointer"
-            aria-label="Close search"
+            :aria-label="$t('panels.closeSearch')"
             @click="emit('close')"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
             </svg>
           </button>
         </div>
 
         <div class="max-h-[60vh] overflow-y-auto">
-          <p v-if="normalized && !matchedSurahs.length && !matchedVerses.length" class="px-4 py-6 text-sm text-muted text-center">
-            No matches. Verse search covers the current surah only.
+          <p
+            v-if="normalized && !matchedSurahs.length && !matchedVerses.length"
+            class="px-4 py-6 text-sm text-muted text-center"
+          >
+            {{ $t('panels.noMatches') }}
           </p>
 
           <div v-if="!normalized && recentSurahs.length">
-            <p class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Recent</p>
+            <p
+              class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide"
+            >
+              {{ $t('panels.recent') }}
+            </p>
             <button
               v-for="s in recentSurahs"
               :key="s.number"
               class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface cursor-pointer transition-colors"
               @click="pickSurah(s.number)"
             >
-              <span class="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{{ s.number }}</span>
+              <span
+                class="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center"
+                >{{ s.number }}</span
+              >
               <span class="min-w-0">
                 <span class="block text-sm text-body truncate">{{ s.englishName }}</span>
-                <span class="block text-xs text-muted truncate">{{ s.englishNameTranslation }}</span>
+                <span class="block text-xs text-muted truncate">{{
+                  s.englishNameTranslation
+                }}</span>
               </span>
             </button>
           </div>
 
           <div v-if="matchedSurahs.length">
-            <p class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Surahs</p>
+            <p
+              class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide"
+            >
+              {{ $t('panels.surahs') }}
+            </p>
             <button
               v-for="s in matchedSurahs"
               :key="s.number"
               class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface cursor-pointer transition-colors"
               @click="pickSurah(s.number)"
             >
-              <span class="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{{ s.number }}</span>
+              <span
+                class="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center"
+                >{{ s.number }}</span
+              >
               <span class="min-w-0">
                 <span class="block text-sm text-body truncate">{{ s.englishName }}</span>
-                <span class="block text-xs text-muted truncate">{{ s.englishNameTranslation }}</span>
+                <span class="block text-xs text-muted truncate">{{
+                  s.englishNameTranslation
+                }}</span>
               </span>
             </button>
           </div>
 
           <div v-if="matchedVerses.length">
-            <p class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide">
-              Verses in {{ store.currentSurah?.englishName }}
+            <p
+              class="px-4 pt-3 pb-1 text-[0.7rem] font-semibold text-muted uppercase tracking-wide"
+            >
+              {{ $t('panels.versesIn', { surah: store.currentSurah?.englishName }) }}
             </p>
             <button
               v-for="v in matchedVerses"
@@ -147,7 +187,10 @@ function pickVerse(index) {
               class="w-full flex items-start gap-3 px-4 py-2.5 text-left hover:bg-surface cursor-pointer transition-colors"
               @click="pickVerse(v.index)"
             >
-              <span class="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center">{{ v.number }}</span>
+              <span
+                class="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center"
+                >{{ v.number }}</span
+              >
               <span class="min-w-0 text-sm text-body line-clamp-2">{{ v.text }}</span>
             </button>
           </div>

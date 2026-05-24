@@ -2,7 +2,12 @@
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
-import { toDisplayArabic, toVerseTokens, toArabicDigits, tajweedColor } from '../utils/arabicText.js'
+import {
+  toDisplayArabic,
+  toVerseTokens,
+  toArabicDigits,
+  tajweedColor
+} from '../utils/arabicText.js'
 import { qcfFontFamily } from '../utils/qcfFonts.js'
 
 const emit = defineEmits(['retry', 'open-tafsir'])
@@ -13,7 +18,9 @@ const copied = ref(false)
 // Display tokens: one per highlightable word (index aligns with timing segments),
 // with standalone waqf marks attached so no glyphs are dropped in highlight mode.
 const verseTokens = computed(() => {
-  if (!store.currentVerse) {return []}
+  if (!store.currentVerse) {
+    return []
+  }
   return toVerseTokens(store.currentVerse.text)
 })
 
@@ -31,7 +38,9 @@ const arabicStyle = computed(() => ({
 }))
 
 const hasWordTimings = computed(() => {
-  if (store.playbackMode !== 'full') {return false}
+  if (store.playbackMode !== 'full') {
+    return false
+  }
   const timing = store.verseTimings[store.currentVerseIndex]
   return timing && timing.segments && timing.segments.length > 0
 })
@@ -70,8 +79,8 @@ function wordHighlightClass(i) {
   }
 }
 
-const isLastVerse = computed(() =>
-  store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
+const isLastVerse = computed(
+  () => store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
 )
 
 function verseReference() {
@@ -128,11 +137,23 @@ function copyVerse() {
     <div v-if="store.isLoading" class="skeleton-container" style="min-height: 40vh">
       <div class="skeleton-line h-4 w-24 rounded mx-auto mb-8"></div>
       <div class="space-y-5 mb-6" dir="rtl">
-        <div class="skeleton-line h-12 rounded-lg w-[90%] mx-auto" style="animation-delay: 0.1s"></div>
-        <div class="skeleton-line h-12 rounded-lg w-[70%] mx-auto" style="animation-delay: 0.2s"></div>
-        <div class="skeleton-line h-12 rounded-lg w-[50%] mx-auto" style="animation-delay: 0.3s"></div>
+        <div
+          class="skeleton-line h-12 rounded-lg w-[90%] mx-auto"
+          style="animation-delay: 0.1s"
+        ></div>
+        <div
+          class="skeleton-line h-12 rounded-lg w-[70%] mx-auto"
+          style="animation-delay: 0.2s"
+        ></div>
+        <div
+          class="skeleton-line h-12 rounded-lg w-[50%] mx-auto"
+          style="animation-delay: 0.3s"
+        ></div>
       </div>
-      <div class="skeleton-line h-8 w-8 rounded-full mx-auto mb-5" style="animation-delay: 0.15s"></div>
+      <div
+        class="skeleton-line h-8 w-8 rounded-full mx-auto mb-5"
+        style="animation-delay: 0.15s"
+      ></div>
       <div class="space-y-2">
         <div class="skeleton-line h-4 rounded w-[80%] mx-auto" style="animation-delay: 0.25s"></div>
         <div class="skeleton-line h-4 rounded w-[60%] mx-auto" style="animation-delay: 0.35s"></div>
@@ -142,14 +163,18 @@ function copyVerse() {
     <!-- Error -->
     <div v-else-if="store.error" class="error-state text-red-500">
       <svg class="w-10 h-10 mx-auto mb-3 opacity-50" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+        />
       </svg>
       <p class="mb-3 text-sm">{{ store.error }}</p>
       <button
         class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg text-sm cursor-pointer transition-colors"
-        aria-label="Retry loading surah"
+        :aria-label="$t('verse.retryAria')"
         @click="emit('retry')"
-      >Retry</button>
+      >
+        {{ $t('verse.retry') }}
+      </button>
     </div>
 
     <!-- Verse -->
@@ -157,8 +182,13 @@ function copyVerse() {
       <Transition name="verse-fade">
         <div :key="store.currentSurahNum + '-' + store.currentVerseIndex">
           <div v-if="store.showBismillah" class="bismillah mb-8">
-            <p class="text-xl sm:text-2xl text-accent" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
-              {{ "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ" }}
+            <p
+              class="text-xl sm:text-2xl text-accent"
+              dir="rtl"
+              lang="ar"
+              :style="{ fontFamily: store.arabicFontFamily }"
+            >
+              {{ 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ' }}
             </p>
           </div>
 
@@ -168,51 +198,52 @@ function copyVerse() {
             dir="rtl"
             lang="ar"
             :style="arabicStyle"
-          ><template v-for="(w, i) in qcfTokens" :key="i"><span
-              class="word-span"
-              :class="w.isEnd ? null : wordHighlightClass(w.wordIndex)"
-              :style="{ fontFamily: qcfFontFamily(w.page) }"
-            >{{ w.code }}</span>{{ i < qcfTokens.length - 1 ? ' ' : '' }}</template></p>
+          >
+            <template v-for="(w, i) in qcfTokens" :key="i"
+              ><span
+                class="word-span"
+                :class="w.isEnd ? null : wordHighlightClass(w.wordIndex)"
+                :style="{ fontFamily: qcfFontFamily(w.page) }"
+                >{{ w.code }}</span
+              >{{ i < qcfTokens.length - 1 ? ' ' : '' }}</template
+            >
+          </p>
           <p
             v-else-if="tajweedActive"
             class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"
             :style="arabicStyle"
-          ><span
+          >
+            <span
               v-for="(seg, i) in store.currentTajweedSegments"
               :key="i"
               :style="seg.rule ? { color: tajweedColor(seg.rule) } : null"
-            >{{ seg.text }}</span><span
-              v-if="store.verseEndOrnament"
-              class="ayah-ornament"
-              aria-hidden="true"
-            >{{ toArabicDigits(store.currentVerse.number) }}</span></p>
+              >{{ seg.text }}</span
+            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true">{{
+              toArabicDigits(store.currentVerse.number)
+            }}</span>
+          </p>
           <p
             v-else-if="store.wordHighlight && hasWordTimings"
             class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"
             :style="arabicStyle"
-          ><template v-for="(token, i) in verseTokens" :key="i"><span
-              class="word-span"
-              :class="wordHighlightClass(i)"
-            >{{ token.display }}</span>{{ i < verseTokens.length - 1 ? ' ' : '' }}</template><span
-              v-if="store.verseEndOrnament"
-              class="ayah-ornament"
-              aria-hidden="true"
-            >{{ toArabicDigits(store.currentVerse.number) }}</span></p>
-          <p
-            v-else
-            class="verse-arabic text-arabic mb-5"
-            dir="rtl"
-            lang="ar"
-            :style="arabicStyle"
-          ><span>{{ verseDisplayText }}</span><span
-              v-if="store.verseEndOrnament"
-              class="ayah-ornament"
-              aria-hidden="true"
-            >{{ toArabicDigits(store.currentVerse.number) }}</span></p>
+          >
+            <template v-for="(token, i) in verseTokens" :key="i"
+              ><span class="word-span" :class="wordHighlightClass(i)">{{ token.display }}</span
+              >{{ i < verseTokens.length - 1 ? ' ' : '' }}</template
+            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true">{{
+              toArabicDigits(store.currentVerse.number)
+            }}</span>
+          </p>
+          <p v-else class="verse-arabic text-arabic mb-5" dir="rtl" lang="ar" :style="arabicStyle">
+            <span>{{ verseDisplayText }}</span
+            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true">{{
+              toArabicDigits(store.currentVerse.number)
+            }}</span>
+          </p>
 
           <div class="flex flex-col items-center gap-2.5 mt-4 mb-5">
             <span
@@ -223,70 +254,122 @@ function copyVerse() {
             </span>
 
             <div
-              v-if="store.verseActions.bookmark || store.verseActions.share || store.verseActions.copy || store.verseActions.tafsir"
+              v-if="
+                store.verseActions.bookmark ||
+                store.verseActions.share ||
+                store.verseActions.copy ||
+                store.verseActions.tafsir
+              "
               class="flex items-center justify-center gap-1"
             >
               <button
                 v-if="store.verseActions.tafsir"
                 class="verse-action-btn"
-                aria-label="Open tafsir"
-                title="Tafsir (commentary)"
+                :aria-label="$t('verse.openTafsir')"
+                :title="$t('panels.tafsir')"
                 @click="emit('open-tafsir')"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
-                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="text-muted/50"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
                 </svg>
               </button>
 
               <button
                 v-if="store.verseActions.bookmark"
                 class="verse-action-btn"
-                :aria-label="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
-                :title="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
+                :aria-label="
+                  store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')
+                "
+                :title="
+                  store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')
+                "
                 @click="store.toggleBookmark()"
               >
                 <svg
-                  width="14" height="14" viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
                   :fill="store.isCurrentBookmarked ? 'currentColor' : 'none'"
                   :class="store.isCurrentBookmarked ? 'text-accent' : 'text-muted/50'"
-                  stroke="currentColor" stroke-width="2"
+                  stroke="currentColor"
+                  stroke-width="2"
                 >
-                  <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                  <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
                 </svg>
               </button>
 
               <button
                 v-if="store.verseActions.share"
                 class="verse-action-btn"
-                aria-label="Share this verse"
-                title="Share this verse"
+                :aria-label="$t('verse.share')"
+                :title="$t('verse.share')"
                 @click="shareVerse"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
-                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="text-muted/50"
+                >
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
                 </svg>
               </button>
 
               <button
                 v-if="store.verseActions.copy"
                 class="verse-action-btn"
-                :aria-label="copied ? 'Copied' : 'Copy verse text'"
-                :title="copied ? 'Copied' : 'Copy verse text'"
+                :aria-label="copied ? $t('verse.copied') : $t('verse.copy')"
+                :title="copied ? $t('verse.copied') : $t('verse.copy')"
                 @click="copyVerse"
               >
-                <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
-                  <rect x="9" y="9" width="13" height="13" rx="2"/>
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                <svg
+                  v-if="!copied"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="text-muted/50"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                 </svg>
-                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
-                  <path d="M20 6L9 17l-5-5"/>
+                <svg
+                  v-else
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="text-primary"
+                >
+                  <path d="M20 6L9 17l-5-5" />
                 </svg>
               </button>
             </div>
           </div>
 
-          <p class="verse-translation leading-relaxed text-muted font-light mx-auto" :style="{ fontSize: store.translationFontSize + 'rem', maxWidth: (store.contentWidth * 0.75) + 'rem' }">
+          <p
+            class="verse-translation leading-relaxed text-muted font-light mx-auto"
+            :style="{
+              fontSize: store.translationFontSize + 'rem',
+              maxWidth: store.contentWidth * 0.75 + 'rem'
+            }"
+          >
             {{ store.currentTranslationVerse?.text }}
           </p>
 
@@ -294,10 +377,15 @@ function copyVerse() {
             v-for="extra in store.currentExtraTranslations"
             :key="extra.name"
             class="verse-translation mx-auto mt-4"
-            :style="{ maxWidth: (store.contentWidth * 0.75) + 'rem' }"
+            :style="{ maxWidth: store.contentWidth * 0.75 + 'rem' }"
           >
-            <p class="text-[0.65rem] uppercase tracking-wide text-muted/60 mb-1">{{ extra.name }}</p>
-            <p class="leading-relaxed text-muted font-light" :style="{ fontSize: store.translationFontSize + 'rem' }">
+            <p class="text-[0.65rem] uppercase tracking-wide text-muted/60 mb-1">
+              {{ extra.name }}
+            </p>
+            <p
+              class="leading-relaxed text-muted font-light"
+              :style="{ fontSize: store.translationFontSize + 'rem' }"
+            >
               {{ extra.text }}
             </p>
           </div>
@@ -309,7 +397,7 @@ function copyVerse() {
               <div class="end-line-right h-px w-16 bg-border"></div>
             </div>
             <p class="end-text text-[0.65rem] text-muted/50 mt-3">
-              End of {{ store.currentSurah?.englishName }}
+              {{ $t('verse.endOf', { surah: store.currentSurah?.englishName }) }}
             </p>
           </div>
         </div>
@@ -324,8 +412,12 @@ function copyVerse() {
   animation: skeleton-container-in 0.4s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 @keyframes skeleton-container-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .skeleton-line {
@@ -339,8 +431,12 @@ function copyVerse() {
   animation: shimmer 1.8s ease-in-out infinite;
 }
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* -- Error state -- */
@@ -348,8 +444,14 @@ function copyVerse() {
   animation: error-in 0.4s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 @keyframes error-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* -- Inline end-of-ayah ornament -- */
@@ -373,7 +475,8 @@ function copyVerse() {
 
 /* -- Word highlight -- */
 .word-span {
-  transition: color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+  transition:
+    color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     text-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1),
     background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1),
     text-decoration-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
@@ -443,7 +546,8 @@ function copyVerse() {
 
 /* Flow: smooth running color wave through text */
 .word-flow {
-  transition: color 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+  transition:
+    color 0.45s cubic-bezier(0.25, 1, 0.5, 1),
     opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .word-flow-done {
@@ -460,7 +564,9 @@ function copyVerse() {
 
 /* -- Verse transition (between verses) -- */
 .verse-fade-enter-active {
-  transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .verse-fade-leave-active {
   transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1);
@@ -483,8 +589,12 @@ function copyVerse() {
   animation-delay: 0.05s;
 }
 @keyframes content-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .verse-action-btn {
@@ -495,7 +605,9 @@ function copyVerse() {
   height: 32px;
   border-radius: 9999px;
   cursor: pointer;
-  transition: background 0.15s var(--ease-out), color 0.15s var(--ease-out);
+  transition:
+    background 0.15s var(--ease-out),
+    color 0.15s var(--ease-out);
 }
 .verse-action-btn:hover {
   background: color-mix(in srgb, var(--color-muted) 12%, transparent);
@@ -506,8 +618,14 @@ function copyVerse() {
   animation-delay: 0.18s;
 }
 @keyframes badge-in {
-  from { opacity: 0; transform: scale(0.5); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .verse-translation {
@@ -515,8 +633,14 @@ function copyVerse() {
   animation-delay: 0.22s;
 }
 @keyframes translation-rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* -- Bismillah -- */
@@ -525,8 +649,14 @@ function copyVerse() {
   animation-delay: 0.05s;
 }
 @keyframes bismillah-reveal {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* -- Surah end ornament -- */
@@ -535,8 +665,12 @@ function copyVerse() {
   animation-delay: 0.3s;
 }
 @keyframes surah-end-reveal {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .end-line-left {
@@ -550,12 +684,24 @@ function copyVerse() {
   transform-origin: left center;
 }
 @keyframes line-grow-left {
-  from { opacity: 0; transform: scaleX(0); }
-  to { opacity: 1; transform: scaleX(1); }
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
 }
 @keyframes line-grow-right {
-  from { opacity: 0; transform: scaleX(0); }
-  to { opacity: 1; transform: scaleX(1); }
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
 }
 
 .end-diamond {
@@ -563,8 +709,14 @@ function copyVerse() {
   animation-delay: 0.45s;
 }
 @keyframes diamond-in {
-  from { opacity: 0; transform: rotate(45deg) scale(0); }
-  to { opacity: 1; transform: rotate(45deg) scale(1); }
+  from {
+    opacity: 0;
+    transform: rotate(45deg) scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(45deg) scale(1);
+  }
 }
 
 .end-text {
@@ -572,7 +724,13 @@ function copyVerse() {
   animation-delay: 0.55s;
 }
 @keyframes end-text-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

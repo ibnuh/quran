@@ -54,47 +54,60 @@ watch(() => [store.tafsirSource, store.currentVerseIndex, store.currentSurahNum]
     <div
       class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end"
       role="dialog"
-      aria-label="Tafsir"
+      :aria-label="$t('panels.tafsir')"
       aria-modal="true"
     >
-      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" role="presentation" @click="emit('close')"></div>
+      <div
+        class="absolute top-0 right-0 bottom-0 left-0 bg-black/40"
+        role="presentation"
+        @click="emit('close')"
+      ></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-md lg:max-w-lg h-full shadow-2xl">
         <div class="bg-card h-full flex flex-col">
-          <div class="shrink-0 flex items-center justify-between gap-3 px-4 pb-3 border-b border-border" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px))">
+          <div
+            class="shrink-0 flex items-center justify-between gap-3 px-4 pb-3 border-b border-border"
+            style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px))"
+          >
             <div class="min-w-0">
-              <h3 class="text-sm font-semibold text-body truncate">Tafsir</h3>
+              <h3 class="text-sm font-semibold text-body truncate">{{ $t('panels.tafsir') }}</h3>
               <p class="text-xs text-muted truncate">{{ surahName }} {{ verseNumber }}</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <select
                 class="text-xs bg-surface border border-border rounded-lg px-2 py-1.5 text-body cursor-pointer max-w-[10rem] truncate focus:outline-none focus:border-primary"
                 :value="store.tafsirSource"
-                aria-label="Tafsir source"
+                :aria-label="$t('panels.tafsirSource')"
                 @change="store.setTafsirSource(Number($event.target.value))"
               >
                 <option v-for="t in TAFSIRS" :key="t.id" :value="t.id">{{ t.name }}</option>
               </select>
               <button
                 class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
-                aria-label="Close tafsir"
+                :aria-label="$t('panels.closeTafsir')"
                 @click="emit('close')"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                  />
                 </svg>
               </button>
             </div>
           </div>
 
           <div class="flex-1 overflow-y-auto px-4 py-4">
-            <p v-if="loading" class="text-sm text-muted text-center py-8">Loading tafsir...</p>
+            <p v-if="loading" class="text-sm text-muted text-center py-8">
+              {{ $t('panels.loadingTafsir') }}
+            </p>
             <div v-else-if="error" class="text-center py-8">
-              <p class="text-sm text-muted mb-3">Could not load tafsir. Check your connection.</p>
+              <p class="text-sm text-muted mb-3">{{ $t('panels.tafsirError') }}</p>
               <button
                 class="bg-primary hover:bg-primary-dark text-white px-5 py-2 rounded-lg text-sm cursor-pointer transition-colors"
                 @click="load"
-              >Retry</button>
+              >
+                {{ $t('verse.retry') }}
+              </button>
             </div>
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div v-else class="tafsir-body text-sm text-body leading-relaxed" v-html="html"></div>

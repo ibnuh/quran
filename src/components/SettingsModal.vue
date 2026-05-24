@@ -9,8 +9,10 @@ import TRANSLATIONS, { LANGUAGES } from '../data/translations.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import THEMES from '../data/themes.js'
 import { TAJWEED_RULES, tajweedColor } from '../utils/arabicText.js'
+import { t, UI_LOCALES } from '../i18n/index.js'
 
 const store = usePlayerStore()
+const uiLanguageOptions = UI_LOCALES.map(l => ({ value: l.code, label: l.name }))
 const emit = defineEmits(['close'])
 const panelRef = ref(null)
 useFocusTrap(panelRef, { onEscape: () => emit('close'), autoFocus: false })
@@ -51,24 +53,28 @@ async function forceUpdate() {
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' })
         updateAvailable.value = true
-        updateStatus.value = 'Update found! Reloading...'
+        updateStatus.value = t('settings.updateFound')
         setTimeout(() => window.location.reload(), 500)
         return
       }
     }
     updateChecking.value = false
-    updateStatus.value = 'Already up to date'
-    setTimeout(() => { updateStatus.value = '' }, 3000)
+    updateStatus.value = t('settings.upToDate')
+    setTimeout(() => {
+      updateStatus.value = ''
+    }, 3000)
   } catch (e) {
     updateChecking.value = false
-    updateStatus.value = 'Already up to date'
-    setTimeout(() => { updateStatus.value = '' }, 3000)
+    updateStatus.value = t('settings.upToDate')
+    setTimeout(() => {
+      updateStatus.value = ''
+    }, 3000)
   }
 }
 
 // Reset settings
 function resetSettings() {
-  if (confirm('Reset all settings to defaults? This will reload the page.')) {
+  if (confirm(t('settings.resetConfirm'))) {
     localStorage.removeItem('quran-player-prefs')
     localStorage.removeItem('quran-tip-dismissed')
     localStorage.removeItem('quran-pwa-install-dismissed')
@@ -87,18 +93,23 @@ function getLangFromTranslation(id) {
 const selectedLanguage = ref(getLangFromTranslation(store.currentTranslation))
 
 const surahOptions = computed(() =>
-  SURAHS.map(s => ({ value: s.number, label: `${s.number}. ${s.englishName} - ${s.englishNameTranslation}` }))
+  SURAHS.map(s => ({
+    value: s.number,
+    label: `${s.number}. ${s.englishName} - ${s.englishNameTranslation}`
+  }))
 )
-const reciterOptions = computed(() =>
-  RECITERS.map(r => ({ value: r.id, label: r.name }))
-)
+const reciterOptions = computed(() => RECITERS.map(r => ({ value: r.id, label: r.name })))
 const languageOptions = computed(() =>
-  LANGUAGES.filter(l => TRANSLATIONS.some(t => t.language === l.code))
-    .map(l => ({ value: l.code, label: l.name }))
+  LANGUAGES.filter(l => TRANSLATIONS.some(t => t.language === l.code)).map(l => ({
+    value: l.code,
+    label: l.name
+  }))
 )
 const translationOptions = computed(() =>
-  TRANSLATIONS.filter(t => t.language === selectedLanguage.value)
-    .map(t => ({ value: t.identifier, label: t.englishName }))
+  TRANSLATIONS.filter(t => t.language === selectedLanguage.value).map(t => ({
+    value: t.identifier,
+    label: t.englishName
+  }))
 )
 // Extra translations are alquran.cloud editions (quran.com qdc.* are excluded), and
 // exclude the current primary and any already added.
@@ -153,10 +164,10 @@ const HIGHLIGHT_STYLES = [
 ]
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const VERSE_ACTIONS = [
-  { key: 'tafsir', label: 'Tafsir' },
-  { key: 'bookmark', label: 'Bookmark' },
-  { key: 'share', label: 'Share' },
-  { key: 'copy', label: 'Copy' }
+  { key: 'tafsir', labelKey: 'settings.actionTafsir' },
+  { key: 'bookmark', labelKey: 'settings.actionBookmark' },
+  { key: 'share', labelKey: 'settings.actionShare' },
+  { key: 'copy', labelKey: 'settings.actionCopy' }
 ]
 const REPEAT_MODES = [
   { value: 'none', label: 'Off' },
@@ -171,72 +182,98 @@ function onLanguageChange(code) {
     store.setTranslation(firstTranslation.identifier)
   }
 }
-
 </script>
 
 <template>
   <Transition name="settings-panel" appear>
-    <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-start" role="dialog" aria-label="Settings" aria-modal="true">
-      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" role="presentation" @click="emit('close')"></div>
+    <div
+      class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-start"
+      role="dialog"
+      :aria-label="$t('settings.title')"
+      aria-modal="true"
+    >
+      <div
+        class="absolute top-0 right-0 bottom-0 left-0 bg-black/40"
+        role="presentation"
+        @click="emit('close')"
+      ></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-sm h-full shadow-2xl">
-        <div class="bg-card h-full overflow-y-auto scrollable" style="padding-left: env(safe-area-inset-left, 0px)">
-          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pb-4 border-b border-border" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">
-            <h2 class="text-base font-semibold text-body">Settings</h2>
+        <div
+          class="bg-card h-full overflow-y-auto scrollable"
+          style="padding-left: env(safe-area-inset-left, 0px)"
+        >
+          <div
+            class="sticky top-0 bg-card z-10 flex items-center justify-between px-5 pb-4 border-b border-border"
+            style="padding-top: max(1rem, env(safe-area-inset-top, 0px))"
+          >
+            <h2 class="text-base font-semibold text-body">{{ $t('settings.title') }}</h2>
             <button
               class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
-              aria-label="Close settings"
+              :aria-label="$t('settings.close')"
               @click="emit('close')"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                <path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                />
               </svg>
             </button>
           </div>
 
           <div class="p-5 space-y-5">
             <div>
-              <label class="block text-sm font-medium text-muted mb-1.5">Surah</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.surah')
+              }}</label>
               <SearchSelect
                 :model-value="store.currentSurahNum"
                 :options="surahOptions"
-                placeholder="Search surah..."
+                :placeholder="$t('settings.searchSurah')"
                 @update:model-value="store.setSurah($event)"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-muted mb-1.5">Reciter</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.reciter')
+              }}</label>
               <SearchSelect
                 :model-value="store.currentReciter"
                 :options="reciterOptions"
-                placeholder="Search reciter..."
+                :placeholder="$t('settings.searchReciter')"
                 @update:model-value="store.setReciter($event)"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-muted mb-1.5">Translation Language</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.translationLanguage')
+              }}</label>
               <SearchSelect
                 :model-value="selectedLanguage"
                 :options="languageOptions"
-                placeholder="Search language..."
+                :placeholder="$t('settings.searchTranslation')"
                 @update:model-value="onLanguageChange($event)"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-muted mb-1.5">Translation</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.translation')
+              }}</label>
               <SearchSelect
                 :model-value="store.currentTranslation"
                 :options="translationOptions"
-                placeholder="Search translation..."
+                :placeholder="$t('settings.searchTranslation')"
                 @update:model-value="store.setTranslation($event)"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-muted mb-1.5">Additional translations</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.additionalTranslations')
+              }}</label>
               <SearchSelect
                 :model-value="null"
                 :options="extraTranslationOptions"
-                placeholder="Add a translation..."
+                :placeholder="$t('settings.addTranslation')"
                 @update:model-value="store.addExtraTranslation($event)"
               />
               <div v-if="extraTranslationChips.length" class="flex flex-wrap gap-1.5 mt-2">
@@ -251,24 +288,32 @@ function onLanguageChange(code) {
                     :aria-label="'Remove ' + chip.label"
                     @click="store.removeExtraTranslation(chip.id)"
                   >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                      />
+                    </svg>
                   </button>
                 </span>
               </div>
             </div>
 
             <div class="border-t border-border pt-5">
-              <label class="block text-sm font-medium text-muted mb-1.5">Arabic Font</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.arabicFont')
+              }}</label>
               <SearchSelect
                 :model-value="store.arabicFont"
                 :options="fontOptions"
-                placeholder="Search font..."
+                :placeholder="$t('settings.searchFont')"
                 @update:model-value="store.setArabicFont($event)"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-muted mb-3">Arabic Font Size</label>
+              <label class="block text-sm font-medium text-muted mb-3">{{
+                $t('settings.arabicFontSize')
+              }}</label>
               <div class="flex items-center gap-3">
                 <input
                   type="range"
@@ -280,13 +325,28 @@ function onLanguageChange(code) {
                   class="range-field flex-1"
                   @input="store.setArabicFontSize(parseFloat($event.target.value))"
                 />
-                <span class="font-arabic text-body w-12 text-right text-sm">{{ store.arabicFontSize.toFixed(1) }}</span>
+                <span class="font-arabic text-body w-12 text-right text-sm">{{
+                  store.arabicFontSize.toFixed(1)
+                }}</span>
               </div>
-              <p class="text-arabic mt-2" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily, fontSize: Math.min(store.arabicFontSize, 2.5) + 'rem', lineHeight: 2 }">بِسْمِ اللَّهِ</p>
+              <p
+                class="text-arabic mt-2"
+                dir="rtl"
+                lang="ar"
+                :style="{
+                  fontFamily: store.arabicFontFamily,
+                  fontSize: Math.min(store.arabicFontSize, 2.5) + 'rem',
+                  lineHeight: 2
+                }"
+              >
+                بِسْمِ اللَّهِ
+              </p>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-muted mb-3">Translation Font Size</label>
+              <label class="block text-sm font-medium text-muted mb-3">{{
+                $t('settings.translationFontSize')
+              }}</label>
               <div class="flex items-center gap-3">
                 <input
                   type="range"
@@ -298,13 +358,22 @@ function onLanguageChange(code) {
                   class="range-field flex-1"
                   @input="store.setTranslationFontSize(parseFloat($event.target.value))"
                 />
-                <span class="text-body w-12 text-right text-sm">{{ store.translationFontSize.toFixed(1) }}</span>
+                <span class="text-body w-12 text-right text-sm">{{
+                  store.translationFontSize.toFixed(1)
+                }}</span>
               </div>
-              <p class="text-muted font-light mt-2" :style="{ fontSize: store.translationFontSize + 'rem' }">In the name of God</p>
+              <p
+                class="text-muted font-light mt-2"
+                :style="{ fontSize: store.translationFontSize + 'rem' }"
+              >
+                In the name of God
+              </p>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-muted mb-3">Content Width</label>
+              <label class="block text-sm font-medium text-muted mb-3">{{
+                $t('settings.contentWidth')
+              }}</label>
               <div class="flex items-center gap-3">
                 <input
                   type="range"
@@ -321,26 +390,39 @@ function onLanguageChange(code) {
             </div>
 
             <div class="border-t border-border pt-5">
-              <label class="block text-sm font-medium text-muted mb-3">Theme</label>
+              <label class="block text-sm font-medium text-muted mb-3">{{
+                $t('settings.theme')
+              }}</label>
               <div class="grid grid-cols-5 gap-2 gap-y-3">
                 <button
                   class="theme-swatch flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-pointer"
-                  :class="store.theme === 'auto' ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
-                  aria-label="Select Auto theme"
+                  :class="
+                    store.theme === 'auto'
+                      ? 'bg-primary/10 ring-2 ring-primary'
+                      : 'hover:bg-surface'
+                  "
+                  :aria-label="$t('header.selectTheme', { name: $t('header.auto') })"
                   @click="store.setTheme('auto')"
                 >
-                  <span class="w-8 h-8 rounded-full border-2 overflow-hidden flex" style="border-color: var(--color-primary)">
-                    <span class="w-1/2 h-full" style="background:#f8f6f1"></span>
-                    <span class="w-1/2 h-full" style="background:#121212"></span>
+                  <span
+                    class="w-8 h-8 rounded-full border-2 overflow-hidden flex"
+                    style="border-color: var(--color-primary)"
+                  >
+                    <span class="w-1/2 h-full" style="background: #f8f6f1"></span>
+                    <span class="w-1/2 h-full" style="background: #121212"></span>
                   </span>
-                  <span class="text-[0.65rem] text-body">Auto</span>
+                  <span class="text-[0.65rem] text-body">{{ $t('header.auto') }}</span>
                 </button>
                 <button
                   v-for="theme in THEMES"
                   :key="theme.id"
                   class="theme-swatch flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-pointer"
-                  :class="store.theme === theme.id ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface'"
-                  :aria-label="'Select ' + theme.name + ' theme'"
+                  :class="
+                    store.theme === theme.id
+                      ? 'bg-primary/10 ring-2 ring-primary'
+                      : 'hover:bg-surface'
+                  "
+                  :aria-label="$t('header.selectTheme', { name: theme.name })"
                   @click="store.setTheme(theme.id)"
                 >
                   <span
@@ -353,34 +435,64 @@ function onLanguageChange(code) {
             </div>
 
             <div class="border-t border-border pt-5">
-              <label class="block text-sm font-medium text-muted mb-3">Playback Speed</label>
+              <label class="block text-sm font-medium text-muted mb-1.5">{{
+                $t('settings.uiLanguage')
+              }}</label>
+              <SearchSelect
+                :model-value="store.uiLanguage"
+                :options="uiLanguageOptions"
+                :placeholder="$t('settings.uiLanguage')"
+                @update:model-value="store.setUiLanguage($event)"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-muted mb-3">{{
+                $t('settings.playbackSpeed')
+              }}</label>
               <div class="flex gap-1.5">
                 <button
                   v-for="s in SPEEDS"
                   :key="s"
                   class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                  :class="store.playbackSpeed === s ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                  :class="
+                    store.playbackSpeed === s
+                      ? 'bg-primary text-white'
+                      : 'bg-surface text-body hover:bg-border'
+                  "
                   @click="store.setPlaybackSpeed(s)"
-                >{{ s }}x</button>
+                >
+                  {{ s }}x
+                </button>
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-muted mb-3">Repeat Mode</label>
+              <label class="block text-sm font-medium text-muted mb-3">{{
+                $t('settings.repeatMode')
+              }}</label>
               <div class="flex gap-1.5">
                 <button
                   v-for="mode in REPEAT_MODES"
                   :key="mode.value"
                   class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                  :class="store.repeatMode === mode.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                  :class="
+                    store.repeatMode === mode.value
+                      ? 'bg-primary text-white'
+                      : 'bg-surface text-body hover:bg-border'
+                  "
                   @click="store.setRepeatMode(mode.value)"
-                >{{ mode.label }}</button>
+                >
+                  {{ $t('repeatModes.' + mode.value) }}
+                </button>
               </div>
             </div>
 
             <div class="border-t border-border pt-5 space-y-4">
               <label class="flex items-center justify-between cursor-pointer">
-                <span class="text-sm font-medium text-muted">Auto-hide controls during playback</span>
+                <span class="text-sm font-medium text-muted">{{
+                  $t('settings.autoHideDuringPlayback')
+                }}</span>
                 <input
                   type="checkbox"
                   :checked="store.autoHideControls"
@@ -390,9 +502,15 @@ function onLanguageChange(code) {
               </label>
               <label class="flex items-center justify-between cursor-pointer">
                 <div>
-                  <span class="text-sm font-medium text-muted">Word-by-word highlighting</span>
+                  <span class="text-sm font-medium text-muted">{{
+                    $t('settings.wordHighlight')
+                  }}</span>
                   <p class="text-xs text-muted/60 mt-0.5">
-                    {{ store.playbackMode === 'verse' ? 'Only available with reciters that support full surah audio' : 'Highlights each word as it is recited' }}
+                    {{
+                      store.playbackMode === 'verse'
+                        ? $t('settings.wordHighlightHintVerse')
+                        : $t('settings.wordHighlightHint')
+                    }}
                   </p>
                 </div>
                 <input
@@ -404,21 +522,31 @@ function onLanguageChange(code) {
                 />
               </label>
               <div v-if="store.wordHighlight && store.playbackMode !== 'verse'">
-                <label class="block text-sm font-medium text-muted mb-2">Highlight Style</label>
+                <label class="block text-sm font-medium text-muted mb-2">{{
+                  $t('settings.highlightStyle')
+                }}</label>
                 <div class="grid grid-cols-3 gap-1.5">
                   <button
                     v-for="style in HIGHLIGHT_STYLES"
                     :key="style.value"
                     class="py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                    :class="store.highlightStyle === style.value ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-border'"
+                    :class="
+                      store.highlightStyle === style.value
+                        ? 'bg-primary text-white'
+                        : 'bg-surface text-body hover:bg-border'
+                    "
                     @click="store.setHighlightStyle(style.value)"
-                  >{{ style.label }}</button>
+                  >
+                    {{ style.label }}
+                  </button>
                 </div>
               </div>
               <label class="flex items-center justify-between cursor-pointer">
                 <div>
-                  <span class="text-sm font-medium text-muted">Animations</span>
-                  <p class="text-xs text-muted/60 mt-0.5">Enable transitions and animations</p>
+                  <span class="text-sm font-medium text-muted">{{
+                    $t('settings.animations')
+                  }}</span>
+                  <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.animationsHint') }}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -429,8 +557,12 @@ function onLanguageChange(code) {
               </label>
               <label class="flex items-center justify-between cursor-pointer">
                 <div>
-                  <span class="text-sm font-medium text-muted">Continuous reading</span>
-                  <p class="text-xs text-muted/60 mt-0.5">Show all verses in a scrollable page; tap a verse to play</p>
+                  <span class="text-sm font-medium text-muted">{{
+                    $t('settings.continuousReading')
+                  }}</span>
+                  <p class="text-xs text-muted/60 mt-0.5">
+                    {{ $t('settings.continuousReadingHint') }}
+                  </p>
                 </div>
                 <input
                   type="checkbox"
@@ -443,15 +575,17 @@ function onLanguageChange(code) {
 
             <!-- Verse action buttons -->
             <div class="border-t border-border pt-5">
-              <label class="block text-sm font-medium text-muted mb-1">Verse buttons</label>
-              <p class="text-xs text-muted/60 mb-3">Choose which actions appear under each verse</p>
+              <label class="block text-sm font-medium text-muted mb-1">{{
+                $t('settings.verseButtons')
+              }}</label>
+              <p class="text-xs text-muted/60 mb-3">{{ $t('settings.verseButtonsHint') }}</p>
               <div class="space-y-3">
                 <label
                   v-for="action in VERSE_ACTIONS"
                   :key="action.key"
                   class="flex items-center justify-between cursor-pointer"
                 >
-                  <span class="text-sm text-body">{{ action.label }}</span>
+                  <span class="text-sm text-body">{{ $t(action.labelKey) }}</span>
                   <input
                     type="checkbox"
                     :checked="store.verseActions[action.key]"
@@ -461,8 +595,8 @@ function onLanguageChange(code) {
                 </label>
                 <label class="flex items-center justify-between cursor-pointer">
                   <div>
-                    <span class="text-sm text-body">End-of-verse ornament</span>
-                    <p class="text-xs text-muted/60 mt-0.5">Show the ayah number inline instead of the badge</p>
+                    <span class="text-sm text-body">{{ $t('settings.endOrnament') }}</span>
+                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.endOrnamentHint') }}</p>
                   </div>
                   <input
                     type="checkbox"
@@ -473,8 +607,8 @@ function onLanguageChange(code) {
                 </label>
                 <label class="flex items-center justify-between cursor-pointer">
                   <div>
-                    <span class="text-sm text-body">Justify Arabic text</span>
-                    <p class="text-xs text-muted/60 mt-0.5">Spread long verses to both edges (mushaf style)</p>
+                    <span class="text-sm text-body">{{ $t('settings.justify') }}</span>
+                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.justifyHint') }}</p>
                   </div>
                   <input
                     type="checkbox"
@@ -485,8 +619,8 @@ function onLanguageChange(code) {
                 </label>
                 <label class="flex items-center justify-between cursor-pointer">
                   <div>
-                    <span class="text-sm text-body">Mushaf font (QCF)</span>
-                    <p class="text-xs text-muted/60 mt-0.5">Render verses with the Madani mushaf glyph fonts</p>
+                    <span class="text-sm text-body">{{ $t('settings.mushafFont') }}</span>
+                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.mushafFontHint') }}</p>
                   </div>
                   <input
                     type="checkbox"
@@ -497,8 +631,8 @@ function onLanguageChange(code) {
                 </label>
                 <label class="flex items-center justify-between cursor-pointer">
                   <div>
-                    <span class="text-sm text-body">Tajweed colors</span>
-                    <p class="text-xs text-muted/60 mt-0.5">Color-code pronunciation rules (per-word highlight off)</p>
+                    <span class="text-sm text-body">{{ $t('settings.tajweed') }}</span>
+                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.tajweedHint') }}</p>
                   </div>
                   <input
                     type="checkbox"
@@ -513,7 +647,10 @@ function onLanguageChange(code) {
                     :key="rule.key"
                     class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted"
                   >
-                    <span class="w-2.5 h-2.5 rounded-full" :style="{ background: tajweedColor(rule.key) }"></span>
+                    <span
+                      class="w-2.5 h-2.5 rounded-full"
+                      :style="{ background: tajweedColor(rule.key) }"
+                    ></span>
                     {{ rule.label }}
                   </span>
                 </div>
@@ -524,19 +661,38 @@ function onLanguageChange(code) {
             <div class="border-t border-border pt-5 space-y-2">
               <button
                 class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors disabled:opacity-60"
-                :class="store.isCurrentDownloaded ? 'bg-primary/10 text-primary' : 'bg-surface text-body hover:bg-border'"
+                :class="
+                  store.isCurrentDownloaded
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-surface text-body hover:bg-border'
+                "
                 :disabled="store.downloadingSurah !== null || !store.totalVerses"
                 @click="toggleDownload"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path v-if="store.isCurrentDownloaded" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  <path v-else d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                  <path
+                    v-if="store.isCurrentDownloaded"
+                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                  />
+                  <path v-else d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                 </svg>
-                {{ store.downloadingSurah === store.currentSurahNum ? 'Downloading...' : store.isCurrentDownloaded ? 'Saved offline (tap to remove)' : 'Download this surah for offline' }}
+                {{
+                  store.downloadingSurah === store.currentSurahNum
+                    ? $t('settings.downloading')
+                    : store.isCurrentDownloaded
+                      ? $t('settings.downloaded')
+                      : $t('settings.download')
+                }}
               </button>
-              <p v-if="store.downloadError" class="text-xs text-red-500 text-center">Download failed. Check your connection.</p>
-              <p v-if="storageText || store.downloadedSurahs.length" class="text-xs text-muted text-center">
-                {{ store.downloadedSurahs.length }} surah(s) saved<span v-if="storageText"> · {{ storageText }}</span>
+              <p v-if="store.downloadError" class="text-xs text-red-500 text-center">
+                {{ $t('settings.downloadFailed') }}
+              </p>
+              <p
+                v-if="storageText || store.downloadedSurahs.length"
+                class="text-xs text-muted text-center"
+              >
+                {{ $t('settings.surahsSaved', { count: store.downloadedSurahs.length })
+                }}<span v-if="storageText"> · {{ storageText }}</span>
               </p>
             </div>
 
@@ -548,12 +704,17 @@ function onLanguageChange(code) {
                 @click="installApp"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zm-1-4l-1.41-1.41L13 12.17V4h-2v8.17L8.41 9.59 7 11l5 5 5-5z"/>
+                  <path
+                    d="M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zm-1-4l-1.41-1.41L13 12.17V4h-2v8.17L8.41 9.59 7 11l5 5 5-5z"
+                  />
                 </svg>
-                Install App
+                {{ $t('settings.install') }}
               </button>
-              <div v-if="showIOSInstructions" class="px-3 py-2 bg-surface rounded-lg text-xs text-muted leading-relaxed">
-                <p class="font-medium text-body mb-1">To install on iOS:</p>
+              <div
+                v-if="showIOSInstructions"
+                class="px-3 py-2 bg-surface rounded-lg text-xs text-muted leading-relaxed"
+              >
+                <p class="font-medium text-body mb-1">{{ $t('settings.iosInstallTitle') }}</p>
                 <ol class="list-decimal list-inside space-y-0.5">
                   <li>Tap the <span class="font-medium">Share</span> button in Safari</li>
                   <li>Scroll down and tap <span class="font-medium">Add to Home Screen</span></li>
@@ -566,10 +727,22 @@ function onLanguageChange(code) {
                 :disabled="updateChecking"
                 @click="forceUpdate"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" :class="updateChecking ? 'animate-spin' : ''">
-                  <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  :class="updateChecking ? 'animate-spin' : ''"
+                >
+                  <path
+                    d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+                  />
                 </svg>
-                {{ updateChecking ? 'Checking...' : updateStatus || 'Check for Updates' }}
+                {{
+                  updateChecking
+                    ? $t('settings.checking')
+                    : updateStatus || $t('settings.checkUpdates')
+                }}
               </button>
 
               <button
@@ -577,22 +750,37 @@ function onLanguageChange(code) {
                 @click="resetSettings"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                  <path
+                    d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+                  />
                 </svg>
-                Reset Settings
+                {{ $t('settings.reset') }}
               </button>
             </div>
 
             <div class="border-t border-border pt-5">
-              <h3 class="text-sm font-semibold text-body mb-3">About</h3>
+              <h3 class="text-sm font-semibold text-body mb-3">{{ $t('settings.about') }}</h3>
               <p class="text-xs text-muted leading-relaxed mb-4">
-                I wanted a Quran player that felt clean and focused, something I could open and immediately start reading or listening. This app pairs each verse with its translation and highlights words in sync with the recitation, so you can follow along naturally.
+                I wanted a Quran player that felt clean and focused, something I could open and
+                immediately start reading or listening. This app pairs each verse with its
+                translation and highlights words in sync with the recitation, so you can follow
+                along naturally.
               </p>
               <div class="flex items-center gap-3 mb-4">
-                <img src="/author.jpeg" alt="Muhammad Ibnuh" class="w-10 h-10 rounded-full object-cover shrink-0" />
+                <img
+                  src="/author.jpeg"
+                  alt="Muhammad Ibnuh"
+                  class="w-10 h-10 rounded-full object-cover shrink-0"
+                />
                 <div>
                   <p class="text-sm font-medium text-body">Muhammad Ibnuh</p>
-                  <a href="https://ibnuhx.com" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline">ibnuhx.com</a>
+                  <a
+                    href="https://ibnuhx.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-xs text-primary hover:underline"
+                    >ibnuhx.com</a
+                  >
                 </div>
               </div>
               <div class="flex items-center gap-3 flex-wrap">
@@ -601,7 +789,9 @@ function onLanguageChange(code) {
                   class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    <path
+                      d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                    />
                   </svg>
                   quran@ibnuhx.com
                 </a>
@@ -612,7 +802,9 @@ function onLanguageChange(code) {
                   class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    <path
+                      d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                    />
                   </svg>
                   @ibnuhx
                 </a>
@@ -620,13 +812,22 @@ function onLanguageChange(code) {
 
               <div class="mt-4 p-3 bg-surface rounded-lg">
                 <div class="flex items-center gap-2 mb-1.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-primary">
-                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.337-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    class="text-primary"
+                  >
+                    <path
+                      d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.337-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"
+                    />
                   </svg>
                   <span class="text-xs font-semibold text-body">Open Source</span>
                 </div>
                 <p class="text-[0.65rem] text-muted leading-relaxed mb-2">
-                  This project is open source under the MIT License. Contributions, bug reports, and feature requests are welcome.
+                  This project is open source under the MIT License. Contributions, bug reports, and
+                  feature requests are welcome.
                 </p>
                 <a
                   href="https://github.com/ibnuh/quran"
@@ -636,7 +837,9 @@ function onLanguageChange(code) {
                 >
                   github.com/ibnuh/quran
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                    <path
+                      d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"
+                    />
                   </svg>
                 </a>
               </div>
@@ -644,46 +847,117 @@ function onLanguageChange(code) {
               <div class="mt-5 pt-4 border-t border-border">
                 <h4 class="text-xs font-semibold text-muted mb-3">Powered by</h4>
                 <div class="space-y-2.5">
-                  <a href="https://alquran.cloud" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
-                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15h14v2H5zm0-4h14v2H5zm0-4h14v2H5z"/></svg>
+                  <a
+                    href="https://alquran.cloud"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-start gap-2.5 group"
+                  >
+                    <div
+                      class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15h14v2H5zm0-4h14v2H5zm0-4h14v2H5z"
+                        />
+                      </svg>
                     </div>
                     <div>
-                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">AlQuran Cloud</p>
-                      <p class="text-[0.65rem] text-muted">Quran text, translations, per-verse audio</p>
+                      <p
+                        class="text-xs font-medium text-body group-hover:text-primary transition-colors"
+                      >
+                        AlQuran Cloud
+                      </p>
+                      <p class="text-[0.65rem] text-muted">
+                        Quran text, translations, per-verse audio
+                      </p>
                     </div>
                   </a>
-                  <a href="https://quran.com" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
-                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v9.28a4.39 4.39 0 00-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
+                  <a
+                    href="https://quran.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-start gap-2.5 group"
+                  >
+                    <div
+                      class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M12 3v9.28a4.39 4.39 0 00-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"
+                        />
+                      </svg>
                     </div>
                     <div>
-                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">Quran.com / QDC</p>
+                      <p
+                        class="text-xs font-medium text-body group-hover:text-primary transition-colors"
+                      >
+                        Quran.com / QDC
+                      </p>
                       <p class="text-[0.65rem] text-muted">Full surah audio, word-level timing</p>
                     </div>
                   </a>
-                  <a href="https://verses.quran.foundation" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
-                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>
+                  <a
+                    href="https://verses.quran.foundation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-start gap-2.5 group"
+                  >
+                    <div
+                      class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"
+                        />
+                      </svg>
                     </div>
                     <div>
-                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">Quran Foundation</p>
+                      <p
+                        class="text-xs font-medium text-body group-hover:text-primary transition-colors"
+                      >
+                        Quran Foundation
+                      </p>
                       <p class="text-[0.65rem] text-muted">Uthmanic Hafs font</p>
                     </div>
                   </a>
-                  <a href="https://fonts.google.com" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2.5 group">
-                    <div class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>
+                  <a
+                    href="https://fonts.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-start gap-2.5 group"
+                  >
+                    <div
+                      class="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"
+                        />
+                      </svg>
                     </div>
                     <div>
-                      <p class="text-xs font-medium text-body group-hover:text-primary transition-colors">Google Fonts</p>
+                      <p
+                        class="text-xs font-medium text-body group-hover:text-primary transition-colors"
+                      >
+                        Google Fonts
+                      </p>
                       <p class="text-[0.65rem] text-muted">Amiri and Amiri Quran typefaces</p>
                     </div>
                   </a>
                 </div>
               </div>
 
-              <p class="mt-4 text-[0.6rem] text-muted/50 text-center tabular-nums">Version <a :href="'https://github.com/ibnuh/quran/commit/' + appVersion" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">{{ appVersion }}</a></p>
+              <p class="mt-4 text-[0.6rem] text-muted/50 text-center tabular-nums">
+                Version
+                <a
+                  :href="'https://github.com/ibnuh/quran/commit/' + appVersion"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hover:text-primary transition-colors"
+                  >{{ appVersion }}</a
+                >
+              </p>
             </div>
           </div>
         </div>
@@ -694,7 +968,9 @@ function onLanguageChange(code) {
 
 <style scoped>
 .theme-swatch {
-  transition: background 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    background 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .theme-swatch:active {
   transform: scale(0.95);
@@ -763,7 +1039,7 @@ function onLanguageChange(code) {
   height: 1.25rem;
   border-radius: 50%;
   background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .toggle-switch:checked {

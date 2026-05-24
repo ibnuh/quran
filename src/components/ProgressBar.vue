@@ -86,11 +86,15 @@ function onTouchEnd() {
       ref="barRef"
       class="progress-wrapper group"
       role="slider"
-      aria-label="Seek audio"
+      :aria-label="$t('controls.seek')"
       :aria-valuenow="Math.round(progress)"
       aria-valuemin="0"
       aria-valuemax="100"
-      :aria-valuetext="durationMs > 0 ? formatTime(currentTimeMs) + ' of ' + formatTime(durationMs) : 'No audio loaded'"
+      :aria-valuetext="
+        durationMs > 0
+          ? formatTime(currentTimeMs) + ' of ' + formatTime(durationMs)
+          : 'No audio loaded'
+      "
       tabindex="0"
       @click="onClick"
       @mousedown.prevent="onMouseDown"

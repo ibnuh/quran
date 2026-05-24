@@ -12,6 +12,7 @@ import {
 } from '../services/api.js'
 import { parseTajweed } from '../utils/arabicText.js'
 import { ensureQcfPageFont } from '../utils/qcfFonts.js'
+import { setUiLocale, t } from '../i18n/index.js'
 import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
@@ -38,19 +39,15 @@ function detectTranslationFromLocale() {
 function errorMessageFor(err, { isAudio = false } = {}) {
   const kind = err?.kind
   if (kind === 'not-found') {
-    return isAudio
-      ? 'Audio is unavailable for this reciter and surah.'
-      : 'This surah or translation could not be found.'
+    return isAudio ? t('errors.notFoundAudio') : t('errors.notFoundText')
   }
   if (kind === 'network') {
-    return 'Network error. Please check your connection and try again.'
+    return t('errors.network')
   }
   if (kind === 'invalid' || kind === 'http') {
-    return isAudio
-      ? 'The audio service is unavailable right now. Try another reciter.'
-      : 'The text service is unavailable right now. Please try again.'
+    return isAudio ? t('errors.invalidAudio') : t('errors.invalidText')
   }
-  return 'Failed to load surah. Please check your connection and try again.'
+  return t('errors.generic')
 }
 
 // Migrate and validate persisted preferences across schema versions, dropping
@@ -154,6 +151,7 @@ export const usePlayerStore = defineStore('player', {
     translationFontSize: _responsiveDefaults.translationFontSize,
     contentWidth: _responsiveDefaults.contentWidth,
     theme: 'light',
+    uiLanguage: 'en',
     autoHideControls: true,
     currentWordIndex: -1,
     wordHighlight: true,
@@ -481,11 +479,7 @@ export const usePlayerStore = defineStore('player', {
       this.downloadError = false
       try {
         const urls =
-          this.playbackMode === 'full'
-            ? this.audioUrl
-              ? [this.audioUrl]
-              : []
-            : this.audioUrls
+          this.playbackMode === 'full' ? (this.audioUrl ? [this.audioUrl] : []) : this.audioUrls
         for (const url of urls) {
           await fetch(url, { mode: 'no-cors' }).catch(() => {})
         }
@@ -608,6 +602,11 @@ export const usePlayerStore = defineStore('player', {
 
     setReadingMode(value) {
       this.readingMode = !!value
+      this.savePreferences()
+    },
+
+    setUiLanguage(code) {
+      this.uiLanguage = setUiLocale(code)
       this.savePreferences()
     },
 
@@ -908,6 +907,7 @@ export const usePlayerStore = defineStore('player', {
             translationFontSize: this.translationFontSize,
             contentWidth: this.contentWidth,
             theme: this.theme,
+            uiLanguage: this.uiLanguage,
             autoHideControls: this.autoHideControls,
             wordHighlight: this.wordHighlight,
             highlightStyle: this.highlightStyle,
@@ -979,6 +979,9 @@ export const usePlayerStore = defineStore('player', {
         if (prefs.theme) {
           this.theme = prefs.theme
           applyThemeToDocument(prefs.theme)
+        }
+        if (prefs.uiLanguage) {
+          this.uiLanguage = prefs.uiLanguage
         }
         if (prefs.autoHideControls !== undefined) {
           this.autoHideControls = prefs.autoHideControls

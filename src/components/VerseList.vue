@@ -11,8 +11,15 @@ const emit = defineEmits(['close', 'select'])
 
 useFocusTrap(panelRef, { onEscape: () => emit('close'), autoFocus: false })
 
+function selectVerse(i) {
+  emit('select', i)
+  emit('close')
+}
+
 function scrollToActive(smooth = false) {
-  if (!listRef.value) {return}
+  if (!listRef.value) {
+    return
+  }
   const active = listRef.value.querySelector('.verse-active')
   if (active) {
     active.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' })
@@ -23,33 +30,56 @@ onMounted(() => {
   nextTick(() => scrollToActive())
 })
 
-watch(() => store.currentVerseIndex, async () => {
-  await nextTick()
-  scrollToActive(true)
-})
+watch(
+  () => store.currentVerseIndex,
+  async () => {
+    await nextTick()
+    scrollToActive(true)
+  }
+)
 </script>
 
 <template>
   <Transition name="panel" appear>
-    <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end" role="dialog" aria-label="Verse list" aria-modal="true">
-      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40" role="presentation" @click="emit('close')"></div>
+    <div
+      class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end"
+      role="dialog"
+      aria-label="Verse list"
+      aria-modal="true"
+    >
+      <div
+        class="absolute top-0 right-0 bottom-0 left-0 bg-black/40"
+        role="presentation"
+        @click="emit('close')"
+      ></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-md lg:max-w-lg h-full shadow-2xl">
         <div class="bg-card h-full overflow-y-auto">
-          <div class="sticky top-0 bg-card z-10 flex items-center justify-between px-4 pb-3 border-b border-border" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px))">
-            <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">All Verses</h3>
+          <div
+            class="sticky top-0 bg-card z-10 flex items-center justify-between px-4 pb-3 border-b border-border"
+            style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px))"
+          >
+            <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">
+              {{ $t('panels.allVerses') }}
+            </h3>
             <button
               class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
-              aria-label="Close verse list"
+              :aria-label="$t('panels.closeVerses')"
               @click="emit('close')"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                <path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                />
               </svg>
             </button>
           </div>
 
-          <div ref="listRef" class="p-4 space-y-2" style="padding-right: max(1rem, env(safe-area-inset-right, 0px))">
+          <div
+            ref="listRef"
+            class="p-4 space-y-2"
+            style="padding-right: max(1rem, env(safe-area-inset-right, 0px))"
+          >
             <VerseItem
               v-for="(verse, i) in store.verses"
               :key="verse.number"
@@ -58,7 +88,7 @@ watch(() => store.currentVerseIndex, async () => {
               :is-active="i === store.currentVerseIndex"
               :class="{ 'verse-active': i === store.currentVerseIndex }"
               class="scroll-mt-16"
-              @select="emit('select', i); emit('close')"
+              @select="selectVerse(i)"
             />
           </div>
         </div>

@@ -7,10 +7,10 @@ const panelRef = ref(null)
 useFocusTrap(panelRef)
 
 const shortcuts = [
-  { keys: ['Space'], action: 'Play / Pause' },
-  { keys: ['\u2190'], action: 'Previous verse' },
-  { keys: ['\u2192'], action: 'Next verse' },
-  { keys: ['?'], action: 'Toggle this help' }
+  { keys: ['Space'], action: 'panels.shortcutPlay' },
+  { keys: ['\u2190'], action: 'panels.shortcutPrev' },
+  { keys: ['\u2192'], action: 'panels.shortcutNext' },
+  { keys: ['?'], action: 'panels.shortcutHelp' }
 ]
 
 function onKeydown(e) {
@@ -26,36 +26,37 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 <template>
   <Transition name="shortcuts">
-    <div class="fixed top-0 right-0 bottom-0 left-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Keyboard shortcuts">
-      <div class="absolute top-0 right-0 bottom-0 left-0 bg-black/40 backdrop-blur-sm" @click="emit('close')"></div>
+    <div
+      class="fixed top-0 right-0 bottom-0 left-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-label="Keyboard shortcuts"
+    >
+      <div
+        class="absolute top-0 right-0 bottom-0 left-0 bg-black/40 backdrop-blur-sm"
+        @click="emit('close')"
+      ></div>
 
       <div ref="panelRef" class="relative bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-base font-semibold text-body">Keyboard Shortcuts</h2>
+          <h2 class="text-base font-semibold text-body">{{ $t('panels.shortcuts') }}</h2>
           <button
             class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
-            aria-label="Close shortcuts"
+            :aria-label="$t('panels.closeShortcuts')"
             @click="emit('close')"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
             </svg>
           </button>
         </div>
 
         <div class="space-y-3">
-          <div
-            v-for="s in shortcuts"
-            :key="s.action"
-            class="flex items-center justify-between"
-          >
-            <span class="text-sm text-body">{{ s.action }}</span>
+          <div v-for="s in shortcuts" :key="s.action" class="flex items-center justify-between">
+            <span class="text-sm text-body">{{ $t(s.action) }}</span>
             <div class="flex gap-1">
-              <kbd
-                v-for="key in s.keys"
-                :key="key"
-                class="kbd"
-              >{{ key }}</kbd>
+              <kbd v-for="key in s.keys" :key="key" class="kbd">{{ key }}</kbd>
             </div>
           </div>
         </div>

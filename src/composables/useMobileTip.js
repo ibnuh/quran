@@ -1,5 +1,6 @@
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { TIP_DISMISSED_KEY, MOBILE_TIP_TIMEOUT } from '../config.js'
+import { t } from '../i18n/index.js'
 
 // One-time mobile hint suggesting landscape mode and auto-hide controls.
 export function useMobileTip(store) {
@@ -28,15 +29,15 @@ export function useMobileTip(store) {
     }
 
     if (!isLandscape && !store.autoHideControls) {
-      tipMessage.value = 'Try landscape mode with auto-hide for a better reading experience'
+      tipMessage.value = t('tip.both')
       tipAction.value = 'both'
       showMobileTip.value = true
     } else if (!isLandscape) {
-      tipMessage.value = 'Try landscape mode for a wider, more immersive reading experience'
+      tipMessage.value = t('tip.landscape')
       tipAction.value = 'landscape'
       showMobileTip.value = true
     } else if (!store.autoHideControls) {
-      tipMessage.value = 'Enable auto-hide for a more immersive experience'
+      tipMessage.value = t('tip.autoHide')
       tipAction.value = 'auto-hide'
       showMobileTip.value = true
     } else {

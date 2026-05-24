@@ -41,9 +41,13 @@ function onClickOutside(e) {
 }
 
 function onSpeedMenuKeydown(e) {
-  if (!showSpeedMenu.value) {return}
+  if (!showSpeedMenu.value) {
+    return
+  }
   const buttons = Array.from(document.querySelectorAll('.speed-wrapper [role="menu"] button'))
-  if (!buttons.length) {return}
+  if (!buttons.length) {
+    return
+  }
   const current = buttons.indexOf(document.activeElement)
   if (e.key === 'ArrowUp') {
     e.preventDefault()
@@ -113,9 +117,7 @@ const sleepLabel = computed(() => {
   return `${m}:${s.toString().padStart(2, '0')}`
 })
 
-const toolsActive = computed(
-  () => store.volume < 1 || !!store.abRepeat || props.sleepMinutes > 0
-)
+const toolsActive = computed(() => store.volume < 1 || !!store.abRepeat || props.sleepMinutes > 0)
 
 function setRepeatA() {
   const end = store.abRepeat ? store.abRepeat.end : store.currentVerseIndex
@@ -133,7 +135,9 @@ function clearRepeat() {
 </script>
 
 <template>
-  <div class="px-4 sm:px-12 pb-1 pt-3 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+  <div
+    class="px-4 sm:px-12 pb-1 pt-3 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]"
+  >
     <ProgressBar
       :progress="progress"
       :buffered="buffered"
@@ -148,179 +152,270 @@ function clearRepeat() {
         <button
           class="flex ctrl-btn"
           :class="store.repeatMode !== 'none' ? 'text-primary!' : ''"
-          aria-label="Cycle repeat mode"
+          :aria-label="$t('controls.cycleRepeat')"
           @click="cycleRepeat"
         >
           <span v-if="store.repeatMode === 'verse'" class="relative inline-flex">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
-            <span class="absolute inset-0 flex items-center justify-center text-[7px] font-bold">1</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+            </svg>
+            <span class="absolute inset-0 flex items-center justify-center text-[7px] font-bold"
+              >1</span
+            >
           </span>
-          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
-          <span class="hidden sm:inline text-[0.7rem]">{{ store.repeatMode === 'none' ? 'Repeat' : store.repeatMode === 'verse' ? 'Verse' : 'Surah' }}</span>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+          </svg>
+          <span class="hidden sm:inline text-[0.7rem]">{{
+            store.repeatMode === 'none'
+              ? $t('controls.repeat')
+              : store.repeatMode === 'verse'
+                ? $t('controls.repeatVerse')
+                : $t('controls.repeatSurah')
+          }}</span>
         </button>
 
         <div class="flex items-center gap-1 sm:gap-2">
-        <button
-          class="ctrl-btn flex"
-          :disabled="!store.canPrevSurah"
-          aria-label="Previous surah"
-          @click="emit('prev-surah')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-          <span class="hidden sm:inline">Prev Surah</span>
-        </button>
+          <button
+            class="ctrl-btn flex"
+            :disabled="!store.canPrevSurah"
+            :aria-label="$t('controls.previousSurah')"
+            @click="emit('prev-surah')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+            </svg>
+            <span class="hidden sm:inline">{{ $t('controls.prevSurah') }}</span>
+          </button>
 
-        <button
-          class="flex ctrl-btn"
-          :disabled="!store.canPrevVerse"
-          aria-label="Previous verse"
-          @click="emit('prev-verse')"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-          <span class="hidden sm:inline">Prev</span>
-        </button>
+          <button
+            class="flex ctrl-btn"
+            :disabled="!store.canPrevVerse"
+            :aria-label="$t('controls.previousVerse')"
+            @click="emit('prev-verse')"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+            </svg>
+            <span class="hidden sm:inline">{{ $t('controls.prev') }}</span>
+          </button>
         </div>
       </div>
 
       <!-- Center: Play button -->
       <button
         class="play-btn w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 cursor-pointer shrink-0"
-        :aria-label="isPlaying ? 'Pause' : 'Play'"
+        :aria-label="isPlaying ? $t('controls.pause') : $t('controls.play')"
         @click="emit('toggle-play')"
       >
         <Transition name="play-icon" mode="out-in">
-          <svg v-if="!isPlaying" key="play" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          <svg v-else key="pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          <svg
+            v-if="!isPlaying"
+            key="play"
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg v-else key="pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
         </Transition>
       </button>
 
       <!-- Right group: navigation hugging Play, speed/tools utilities on the edge -->
       <div class="flex items-center justify-between gap-1 sm:gap-2 min-w-0">
         <div class="flex items-center gap-1 sm:gap-2">
-        <button
-          class="flex ctrl-btn"
-          :disabled="!store.canNextVerse"
-          aria-label="Next verse"
-          @click="emit('next-verse')"
-        >
-          <span class="hidden sm:inline">Next</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        </button>
+          <button
+            class="flex ctrl-btn"
+            :disabled="!store.canNextVerse"
+            :aria-label="$t('controls.nextVerse')"
+            @click="emit('next-verse')"
+          >
+            <span class="hidden sm:inline">{{ $t('controls.next') }}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+            </svg>
+          </button>
 
-        <button
-          class="ctrl-btn flex"
-          :disabled="!store.canNextSurah"
-          aria-label="Next surah"
-          @click="emit('next-surah')"
-        >
-          <span class="hidden sm:inline">Next Surah</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-        </button>
+          <button
+            class="ctrl-btn flex"
+            :disabled="!store.canNextSurah"
+            :aria-label="$t('controls.nextSurah')"
+            @click="emit('next-surah')"
+          >
+            <span class="hidden sm:inline">{{ $t('controls.nextSurah') }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+            </svg>
+          </button>
         </div>
 
         <div class="flex items-center gap-1 sm:gap-2">
-        <!-- Speed -->
-        <div class="relative speed-wrapper">
-          <button
-            class="flex ctrl-btn"
-            :class="store.playbackSpeed !== 1 ? 'text-primary!' : ''"
-            aria-label="Playback speed"
-            @click.stop="showSpeedMenu = !showSpeedMenu"
-          >
-            <span class="text-[0.7rem] font-semibold tabular-nums">{{ store.playbackSpeed }}x</span>
-          </button>
-          <Transition name="speed-pop">
-            <div v-if="showSpeedMenu" role="menu" class="absolute bottom-full right-0 mb-2 bg-card rounded-lg shadow-2xl border border-border p-1 z-50 min-w-[4.5rem]" @keydown="onSpeedMenuKeydown">
-              <button
-                v-for="s in SPEEDS"
-                :key="s"
-                class="w-full px-3 py-1.5 text-xs text-center rounded cursor-pointer transition-colors"
-                :class="store.playbackSpeed === s ? 'bg-primary/10 text-primary font-semibold' : 'text-body hover:bg-surface'"
-                @click="selectSpeed(s)"
-              >{{ s }}x</button>
-            </div>
-          </Transition>
-        </div>
+          <!-- Speed -->
+          <div class="relative speed-wrapper">
+            <button
+              class="flex ctrl-btn"
+              :class="store.playbackSpeed !== 1 ? 'text-primary!' : ''"
+              :aria-label="$t('controls.playbackSpeed')"
+              @click.stop="showSpeedMenu = !showSpeedMenu"
+            >
+              <span class="text-[0.7rem] font-semibold tabular-nums"
+                >{{ store.playbackSpeed }}x</span
+              >
+            </button>
+            <Transition name="speed-pop">
+              <div
+                v-if="showSpeedMenu"
+                role="menu"
+                class="absolute bottom-full right-0 mb-2 bg-card rounded-lg shadow-2xl border border-border p-1 z-50 min-w-[4.5rem]"
+                @keydown="onSpeedMenuKeydown"
+              >
+                <button
+                  v-for="s in SPEEDS"
+                  :key="s"
+                  class="w-full px-3 py-1.5 text-xs text-center rounded cursor-pointer transition-colors"
+                  :class="
+                    store.playbackSpeed === s
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-body hover:bg-surface'
+                  "
+                  @click="selectSpeed(s)"
+                >
+                  {{ s }}x
+                </button>
+              </div>
+            </Transition>
+          </div>
 
-        <!-- Tools: volume, sleep timer, A-B repeat -->
-        <div class="relative tools-wrapper">
-          <button
-            class="flex ctrl-btn"
-            :class="toolsActive ? 'text-primary!' : ''"
-            aria-label="Audio tools"
-            @click.stop="showToolsMenu = !showToolsMenu"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
-            <span v-if="sleepLabel" class="text-[0.7rem] font-semibold tabular-nums">{{ sleepLabel }}</span>
-          </button>
-          <Transition name="speed-pop">
-            <div v-if="showToolsMenu" class="absolute bottom-full right-0 mb-2 bg-card rounded-xl shadow-2xl border border-border p-3 z-50 w-60 text-left space-y-4">
-              <!-- Volume -->
-              <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Volume</span>
-                  <span class="text-[0.7rem] text-muted tabular-nums">{{ volumePercent }}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  :value="volumePercent"
-                  class="w-full accent-[var(--color-primary)] cursor-pointer"
-                  aria-label="Volume"
-                  @input="onVolumeInput"
+          <!-- Tools: volume, sleep timer, A-B repeat -->
+          <div class="relative tools-wrapper">
+            <button
+              class="flex ctrl-btn"
+              :class="toolsActive ? 'text-primary!' : ''"
+              :aria-label="$t('controls.audioTools')"
+              @click.stop="showToolsMenu = !showToolsMenu"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"
                 />
-              </div>
+              </svg>
+              <span v-if="sleepLabel" class="text-[0.7rem] font-semibold tabular-nums">{{
+                sleepLabel
+              }}</span>
+            </button>
+            <Transition name="speed-pop">
+              <div
+                v-if="showToolsMenu"
+                class="absolute bottom-full right-0 mb-2 bg-card rounded-xl shadow-2xl border border-border p-3 z-50 w-60 text-left space-y-4"
+              >
+                <!-- Volume -->
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">{{
+                      $t('controls.volume')
+                    }}</span>
+                    <span class="text-[0.7rem] text-muted tabular-nums">{{ volumePercent }}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    :value="volumePercent"
+                    class="w-full accent-[var(--color-primary)] cursor-pointer"
+                    :aria-label="$t('controls.volume')"
+                    @input="onVolumeInput"
+                  />
+                </div>
 
-              <!-- A-B repeat -->
-              <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Repeat range</span>
-                  <span v-if="store.abRepeat" class="text-[0.7rem] text-primary tabular-nums">{{ store.abRepeat.start + 1 }}-{{ store.abRepeat.end + 1 }}</span>
+                <!-- A-B repeat -->
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">{{
+                      $t('controls.repeatRange')
+                    }}</span>
+                    <span v-if="store.abRepeat" class="text-[0.7rem] text-primary tabular-nums"
+                      >{{ store.abRepeat.start + 1 }}-{{ store.abRepeat.end + 1 }}</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      class="flex-1 text-xs py-1.5 rounded-md bg-surface text-body hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                      @click="setRepeatA"
+                    >
+                      {{ $t('controls.setA') }}
+                    </button>
+                    <button
+                      class="flex-1 text-xs py-1.5 rounded-md bg-surface text-body hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+                      @click="setRepeatB"
+                    >
+                      {{ $t('controls.setB') }}
+                    </button>
+                    <button
+                      class="flex-1 text-xs py-1.5 rounded-md cursor-pointer transition-colors"
+                      :class="
+                        store.abRepeat ? 'bg-primary/10 text-primary' : 'bg-surface text-muted'
+                      "
+                      :disabled="!store.abRepeat"
+                      @click="clearRepeat"
+                    >
+                      {{ $t('controls.clear') }}
+                    </button>
+                  </div>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <button class="flex-1 text-xs py-1.5 rounded-md bg-surface text-body hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors" @click="setRepeatA">Set A</button>
-                  <button class="flex-1 text-xs py-1.5 rounded-md bg-surface text-body hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors" @click="setRepeatB">Set B</button>
-                  <button
-                    class="flex-1 text-xs py-1.5 rounded-md cursor-pointer transition-colors"
-                    :class="store.abRepeat ? 'bg-primary/10 text-primary' : 'bg-surface text-muted'"
-                    :disabled="!store.abRepeat"
-                    @click="clearRepeat"
-                  >Clear</button>
-                </div>
-              </div>
 
-              <!-- Sleep timer -->
-              <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">Sleep timer</span>
-                  <span v-if="sleepLabel" class="text-[0.7rem] text-primary tabular-nums">{{ sleepLabel }}</span>
-                </div>
-                <div class="grid grid-cols-3 gap-1.5">
-                  <button
-                    v-for="m in SLEEP_TIMER_OPTIONS"
-                    :key="m"
-                    class="text-xs py-1.5 rounded-md cursor-pointer transition-colors"
-                    :class="sleepMinutes === m ? 'bg-primary/10 text-primary font-semibold' : 'bg-surface text-body hover:bg-primary/10 hover:text-primary'"
-                    @click="selectSleep(m)"
-                  >{{ m }}m</button>
+                <!-- Sleep timer -->
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[0.7rem] font-semibold text-muted uppercase tracking-wide">{{
+                      $t('controls.sleepTimer')
+                    }}</span>
+                    <span v-if="sleepLabel" class="text-[0.7rem] text-primary tabular-nums">{{
+                      sleepLabel
+                    }}</span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-1.5">
+                    <button
+                      v-for="m in SLEEP_TIMER_OPTIONS"
+                      :key="m"
+                      class="text-xs py-1.5 rounded-md cursor-pointer transition-colors"
+                      :class="
+                        sleepMinutes === m
+                          ? 'bg-primary/10 text-primary font-semibold'
+                          : 'bg-surface text-body hover:bg-primary/10 hover:text-primary'
+                      "
+                      @click="selectSleep(m)"
+                    >
+                      {{ m }}m
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Transition>
-        </div>
+            </Transition>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="text-center mt-2 mb-3 landscape-compact:hidden" :class="store.currentVerse ? '' : 'invisible'">
+    <div
+      class="text-center mt-2 mb-3 landscape-compact:hidden"
+      :class="store.currentVerse ? '' : 'invisible'"
+    >
       <div class="relative inline-flex items-center gap-1 jump-verse-input-wrapper">
         <button
           class="text-xs text-muted hover:text-primary transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-surface"
-          aria-label="Jump to verse"
+          :aria-label="$t('controls.jumpToVerse')"
           @click.stop="showJumpInput = !showJumpInput"
         >
-          Verse {{ store.currentVerse?.number || 0 }} of {{ store.totalVerses || 0 }}
+          {{
+            $t('controls.verseOf', {
+              current: store.currentVerse?.number || 0,
+              total: store.totalVerses || 0
+            })
+          }}
         </button>
         <Transition name="speed-pop">
           <div
@@ -328,7 +423,7 @@ function clearRepeat() {
             class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-card rounded-lg shadow-2xl border border-border p-2 z-50 flex items-center gap-1.5"
             @keydown="onJumpKeydown"
           >
-            <span class="text-[0.65rem] text-muted">Go to</span>
+            <span class="text-[0.65rem] text-muted">{{ $t('controls.goTo') }}</span>
             <input
               ref="jumpInputRef"
               v-model="jumpVerseNum"
@@ -338,12 +433,19 @@ function clearRepeat() {
               class="w-16 px-2 py-1 text-xs text-center rounded-md border border-border bg-surface text-body focus:outline-none focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="#"
               @keydown.enter="jumpToVerse"
-              @keydown.escape.prevent="() => { showJumpInput = false; jumpVerseNum = '' }"
+              @keydown.escape.prevent="
+                () => {
+                  showJumpInput = false
+                  jumpVerseNum = ''
+                }
+              "
             />
             <button
               class="text-xs px-2 py-1 bg-primary text-white rounded-md font-medium cursor-pointer hover:bg-primary-dark transition-colors"
               @click="jumpToVerse"
-            >Go</button>
+            >
+              {{ $t('controls.go') }}
+            </button>
           </div>
         </Transition>
       </div>
@@ -354,7 +456,10 @@ function clearRepeat() {
 <style scoped>
 .play-btn {
   box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 30%, transparent);
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    background-color 0.15s ease,
+    box-shadow 0.2s ease;
 }
 .play-btn:hover {
   background-color: var(--color-primary-dark);
@@ -368,7 +473,9 @@ function clearRepeat() {
 
 .play-icon-enter-active,
 .play-icon-leave-active {
-  transition: opacity 0.1s ease, transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    opacity 0.1s ease,
+    transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .play-icon-enter-from {
   opacity: 0;
@@ -392,7 +499,10 @@ function clearRepeat() {
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s cubic-bezier(0.25, 1, 0.5, 1), color 0.15s ease, transform 0.1s ease;
+  transition:
+    background 0.15s cubic-bezier(0.25, 1, 0.5, 1),
+    color 0.15s ease,
+    transform 0.1s ease;
 }
 .ctrl-btn:hover:not(:disabled) {
   background: var(--color-primary-light);
@@ -408,12 +518,13 @@ function clearRepeat() {
 
 .speed-pop-enter-active,
 .speed-pop-leave-active {
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .speed-pop-enter-from,
 .speed-pop-leave-to {
   opacity: 0;
   transform: scale(0.95) translateY(4px);
 }
-
 </style>

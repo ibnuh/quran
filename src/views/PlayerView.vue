@@ -254,16 +254,27 @@ onMounted(async () => {
 
     <!-- Offline banner -->
     <Transition name="offline-bar">
-      <div v-if="!isOnline" class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs pb-1.5 px-4 font-medium" style="padding-top: max(0.375rem, env(safe-area-inset-top, 0px))">
-        You are offline. Some features may not be available.
+      <div
+        v-if="!isOnline"
+        class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs pb-1.5 px-4 font-medium"
+        style="padding-top: max(0.375rem, env(safe-area-inset-top, 0px))"
+      >
+        {{ $t('app.offline') }}
       </div>
     </Transition>
 
     <div
       ref="headerRef"
       class="absolute top-0 left-0 right-0 z-40"
-      :style="{ transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }"
-      :class="controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'"
+      :style="{
+        transition:
+          'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
+      }"
+      :class="
+        controlsVisible
+          ? 'translate-y-0 opacity-100'
+          : '-translate-y-full opacity-0 pointer-events-none'
+      "
     >
       <AppHeader
         @open-settings="showSettings = true"
@@ -283,7 +294,7 @@ onMounted(async () => {
       class="h-full flex flex-col overflow-y-auto scrollable cursor-pointer select-none"
       :style="{
         transition: 'padding-top 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
-        paddingTop: ((headerHeight || 16) + 24) + 'px',
+        paddingTop: (headerHeight || 16) + 24 + 'px',
         paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
         paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
         paddingBottom: Math.max(controlsHeight, 16) + 'px',
@@ -305,9 +316,16 @@ onMounted(async () => {
     <div
       ref="controlsRef"
       class="fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-sm border-t border-border"
-      :style="{ transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1)' }"
+      :style="{
+        transition:
+          'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
+      }"
       style="padding-bottom: env(safe-area-inset-bottom, 0px)"
-      :class="controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'"
+      :class="
+        controlsVisible
+          ? 'translate-y-0 opacity-100'
+          : 'translate-y-full opacity-0 pointer-events-none'
+      "
     >
       <PlayerControls
         :is-playing="audio.isPlaying.value"
@@ -331,7 +349,11 @@ onMounted(async () => {
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
-    <BookmarksPanel v-if="showBookmarks" @close="showBookmarks = false" @select="handleGoToBookmark" />
+    <BookmarksPanel
+      v-if="showBookmarks"
+      @close="showBookmarks = false"
+      @select="handleGoToBookmark"
+    />
     <KeyboardShortcuts v-if="showShortcuts" @close="showShortcuts = false" />
     <SearchPanel
       v-if="showSearch"
@@ -346,24 +368,36 @@ onMounted(async () => {
       <div
         v-if="showMobileTip"
         class="fixed left-4 right-4 z-30 flex items-center gap-3 bg-card border border-border rounded-xl shadow-xl px-4 py-3 md:hidden"
-        :style="{ top: (headerHeight + 8) + 'px' }"
+        :style="{ top: headerHeight + 8 + 'px' }"
       >
-        <svg class="shrink-0 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        <svg
+          class="shrink-0 text-primary"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+          />
         </svg>
         <p class="text-xs text-body flex-1">{{ tipMessage }}</p>
         <button
           v-if="tipAction === 'auto-hide' || tipAction === 'both'"
           class="shrink-0 bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer"
           @click="applyMobileTip"
-        >{{ tipAction === 'both' ? 'Enable Auto-hide' : 'Enable' }}</button>
+        >
+          {{ tipAction === 'both' ? $t('tip.enableAutoHide') : $t('tip.enable') }}
+        </button>
         <button
           class="shrink-0 text-muted cursor-pointer p-1"
-          aria-label="Dismiss"
+          :aria-label="$t('tip.dismiss')"
           @click="dismissMobileTip"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+            />
           </svg>
         </button>
       </div>
@@ -374,7 +408,9 @@ onMounted(async () => {
 <style scoped>
 .offline-bar-enter-active,
 .offline-bar-leave-active {
-  transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .offline-bar-enter-from,
 .offline-bar-leave-to {
@@ -383,10 +419,14 @@ onMounted(async () => {
 }
 
 .tip-enter-active {
-  transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .tip-leave-active {
-  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .tip-enter-from,
 .tip-leave-to {
