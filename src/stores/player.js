@@ -150,6 +150,8 @@ export const usePlayerStore = defineStore('player', {
     currentWordIndex: -1,
     wordHighlight: true,
     highlightStyle: 'flow', // 'glow' | 'background' | 'underline' | 'minimal' | 'sweep' | 'flow'
+    // Per-verse action button visibility (under the verse number).
+    verseActions: { bookmark: true, share: true, copy: true },
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     abRepeat: null, // { start: verseIndex, end: verseIndex } for A-B memorization loop
     playbackSpeed: 1,
@@ -485,6 +487,13 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setVerseAction(name, value) {
+      if (name in this.verseActions) {
+        this.verseActions[name] = !!value
+        this.savePreferences()
+      }
+    },
+
     setRepeatMode(mode) {
       this.repeatMode = mode
       this.savePreferences()
@@ -697,6 +706,7 @@ export const usePlayerStore = defineStore('player', {
             autoHideControls: this.autoHideControls,
             wordHighlight: this.wordHighlight,
             highlightStyle: this.highlightStyle,
+            verseActions: this.verseActions,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
             volume: this.volume,
@@ -763,6 +773,13 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.highlightStyle) {
           this.highlightStyle = prefs.highlightStyle
+        }
+        if (prefs.verseActions && typeof prefs.verseActions === 'object') {
+          this.verseActions = {
+            bookmark: prefs.verseActions.bookmark !== false,
+            share: prefs.verseActions.share !== false,
+            copy: prefs.verseActions.copy !== false
+          }
         }
         if (prefs.repeatMode) {
           this.repeatMode = prefs.repeatMode

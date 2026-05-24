@@ -149,48 +149,54 @@ function copyVerse() {
               {{ store.currentVerse.number }}
             </span>
 
-            <div class="flex items-center justify-center gap-1">
-            <button
-              class="verse-action-btn"
-              :aria-label="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
-              :title="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
-              @click="store.toggleBookmark()"
+            <div
+              v-if="store.verseActions.bookmark || store.verseActions.share || store.verseActions.copy"
+              class="flex items-center justify-center gap-1"
             >
-              <svg
-                width="14" height="14" viewBox="0 0 24 24"
-                :fill="store.isCurrentBookmarked ? 'currentColor' : 'none'"
-                :class="store.isCurrentBookmarked ? 'text-accent' : 'text-muted/50'"
-                stroke="currentColor" stroke-width="2"
+              <button
+                v-if="store.verseActions.bookmark"
+                class="verse-action-btn"
+                :aria-label="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
+                :title="store.isCurrentBookmarked ? 'Remove bookmark' : 'Bookmark this verse'"
+                @click="store.toggleBookmark()"
               >
-                <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-              </svg>
-            </button>
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24"
+                  :fill="store.isCurrentBookmarked ? 'currentColor' : 'none'"
+                  :class="store.isCurrentBookmarked ? 'text-accent' : 'text-muted/50'"
+                  stroke="currentColor" stroke-width="2"
+                >
+                  <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                </svg>
+              </button>
 
-            <button
-              class="verse-action-btn"
-              aria-label="Share this verse"
-              title="Share this verse"
-              @click="shareVerse"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
-                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
-              </svg>
-            </button>
+              <button
+                v-if="store.verseActions.share"
+                class="verse-action-btn"
+                aria-label="Share this verse"
+                title="Share this verse"
+                @click="shareVerse"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                </svg>
+              </button>
 
-            <button
-              class="verse-action-btn"
-              :aria-label="copied ? 'Copied' : 'Copy verse text'"
-              :title="copied ? 'Copied' : 'Copy verse text'"
-              @click="copyVerse"
-            >
-              <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
-                <rect x="9" y="9" width="13" height="13" rx="2"/>
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-              </svg>
-              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-            </button>
+              <button
+                v-if="store.verseActions.copy"
+                class="verse-action-btn"
+                :aria-label="copied ? 'Copied' : 'Copy verse text'"
+                :title="copied ? 'Copied' : 'Copy verse text'"
+                @click="copyVerse"
+              >
+                <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </button>
             </div>
           </div>
 

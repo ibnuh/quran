@@ -112,6 +112,11 @@ const HIGHLIGHT_STYLES = [
   { value: 'minimal', label: 'Minimal' }
 ]
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
+const VERSE_ACTIONS = [
+  { key: 'bookmark', label: 'Bookmark' },
+  { key: 'share', label: 'Share' },
+  { key: 'copy', label: 'Copy' }
+]
 const REPEAT_MODES = [
   { value: 'none', label: 'Off' },
   { value: 'verse', label: 'Verse' },
@@ -356,6 +361,27 @@ function onLanguageChange(code) {
                   @change="store.setAnimations($event.target.checked)"
                 />
               </label>
+            </div>
+
+            <!-- Verse action buttons -->
+            <div class="border-t border-border pt-5">
+              <label class="block text-sm font-medium text-muted mb-1">Verse buttons</label>
+              <p class="text-xs text-muted/60 mb-3">Choose which actions appear under each verse</p>
+              <div class="space-y-3">
+                <label
+                  v-for="action in VERSE_ACTIONS"
+                  :key="action.key"
+                  class="flex items-center justify-between cursor-pointer"
+                >
+                  <span class="text-sm text-body">{{ action.label }}</span>
+                  <input
+                    type="checkbox"
+                    :checked="store.verseActions[action.key]"
+                    class="toggle-switch"
+                    @change="store.setVerseAction(action.key, $event.target.checked)"
+                  />
+                </label>
+              </div>
             </div>
 
             <!-- App actions -->
