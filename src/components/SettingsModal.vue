@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
 import SearchSelect from './SearchSelect.vue'
@@ -116,6 +116,29 @@ const extraTranslationChips = computed(() =>
     return { id, label: t ? t.englishName : id }
   })
 )
+
+const storageText = ref('')
+async function updateStorage() {
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const { usage } = await navigator.storage.estimate()
+      if (usage != null) {
+        storageText.value = (usage / 1048576).toFixed(1) + ' MB used'
+      }
+    }
+  } catch {
+    storageText.value = ''
+  }
+}
+onMounted(updateStorage)
+
+function toggleDownload() {
+  if (store.isCurrentDownloaded) {
+    store.removeDownload(store.currentSurahNum)
+  } else {
+    store.downloadCurrentSurah().then(updateStorage)
+  }
+}
 const fontOptions = computed(() =>
   ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` }))
 )
@@ -483,6 +506,26 @@ function onLanguageChange(code) {
                   </span>
                 </div>
               </div>
+            </div>
+
+            <!-- Offline -->
+            <div class="border-t border-border pt-5 space-y-2">
+              <button
+                class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors disabled:opacity-60"
+                :class="store.isCurrentDownloaded ? 'bg-primary/10 text-primary' : 'bg-surface text-body hover:bg-border'"
+                :disabled="store.downloadingSurah !== null || !store.totalVerses"
+                @click="toggleDownload"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path v-if="store.isCurrentDownloaded" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  <path v-else d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                {{ store.downloadingSurah === store.currentSurahNum ? 'Downloading...' : store.isCurrentDownloaded ? 'Saved offline (tap to remove)' : 'Download this surah for offline' }}
+              </button>
+              <p v-if="store.downloadError" class="text-xs text-red-500 text-center">Download failed. Check your connection.</p>
+              <p v-if="storageText || store.downloadedSurahs.length" class="text-xs text-muted text-center">
+                {{ store.downloadedSurahs.length }} surah(s) saved<span v-if="storageText"> · {{ storageText }}</span>
+              </p>
             </div>
 
             <!-- App actions -->

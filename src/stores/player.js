@@ -177,7 +177,11 @@ export const usePlayerStore = defineStore('player', {
     error: null,
     errorKind: null, // 'text' | 'audio' | null
     bookmarks: [],
-    recentSurahs: []
+    recentSurahs: [],
+    // Offline downloads: surah numbers explicitly cached for offline use.
+    downloadedSurahs: [],
+    downloadingSurah: null,
+    downloadError: false
   }),
 
   getters: {
@@ -215,7 +219,8 @@ export const usePlayerStore = defineStore('player', {
     isCurrentBookmarked: state =>
       state.bookmarks.some(
         b => b.surahNum === state.currentSurahNum && b.verseIndex === state.currentVerseIndex
-      )
+      ),
+    isCurrentDownloaded: state => state.downloadedSurahs.includes(state.currentSurahNum)
   },
 
   actions: {
@@ -449,6 +454,42 @@ export const usePlayerStore = defineStore('player', {
       } catch {
         // Preload failure is silent
       }
+    },
+
+    // Pre-fetch the current surah's audio so it is available offline. Text and timing
+    // responses are already cached by the service worker after loadSurah; fetching the
+    // audio files populates the CacheFirst audio cache.
+    async downloadCurrentSurah() {
+      const num = this.currentSurahNum
+      if (this.downloadingSurah !== null) {
+        return
+      }
+      this.downloadingSurah = num
+      this.downloadError = false
+      try {
+        const urls =
+          this.playbackMode === 'full'
+            ? this.audioUrl
+              ? [this.audioUrl]
+              : []
+            : this.audioUrls
+        for (const url of urls) {
+          await fetch(url, { mode: 'no-cors' }).catch(() => {})
+        }
+        if (!this.downloadedSurahs.includes(num)) {
+          this.downloadedSurahs.push(num)
+        }
+        this.savePreferences()
+      } catch {
+        this.downloadError = true
+      } finally {
+        this.downloadingSurah = null
+      }
+    },
+
+    removeDownload(num) {
+      this.downloadedSurahs = this.downloadedSurahs.filter(n => n !== num)
+      this.savePreferences()
     },
 
     getVerseIndexAtTime(timeMs) {
@@ -836,7 +877,8 @@ export const usePlayerStore = defineStore('player', {
             volume: this.volume,
             animations: this.animations,
             bookmarks: this.bookmarks,
-            recentSurahs: this.recentSurahs
+            recentSurahs: this.recentSurahs,
+            downloadedSurahs: this.downloadedSurahs
           })
         )
       } catch {
@@ -947,6 +989,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (Array.isArray(prefs.recentSurahs)) {
           this.recentSurahs = prefs.recentSurahs
+        }
+        if (Array.isArray(prefs.downloadedSurahs)) {
+          this.downloadedSurahs = prefs.downloadedSurahs.filter(n => typeof n === 'number')
         }
       } catch {
         // Ignore storage errors (private mode, quota, corrupt JSON).
