@@ -42,3 +42,13 @@ test('saved theme is applied to the status bar after reload', async ({ page }) =
   const meta = page.locator('meta[name="theme-color"]')
   await expect(meta).toHaveAttribute('content', '#b04060')
 })
+
+test('disabled animations are applied on load (no first-paint animation flash)', async ({ page }) => {
+  await page.evaluate(() => {
+    const prefs = JSON.parse(localStorage.getItem('quran-player-prefs') || '{}')
+    prefs.animations = false
+    localStorage.setItem('quran-player-prefs', JSON.stringify(prefs))
+  })
+  await page.reload()
+  await expect(page.locator('html')).toHaveClass(/no-animations/)
+})
