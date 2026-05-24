@@ -143,8 +143,8 @@ function clearRepeat() {
     />
 
     <div class="grid grid-cols-[1fr_auto_1fr] items-center mt-1 landscape-compact:mt-1">
-      <!-- Left group -->
-      <div class="flex items-center justify-end gap-1 sm:gap-2 min-w-0">
+      <!-- Left group: repeat utility on the edge, navigation hugging Play -->
+      <div class="flex items-center justify-between gap-1 sm:gap-2 min-w-0">
         <button
           class="flex ctrl-btn"
           :class="store.repeatMode !== 'none' ? 'text-primary!' : ''"
@@ -159,6 +159,7 @@ function clearRepeat() {
           <span class="hidden sm:inline text-[0.7rem]">{{ store.repeatMode === 'none' ? 'Repeat' : store.repeatMode === 'verse' ? 'Verse' : 'Surah' }}</span>
         </button>
 
+        <div class="flex items-center gap-1 sm:gap-2">
         <button
           class="ctrl-btn flex"
           :disabled="!store.canPrevSurah"
@@ -178,6 +179,7 @@ function clearRepeat() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
           <span class="hidden sm:inline">Prev</span>
         </button>
+        </div>
       </div>
 
       <!-- Center: Play button -->
@@ -192,8 +194,9 @@ function clearRepeat() {
         </Transition>
       </button>
 
-      <!-- Right group -->
-      <div class="flex items-center justify-start gap-1 sm:gap-2 min-w-0">
+      <!-- Right group: navigation hugging Play, speed/tools utilities on the edge -->
+      <div class="flex items-center justify-between gap-1 sm:gap-2 min-w-0">
+        <div class="flex items-center gap-1 sm:gap-2">
         <button
           class="flex ctrl-btn"
           :disabled="!store.canNextVerse"
@@ -213,7 +216,9 @@ function clearRepeat() {
           <span class="hidden sm:inline">Next Surah</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
         </button>
+        </div>
 
+        <div class="flex items-center gap-1 sm:gap-2">
         <!-- Speed -->
         <div class="relative speed-wrapper">
           <button
@@ -303,6 +308,7 @@ function clearRepeat() {
               </div>
             </div>
           </Transition>
+        </div>
         </div>
       </div>
     </div>
