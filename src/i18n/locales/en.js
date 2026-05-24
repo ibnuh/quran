@@ -128,7 +128,7 @@ export default {
     mushafFont: 'Mushaf font (QCF)',
     mushafFontHint: 'Render verses with the Madani mushaf glyph fonts',
     tajweed: 'Tajweed colors',
-    tajweedHint: 'Color-code pronunciation rules (per-word highlight off)',
+    tajweedHint: 'Color-code letters by pronunciation rule',
     justify: 'Justify Arabic text',
     justifyHint: 'Spread long verses to both edges (mushaf style)',
     verseButtons: 'Verse buttons',

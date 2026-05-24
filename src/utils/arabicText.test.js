@@ -3,6 +3,7 @@ import {
   toDisplayArabic,
   isWaqfToken,
   toVerseTokens,
+  toTajweedWords,
   toArabicDigits,
   parseTajweed
 } from './arabicText.js'
@@ -76,5 +77,35 @@ describe('toVerseTokens', () => {
       .map(t => t.display)
       .join(' ')
     expect(joined).toBe(toDisplayArabic(text))
+  })
+})
+
+describe('toTajweedWords', () => {
+  it('groups tajweed segments into one word per space, keeping colored pieces', () => {
+    const segments = [
+      { text: 'وَأَ', rule: null },
+      { text: 'نذِرْهُمْ يَوْمَ', rule: 'ikhafa' }
+    ]
+    const words = toTajweedWords(segments)
+    expect(words.length).toBe(2)
+    // First word keeps both pieces (rule change inside a word does not split the word).
+    expect(words[0].pieces).toEqual([
+      { text: 'وَأَ', rule: null },
+      { text: 'نذِرْهُمْ', rule: 'ikhafa' }
+    ])
+    expect(words[1].pieces).toEqual([{ text: 'يَوْمَ', rule: 'ikhafa' }])
+    expect(words.map(w => w.wordIndex)).toEqual([0, 1])
+  })
+
+  it('aligns word count with toVerseTokens so highlight indices match', () => {
+    const text = 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ'
+    const words = toTajweedWords([{ text, rule: null }])
+    expect(words.length).toBe(toVerseTokens(text).length)
+  })
+
+  it('attaches a standalone waqf mark to the previous word', () => {
+    const words = toTajweedWords([{ text: 'كلمة ۛ ثُمَّ', rule: null }])
+    expect(words.length).toBe(2)
+    expect(words[0].pieces.map(p => p.text).join('')).toBe('كلمة ۛ')
   })
 })

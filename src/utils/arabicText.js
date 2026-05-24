@@ -112,3 +112,53 @@ export function toVerseTokens(text) {
   }
   return tokens
 }
+
+// Group tajweed segments (each { text, rule }) into space-delimited words so they can be
+// highlighted in sync with the recitation while keeping per-letter tajweed colors. A word
+// is an array of colored pieces; a rule change inside a word splits a piece but not the
+// word. Standalone waqf marks attach to the preceding word so word indices line up with
+// the verse timing segments (which count real words only). Each returned entry's array
+// index equals its word index.
+export function toTajweedWords(segments) {
+  const rawWords = []
+  let current = null
+  const pushPiece = (text, rule) => {
+    if (!text) {
+      return
+    }
+    if (!current) {
+      current = []
+    }
+    current.push({ text, rule })
+  }
+  const endWord = () => {
+    if (current) {
+      rawWords.push(current)
+      current = null
+    }
+  }
+  for (const seg of segments) {
+    const parts = seg.text.split(/\s+/)
+    for (let i = 0; i < parts.length; i++) {
+      if (i > 0) {
+        endWord()
+      }
+      pushPiece(parts[i], seg.rule)
+    }
+  }
+  endWord()
+
+  // Attach waqf-only words to the previous word, mirroring toVerseTokens.
+  const words = []
+  for (const pieces of rawWords) {
+    const plain = pieces.map(p => p.text).join('')
+    if (isWaqfToken(plain) && words.length > 0) {
+      const prev = words[words.length - 1]
+      prev.push({ text: ' ', rule: null })
+      prev.push(...pieces)
+    } else {
+      words.push(pieces.slice())
+    }
+  }
+  return words.map((pieces, wordIndex) => ({ pieces, wordIndex }))
+}

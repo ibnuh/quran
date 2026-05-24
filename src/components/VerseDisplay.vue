@@ -5,6 +5,7 @@ import { buildVerseUrl } from '../composables/useDeepLink.js'
 import {
   toDisplayArabic,
   toVerseTokens,
+  toTajweedWords,
   toArabicDigits,
   tajweedColor
 } from '../utils/arabicText.js'
@@ -46,6 +47,14 @@ const hasWordTimings = computed(() => {
 })
 
 const tajweedActive = computed(() => store.tajweed && store.currentTajweedSegments.length > 0)
+
+// Tajweed text grouped into highlightable words, used when word-by-word highlighting is
+// also on so the active word gets a background while keeping its tajweed letter colors.
+const tajweedWords = computed(() => toTajweedWords(store.currentTajweedSegments))
+
+const tajweedHighlightActive = computed(
+  () => tajweedActive.value && store.wordHighlight && hasWordTimings.value
+)
 
 const mushafActive = computed(() => store.mushafMode && store.currentQcfWords.length > 0)
 
@@ -215,14 +224,34 @@ function copyVerse() {
             lang="ar"
             :style="arabicStyle"
           >
-            <span
-              v-for="(seg, i) in store.currentTajweedSegments"
-              :key="i"
-              :style="seg.rule ? { color: tajweedColor(seg.rule) } : null"
-              >{{ seg.text }}</span
-            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true">{{
-              toArabicDigits(store.currentVerse.number)
-            }}</span>
+            <template v-if="tajweedHighlightActive"
+              ><template v-for="(w, i) in tajweedWords" :key="i"
+                ><span
+                  class="word-span"
+                  :class="{
+                    'word-tajweed-active': i === store.currentWordIndex,
+                    'word-tajweed-done': i < store.currentWordIndex
+                  }"
+                  ><span
+                    v-for="(piece, pi) in w.pieces"
+                    :key="pi"
+                    :style="piece.rule ? { color: tajweedColor(piece.rule) } : null"
+                    >{{ piece.text }}</span
+                  ></span
+                >{{ i < tajweedWords.length - 1 ? ' ' : '' }}</template
+              ></template
+            ><template v-else
+              ><span
+                v-for="(seg, i) in store.currentTajweedSegments"
+                :key="i"
+                :style="seg.rule ? { color: tajweedColor(seg.rule) } : null"
+                >{{ seg.text }}</span
+              ></template
+            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true"
+              ><span class="ayah-ornament-num">{{
+                toArabicDigits(store.currentVerse.number)
+              }}</span></span
+            >
           </p>
           <p
             v-else-if="store.wordHighlight && hasWordTimings"
@@ -234,15 +263,19 @@ function copyVerse() {
             <template v-for="(token, i) in verseTokens" :key="i"
               ><span class="word-span" :class="wordHighlightClass(i)">{{ token.display }}</span
               >{{ i < verseTokens.length - 1 ? ' ' : '' }}</template
-            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true">{{
-              toArabicDigits(store.currentVerse.number)
-            }}</span>
+            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true"
+              ><span class="ayah-ornament-num">{{
+                toArabicDigits(store.currentVerse.number)
+              }}</span></span
+            >
           </p>
           <p v-else class="verse-arabic text-arabic mb-5" dir="rtl" lang="ar" :style="arabicStyle">
             <span>{{ verseDisplayText }}</span
-            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true">{{
-              toArabicDigits(store.currentVerse.number)
-            }}</span>
+            ><span v-if="store.verseEndOrnament" class="ayah-ornament" aria-hidden="true"
+              ><span class="ayah-ornament-num">{{
+                toArabicDigits(store.currentVerse.number)
+              }}</span></span
+            >
           </p>
 
           <div class="flex flex-col items-center gap-2.5 mt-4 mb-5">
@@ -472,6 +505,13 @@ function copyVerse() {
   color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
+/* Arabic-Indic numerals sit low in their em box, so flex centering leaves them below
+   the circle's center; nudge them up to optically center the number in the ornament. */
+.ayah-ornament-num {
+  display: block;
+  line-height: 1;
+  transform: translateY(-0.15em);
+}
 
 /* -- Word highlight -- */
 .word-span {
@@ -490,6 +530,15 @@ function copyVerse() {
   /* Render backgrounds/borders cleanly when a word wraps across two lines. */
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+
+/* Tajweed + word highlight: keep per-letter tajweed colors, mark the active word with a
+   background box and dim already-recited words so progress is visible. */
+.word-tajweed-active {
+  background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+.word-tajweed-done {
+  opacity: 0.55;
 }
 
 /* Glow: color + text-shadow + subtle background */
