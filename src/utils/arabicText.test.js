@@ -1,5 +1,31 @@
 import { describe, it, expect } from 'vitest'
-import { toDisplayArabic, isWaqfToken, toVerseTokens, toArabicDigits } from './arabicText.js'
+import {
+  toDisplayArabic,
+  isWaqfToken,
+  toVerseTokens,
+  toArabicDigits,
+  parseTajweed
+} from './arabicText.js'
+
+describe('parseTajweed', () => {
+  it('splits tajweed HTML into ordered text/rule segments', () => {
+    const raw = 'وَأَ<tajweed class=ikhafa>نذ</tajweed>ِرْهُمْ <span class=end>٣٩</span>'
+    const segs = parseTajweed(raw)
+    expect(segs).toEqual([
+      { text: 'وَأَ', rule: null },
+      { text: 'نذ', rule: 'ikhafa' },
+      { text: 'ِرْهُمْ ', rule: null }
+    ])
+  })
+
+  it('returns a single plain segment when there is no markup', () => {
+    expect(parseTajweed('السلام')).toEqual([{ text: 'السلام', rule: null }])
+  })
+
+  it('returns an empty array for empty input', () => {
+    expect(parseTajweed('')).toEqual([])
+  })
+})
 
 describe('toArabicDigits', () => {
   it('converts western digits to Arabic-Indic numerals', () => {

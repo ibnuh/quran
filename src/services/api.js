@@ -182,6 +182,21 @@ export async function fetchVerseAudio(cloudReciterId, surahNumber, signal) {
   }
 }
 
+// Tajweed-annotated Uthmani text from quran.com (HTML with <tajweed class=...> spans).
+// Bismillah is already excluded for verse 1, matching the rest of the pipeline.
+export async function fetchSurahTajweed(surahNumber, signal) {
+  const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?fields=text_uthmani_tajweed&per_page=300`
+  const data = await fetchJsonDeduped(url, signal)
+
+  if (!data.verses || !data.verses.length) {
+    throw new ApiError('invalid', 'Invalid tajweed response')
+  }
+
+  return {
+    tajweedVerses: data.verses.map(v => v.text_uthmani_tajweed || '')
+  }
+}
+
 export async function fetchSurahTextQuranCom(surahNumber, translationId, signal) {
   const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?translations=${translationId}&fields=text_uthmani&per_page=300`
   const data = await fetchJsonDeduped(url, signal)

@@ -8,6 +8,7 @@ import RECITERS from '../data/reciters.js'
 import TRANSLATIONS, { LANGUAGES } from '../data/translations.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import THEMES from '../data/themes.js'
+import { TAJWEED_RULES, tajweedColor } from '../utils/arabicText.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
@@ -405,6 +406,28 @@ function onLanguageChange(code) {
                     @change="store.setJustifyText($event.target.checked)"
                   />
                 </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span class="text-sm text-body">Tajweed colors</span>
+                    <p class="text-xs text-muted/60 mt-0.5">Color-code pronunciation rules (per-word highlight off)</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    :checked="store.tajweed"
+                    class="toggle-switch"
+                    @change="store.setTajweed($event.target.checked)"
+                  />
+                </label>
+                <div v-if="store.tajweed" class="flex flex-wrap gap-x-3 gap-y-1.5 pt-1">
+                  <span
+                    v-for="rule in TAJWEED_RULES"
+                    :key="rule.key"
+                    class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted"
+                  >
+                    <span class="w-2.5 h-2.5 rounded-full" :style="{ background: tajweedColor(rule.key) }"></span>
+                    {{ rule.label }}
+                  </span>
+                </div>
               </div>
             </div>
 

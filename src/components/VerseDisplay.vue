@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
-import { toDisplayArabic, toVerseTokens, toArabicDigits } from '../utils/arabicText.js'
+import { toDisplayArabic, toVerseTokens, toArabicDigits, tajweedColor } from '../utils/arabicText.js'
 
 const emit = defineEmits(['retry'])
 const store = usePlayerStore()
@@ -34,6 +34,8 @@ const hasWordTimings = computed(() => {
   const timing = store.verseTimings[store.currentVerseIndex]
   return timing && timing.segments && timing.segments.length > 0
 })
+
+const tajweedActive = computed(() => store.tajweed && store.currentTajweedSegments.length > 0)
 
 const isLastVerse = computed(() =>
   store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
@@ -128,7 +130,22 @@ function copyVerse() {
           </div>
 
           <p
-            v-if="store.wordHighlight && hasWordTimings"
+            v-if="tajweedActive"
+            class="verse-arabic text-arabic mb-5"
+            dir="rtl"
+            lang="ar"
+            :style="arabicStyle"
+          ><span
+              v-for="(seg, i) in store.currentTajweedSegments"
+              :key="i"
+              :style="seg.rule ? { color: tajweedColor(seg.rule) } : null"
+            >{{ seg.text }}</span><span
+              v-if="store.verseEndOrnament"
+              class="ayah-ornament"
+              aria-hidden="true"
+            >{{ toArabicDigits(store.currentVerse.number) }}</span></p>
+          <p
+            v-else-if="store.wordHighlight && hasWordTimings"
             class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"

@@ -4,9 +4,11 @@ import {
   fetchSurahTextQuranCom,
   fetchSurahAudio,
   fetchVerseAudio,
+  fetchSurahTajweed,
   getCachedSurah,
   cacheSurah
 } from '../services/api.js'
+import { parseTajweed } from '../utils/arabicText.js'
 import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
@@ -156,6 +158,9 @@ export const usePlayerStore = defineStore('player', {
     verseEndOrnament: false,
     // Justify the Arabic text block (mushaf style) instead of centering it.
     justifyText: false,
+    // Tajweed coloring (quran.com annotated text); loaded on demand per surah.
+    tajweed: false,
+    tajweedVerses: [],
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     abRepeat: null, // { start: verseIndex, end: verseIndex } for A-B memorization loop
     playbackSpeed: 1,
@@ -185,6 +190,10 @@ export const usePlayerStore = defineStore('player', {
       return font ? font.family : ARABIC_FONTS[0].family
     },
     arabicFontMetrics: state => getFontMetrics(state.arabicFont),
+    currentTajweedSegments: state => {
+      const raw = state.tajweedVerses[state.currentVerseIndex]
+      return raw ? parseTajweed(raw) : []
+    },
     currentJuz: state => {
       const verse = state.verses[state.currentVerseIndex]
       if (!verse) {
@@ -210,6 +219,8 @@ export const usePlayerStore = defineStore('player', {
       this.isLoading = true
       this.error = null
       this.errorKind = null
+      // Tajweed text is surah-specific; clear and reload it for the new surah.
+      this.tajweedVerses = []
 
       const reciter = this.currentReciterData
       if (!reciter) {
@@ -245,6 +256,9 @@ export const usePlayerStore = defineStore('player', {
         }
         this.computeWordCounts()
         this.isLoading = false
+        if (this.tajweed) {
+          void this.loadTajweed()
+        }
         return
       }
 
@@ -345,6 +359,10 @@ export const usePlayerStore = defineStore('player', {
           verseTimings: audioResult.verseTimings,
           audioUrls: audioResult.audioUrls
         })
+
+        if (this.tajweed) {
+          void this.loadTajweed()
+        }
       } catch (err) {
         if (err.name === 'AbortError') {
           return
@@ -509,6 +527,30 @@ export const usePlayerStore = defineStore('player', {
     setJustifyText(value) {
       this.justifyText = !!value
       this.savePreferences()
+    },
+
+    async loadTajweed() {
+      if (!this.tajweed) {
+        return
+      }
+      const surah = this.currentSurahNum
+      try {
+        const data = await fetchSurahTajweed(surah)
+        // Ignore if the surah changed while fetching.
+        if (this.currentSurahNum === surah) {
+          this.tajweedVerses = data.tajweedVerses
+        }
+      } catch {
+        this.tajweedVerses = []
+      }
+    },
+
+    setTajweed(value) {
+      this.tajweed = !!value
+      this.savePreferences()
+      if (this.tajweed && this.tajweedVerses.length === 0) {
+        void this.loadTajweed()
+      }
     },
 
     setRepeatMode(mode) {
@@ -726,6 +768,7 @@ export const usePlayerStore = defineStore('player', {
             verseActions: this.verseActions,
             verseEndOrnament: this.verseEndOrnament,
             justifyText: this.justifyText,
+            tajweed: this.tajweed,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
             volume: this.volume,
@@ -805,6 +848,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.justifyText !== undefined) {
           this.justifyText = !!prefs.justifyText
+        }
+        if (prefs.tajweed !== undefined) {
+          this.tajweed = !!prefs.tajweed
         }
         if (prefs.repeatMode) {
           this.repeatMode = prefs.repeatMode
