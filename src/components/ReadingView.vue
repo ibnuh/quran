@@ -72,6 +72,13 @@ onMounted(() => nextTick(() => scrollToActive(false)))
 </template>
 
 <style scoped>
+/* Skip rendering off-screen verses for long surahs (e.g. Al-Baqara, 286 verses)
+   without true virtualization; near-zero risk and keeps scrolling smooth. */
+.reading-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 7rem;
+}
+
 .reading-ayah-num {
   display: inline-flex;
   align-items: center;
