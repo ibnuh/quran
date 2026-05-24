@@ -6,6 +6,21 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
 
+const SITE_ORIGIN = 'https://quran.ibnuhx.com'
+
+// Emit a sitemap covering the home page and all 114 surah routes for crawlability.
+function sitemapPlugin() {
+  return {
+    name: 'sitemap',
+    generateBundle() {
+      const urls = ['/'].concat(Array.from({ length: 114 }, (_, i) => `/${i + 1}`))
+      const body = urls.map(u => `  <url><loc>${SITE_ORIGIN}${u}</loc></url>`).join('\n')
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: xml })
+    }
+  }
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(commitHash)
@@ -13,6 +28,7 @@ export default defineConfig({
   plugins: [
     vue(),
     tailwindcss(),
+    sitemapPlugin(),
     VitePWA({
       registerType: 'prompt',
       workbox: {
