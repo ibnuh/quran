@@ -59,6 +59,28 @@ export default defineConfig({
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
               networkTimeoutSeconds: 10
             }
+          },
+          {
+            // Full-surah MP3s (qurancdn) and the verse.quran.com mirror.
+            urlPattern: /^https:\/\/(download\.quranicaudio\.com|verses\.quran\.com)\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'quran-audio-files',
+              rangeRequests: true,
+              cacheableResponse: { statuses: [0, 200, 206] },
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 }
+            }
+          },
+          {
+            // Per-verse MP3s (alquran.cloud fallback via islamic.network CDN).
+            urlPattern: /^https:\/\/cdn\.islamic\.network\/quran\/audio\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'quran-verse-audio-files',
+              rangeRequests: true,
+              cacheableResponse: { statuses: [0, 200, 206] },
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 }
+            }
           }
         ]
       },
