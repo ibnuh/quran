@@ -6,6 +6,7 @@ import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS from '../data/translations.js'
 import ARABIC_FONTS from '../data/fonts.js'
+import { t } from '../i18n/index.js'
 
 defineProps({
   visible: { type: Boolean, default: true }
@@ -37,7 +38,24 @@ const translationOptions = computed(() =>
     label: t.englishName
   }))
 )
-const fontOptions = computed(() => ARABIC_FONTS.map(f => ({ value: f.id, label: f.name })))
+// "Mushaf (QCF)" lives in the font dropdown: picking it enables mushaf glyph mode,
+// picking a real font disables it. QCF_FONT_VALUE is a sentinel, not a real font id.
+const QCF_FONT_VALUE = '__qcf__'
+const fontOptions = computed(() => [
+  ...ARABIC_FONTS.map(f => ({ value: f.id, label: f.name })),
+  { value: QCF_FONT_VALUE, label: t('settings.mushafFontOption') }
+])
+const selectedFont = computed(() => (store.mushafMode ? QCF_FONT_VALUE : store.arabicFont))
+function onFontChange(value) {
+  if (value === QCF_FONT_VALUE) {
+    store.setMushafMode(true)
+  } else {
+    if (store.mushafMode) {
+      store.setMushafMode(false)
+    }
+    store.setArabicFont(value)
+  }
+}
 </script>
 
 <template>
@@ -82,11 +100,11 @@ const fontOptions = computed(() => ARABIC_FONTS.map(f => ({ value: f.id, label: 
 
             <div class="flex-1 min-w-0">
               <SearchSelect
-                :model-value="store.arabicFont"
+                :model-value="selectedFont"
                 :options="fontOptions"
                 :placeholder="$t('settings.searchFont')"
                 compact
-                @update:model-value="store.setArabicFont($event)"
+                @update:model-value="onFontChange($event)"
               />
             </div>
 

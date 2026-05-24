@@ -29,10 +29,13 @@ test.beforeEach(async ({ page }) => {
 test('mushaf (QCF) mode renders glyph words in the page font', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal = page.getByRole('dialog', { name: 'Settings' })
+  // The mushaf glyph font is an entry in the Arabic Font dropdown, not a separate toggle.
   await modal
-    .locator('label', { hasText: 'Mushaf font (QCF)' })
-    .locator('input[type="checkbox"]')
-    .check()
+    .locator('.trigger')
+    .filter({ hasText: /Naskh|Mushaf/ })
+    .first()
+    .click()
+  await page.getByText('Mushaf (QCF)', { exact: true }).click()
   await modal.getByLabel('Close settings').click()
 
   const glyph = page.locator('.verse-qcf .word-span').first()

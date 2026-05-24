@@ -150,9 +150,25 @@ function toggleDownload() {
     store.downloadCurrentSurah().then(updateStorage)
   }
 }
-const fontOptions = computed(() =>
-  ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` }))
-)
+// The Madani mushaf glyph font (QCF) is offered as an entry in the same dropdown rather
+// than a separate toggle: picking it turns on mushaf mode, picking any real font turns it
+// off. QCF_FONT_VALUE is a sentinel, not a real font id.
+const QCF_FONT_VALUE = '__qcf__'
+const fontOptions = computed(() => [
+  ...ARABIC_FONTS.map(f => ({ value: f.id, label: `${f.name} - ${f.description}` })),
+  { value: QCF_FONT_VALUE, label: t('settings.mushafFontOption') }
+])
+const selectedFont = computed(() => (store.mushafMode ? QCF_FONT_VALUE : store.arabicFont))
+function onFontChange(value) {
+  if (value === QCF_FONT_VALUE) {
+    store.setMushafMode(true)
+  } else {
+    if (store.mushafMode) {
+      store.setMushafMode(false)
+    }
+    store.setArabicFont(value)
+  }
+}
 
 const HIGHLIGHT_STYLES = [
   { value: 'glow', label: 'Glow' },
@@ -303,10 +319,10 @@ function onLanguageChange(code) {
                 $t('settings.arabicFont')
               }}</label>
               <SearchSelect
-                :model-value="store.arabicFont"
+                :model-value="selectedFont"
                 :options="fontOptions"
                 :placeholder="$t('settings.searchFont')"
-                @update:model-value="store.setArabicFont($event)"
+                @update:model-value="onFontChange($event)"
               />
             </div>
 
@@ -615,18 +631,6 @@ function onLanguageChange(code) {
                     :checked="store.justifyText"
                     class="toggle-switch"
                     @change="store.setJustifyText($event.target.checked)"
-                  />
-                </label>
-                <label class="flex items-center justify-between cursor-pointer">
-                  <div>
-                    <span class="text-sm text-body">{{ $t('settings.mushafFont') }}</span>
-                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.mushafFontHint') }}</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    :checked="store.mushafMode"
-                    class="toggle-switch"
-                    @change="store.setMushafMode($event.target.checked)"
                   />
                 </label>
                 <label class="flex items-center justify-between cursor-pointer">

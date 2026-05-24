@@ -109,6 +109,7 @@ export default {
     searchTranslation: 'ترجمہ تلاش کریں...',
     searchFont: 'فونٹ تلاش کریں...',
     arabicFont: 'عربی فونٹ',
+    mushafFontOption: 'مصحف (QCF)',
     arabicFontSize: 'عربی فونٹ سائز',
     translationFontSize: 'ترجمہ فونٹ سائز',
     contentWidth: 'مواد کی چوڑائی',
@@ -126,8 +127,6 @@ export default {
     continuousReading: 'مسلسل پڑھائی',
     continuousReadingHint:
       'تمام آیات اسکرول ہونے والے صفحے میں دکھائیں؛ چلانے کے لیے آیت پر ٹیپ کریں',
-    mushafFont: 'مصحف فونٹ (QCF)',
-    mushafFontHint: 'آیات کو مدنی مصحف کے فونٹس میں دکھائیں',
     tajweed: 'تجوید کے رنگ',
     tajweedHint: 'حروف کو تجوید کے قواعد کے مطابق رنگ دیں',
     justify: 'عربی متن کو دونوں طرف ترتیب دیں',
