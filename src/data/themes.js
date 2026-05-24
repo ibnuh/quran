@@ -193,4 +193,23 @@ export function resolveThemeId(id) {
   return id
 }
 
+// Apply a theme id to the document: sets the `data-theme` attribute (drives the
+// CSS variables) and the `theme-color` meta (drives the OS/browser status bar).
+// Used both by the early bootstrap in main.js and by the store at runtime so the
+// status bar never shows a stale default color.
+export function applyThemeToDocument(id) {
+  if (typeof document === 'undefined') {
+    return
+  }
+  const resolved = resolveThemeId(id)
+  document.documentElement.setAttribute('data-theme', resolved === 'light' ? '' : resolved)
+  const theme = THEMES.find(t => t.id === resolved)
+  if (theme) {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) {
+      meta.setAttribute('content', theme.colors.primary)
+    }
+  }
+}
+
 export default THEMES

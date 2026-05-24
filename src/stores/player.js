@@ -12,22 +12,8 @@ import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
-import THEMES, { resolveThemeId } from '../data/themes.js'
+import THEMES, { applyThemeToDocument } from '../data/themes.js'
 import JUZS, { getJuzForVerse } from '../data/juzs.js'
-
-// Apply a theme id to the document (data-theme attribute and theme-color meta),
-// resolving 'auto' to the OS color scheme.
-function applyThemeToDom(id) {
-  const resolved = resolveThemeId(id)
-  document.documentElement.setAttribute('data-theme', resolved === 'light' ? '' : resolved)
-  const theme = THEMES.find(t => t.id === resolved)
-  if (theme) {
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) {
-      meta.setAttribute('content', theme.colors.primary)
-    }
-  }
-}
 
 let autoThemeListenerBound = false
 
@@ -577,7 +563,7 @@ export const usePlayerStore = defineStore('player', {
 
     setTheme(id) {
       this.theme = id
-      applyThemeToDom(id)
+      applyThemeToDocument(id)
       this.savePreferences()
     },
 
@@ -590,7 +576,7 @@ export const usePlayerStore = defineStore('player', {
       const mql = window.matchMedia('(prefers-color-scheme: dark)')
       mql.addEventListener('change', () => {
         if (this.theme === 'auto') {
-          applyThemeToDom('auto')
+          applyThemeToDocument('auto')
         }
       })
     },
@@ -767,7 +753,7 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.theme) {
           this.theme = prefs.theme
-          applyThemeToDom(prefs.theme)
+          applyThemeToDocument(prefs.theme)
         }
         if (prefs.autoHideControls !== undefined) {
           this.autoHideControls = prefs.autoHideControls

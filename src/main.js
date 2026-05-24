@@ -2,7 +2,21 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router/index.js'
 import App from './App.vue'
+import { STORAGE_KEY } from './config.js'
+import { applyThemeToDocument } from './data/themes.js'
 import './assets/styles/main.css'
+
+// Apply the saved theme before the app mounts so the OS/browser status bar
+// (theme-color meta) and CSS variables are correct on first paint, instead of
+// briefly showing the default green and leaving a stale status bar color.
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+  if (saved.theme) {
+    applyThemeToDocument(saved.theme)
+  }
+} catch {
+  // Ignore corrupt/unavailable storage; the store applies the theme on load too.
+}
 
 // Capture PWA install prompt globally (fires before components mount)
 window.addEventListener('beforeinstallprompt', e => {
