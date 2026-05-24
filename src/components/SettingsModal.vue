@@ -485,6 +485,18 @@ function onLanguageChange(code) {
                 </label>
                 <label class="flex items-center justify-between cursor-pointer">
                   <div>
+                    <span class="text-sm text-body">Mushaf font (QCF)</span>
+                    <p class="text-xs text-muted/60 mt-0.5">Render verses with the Madani mushaf glyph fonts</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    :checked="store.mushafMode"
+                    class="toggle-switch"
+                    @change="store.setMushafMode($event.target.checked)"
+                  />
+                </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <div>
                     <span class="text-sm text-body">Tajweed colors</span>
                     <p class="text-xs text-muted/60 mt-0.5">Color-code pronunciation rules (per-word highlight off)</p>
                   </div>

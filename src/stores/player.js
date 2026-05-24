@@ -5,11 +5,13 @@ import {
   fetchSurahAudio,
   fetchVerseAudio,
   fetchSurahTajweed,
+  fetchSurahQcf,
   fetchTranslations,
   getCachedSurah,
   cacheSurah
 } from '../services/api.js'
 import { parseTajweed } from '../utils/arabicText.js'
+import { ensureQcfPageFont } from '../utils/qcfFonts.js'
 import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
@@ -168,6 +170,9 @@ export const usePlayerStore = defineStore('player', {
     // Tajweed coloring (quran.com annotated text); loaded on demand per surah.
     tajweed: false,
     tajweedVerses: [],
+    // QCF v2 mushaf glyph rendering (quran.com per-page fonts); loaded per surah.
+    mushafMode: false,
+    qcfVerses: [],
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     abRepeat: null, // { start: verseIndex, end: verseIndex } for A-B memorization loop
     playbackSpeed: 1,
@@ -209,6 +214,7 @@ export const usePlayerStore = defineStore('player', {
       const raw = state.tajweedVerses[state.currentVerseIndex]
       return raw ? parseTajweed(raw) : []
     },
+    currentQcfWords: state => state.qcfVerses[state.currentVerseIndex] || [],
     currentJuz: state => {
       const verse = state.verses[state.currentVerseIndex]
       if (!verse) {
@@ -235,8 +241,9 @@ export const usePlayerStore = defineStore('player', {
       this.isLoading = true
       this.error = null
       this.errorKind = null
-      // Tajweed text and extra translations are surah-specific; reload per surah.
+      // Tajweed text, QCF glyphs, and extra translations are surah-specific; reload.
       this.tajweedVerses = []
+      this.qcfVerses = []
       this.extraTranslationVerses = []
 
       const reciter = this.currentReciterData
@@ -275,6 +282,9 @@ export const usePlayerStore = defineStore('player', {
         this.isLoading = false
         if (this.tajweed) {
           void this.loadTajweed()
+        }
+        if (this.mushafMode) {
+          void this.loadQcf()
         }
         if (this.extraTranslations.length) {
           void this.loadExtraTranslations()
@@ -382,6 +392,9 @@ export const usePlayerStore = defineStore('player', {
 
         if (this.tajweed) {
           void this.loadTajweed()
+        }
+        if (this.mushafMode) {
+          void this.loadQcf()
         }
         if (this.extraTranslations.length) {
           void this.loadExtraTranslations()
@@ -619,6 +632,38 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
       if (this.tajweed && this.tajweedVerses.length === 0) {
         void this.loadTajweed()
+      }
+    },
+
+    async loadQcf() {
+      if (!this.mushafMode) {
+        return
+      }
+      const surah = this.currentSurahNum
+      try {
+        const data = await fetchSurahQcf(surah)
+        if (this.currentSurahNum !== surah) {
+          return
+        }
+        this.qcfVerses = data.qcfVerses
+        // Inject the @font-face for every page used by this surah.
+        const pages = new Set()
+        for (const words of data.qcfVerses) {
+          for (const w of words) {
+            pages.add(w.page)
+          }
+        }
+        pages.forEach(p => ensureQcfPageFont(p))
+      } catch {
+        this.qcfVerses = []
+      }
+    },
+
+    setMushafMode(value) {
+      this.mushafMode = !!value
+      this.savePreferences()
+      if (this.mushafMode && this.qcfVerses.length === 0) {
+        void this.loadQcf()
       }
     },
 
@@ -872,6 +917,7 @@ export const usePlayerStore = defineStore('player', {
             justifyText: this.justifyText,
             readingMode: this.readingMode,
             tajweed: this.tajweed,
+            mushafMode: this.mushafMode,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
             volume: this.volume,
@@ -965,6 +1011,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.tajweed !== undefined) {
           this.tajweed = !!prefs.tajweed
+        }
+        if (prefs.mushafMode !== undefined) {
+          this.mushafMode = !!prefs.mushafMode
         }
         if (prefs.repeatMode) {
           this.repeatMode = prefs.repeatMode

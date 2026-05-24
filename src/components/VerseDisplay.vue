@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
 import { toDisplayArabic, toVerseTokens, toArabicDigits, tajweedColor } from '../utils/arabicText.js'
+import { qcfFontFamily } from '../utils/qcfFonts.js'
 
 const emit = defineEmits(['retry', 'open-tafsir'])
 const store = usePlayerStore()
@@ -36,6 +37,38 @@ const hasWordTimings = computed(() => {
 })
 
 const tajweedActive = computed(() => store.tajweed && store.currentTajweedSegments.length > 0)
+
+const mushafActive = computed(() => store.mushafMode && store.currentQcfWords.length > 0)
+
+// QCF words with a word index assigned to real words (end-of-ayah glyph excluded from
+// indexing) so word highlighting still maps to the audio timing segments.
+const qcfTokens = computed(() => {
+  let wordIndex = -1
+  return store.currentQcfWords.map(w => {
+    if (!w.isEnd) {
+      wordIndex++
+    }
+    return { code: w.code, page: w.page, isEnd: w.isEnd, wordIndex: w.isEnd ? -1 : wordIndex }
+  })
+})
+
+// Shared active-word highlight classes (used by the text and QCF render paths).
+function wordHighlightClass(i) {
+  const s = store.highlightStyle
+  const cur = store.currentWordIndex
+  return {
+    'word-active-glow': i === cur && s === 'glow',
+    'word-active-bg': i === cur && s === 'background',
+    'word-active-underline': i === cur && s === 'underline',
+    'word-active-minimal': i === cur && s === 'minimal',
+    'word-active-sweep': i === cur && s === 'sweep',
+    'word-read': i < cur && s === 'sweep',
+    'word-flow': s === 'flow',
+    'word-flow-done': i < cur && s === 'flow',
+    'word-flow-active': i === cur && s === 'flow',
+    'word-flow-next': i === cur + 1 && s === 'flow'
+  }
+}
 
 const isLastVerse = computed(() =>
   store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
@@ -130,7 +163,18 @@ function copyVerse() {
           </div>
 
           <p
-            v-if="tajweedActive"
+            v-if="mushafActive"
+            class="verse-arabic verse-qcf text-arabic mb-5"
+            dir="rtl"
+            lang="ar"
+            :style="arabicStyle"
+          ><template v-for="(w, i) in qcfTokens" :key="i"><span
+              class="word-span"
+              :class="w.isEnd ? null : wordHighlightClass(w.wordIndex)"
+              :style="{ fontFamily: qcfFontFamily(w.page) }"
+            >{{ w.code }}</span>{{ i < qcfTokens.length - 1 ? ' ' : '' }}</template></p>
+          <p
+            v-else-if="tajweedActive"
             class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"
@@ -152,18 +196,7 @@ function copyVerse() {
             :style="arabicStyle"
           ><template v-for="(token, i) in verseTokens" :key="i"><span
               class="word-span"
-              :class="{
-                'word-active-glow': i === store.currentWordIndex && store.highlightStyle === 'glow',
-                'word-active-bg': i === store.currentWordIndex && store.highlightStyle === 'background',
-                'word-active-underline': i === store.currentWordIndex && store.highlightStyle === 'underline',
-                'word-active-minimal': i === store.currentWordIndex && store.highlightStyle === 'minimal',
-                'word-active-sweep': i === store.currentWordIndex && store.highlightStyle === 'sweep',
-                'word-read': i < store.currentWordIndex && store.highlightStyle === 'sweep',
-                'word-flow': store.highlightStyle === 'flow',
-                'word-flow-done': i < store.currentWordIndex && store.highlightStyle === 'flow',
-                'word-flow-active': i === store.currentWordIndex && store.highlightStyle === 'flow',
-                'word-flow-next': i === store.currentWordIndex + 1 && store.highlightStyle === 'flow'
-              }"
+              :class="wordHighlightClass(i)"
             >{{ token.display }}</span>{{ i < verseTokens.length - 1 ? ' ' : '' }}</template><span
               v-if="store.verseEndOrnament"
               class="ayah-ornament"

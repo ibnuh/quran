@@ -59,6 +59,15 @@ export default defineConfig({
             }
           },
           {
+            // QCF v2 per-page mushaf glyph fonts.
+            urlPattern: /^https:\/\/static\.qurancdn\.com\/fonts\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'qcf-page-fonts',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 365 }
+            }
+          },
+          {
             urlPattern: /^https:\/\/api\.alquran\.cloud\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {

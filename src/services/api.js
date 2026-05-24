@@ -219,6 +219,23 @@ export async function fetchTranslations(surahNumber, editionIds, signal) {
   }
 }
 
+// QCF v2 mushaf glyph data from quran.com: per verse, the words with their glyph code
+// point (code_v2) and page (v2_page) so they can be rendered in the page's glyph font.
+export async function fetchSurahQcf(surahNumber, signal) {
+  const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?words=true&word_fields=code_v2,v2_page&per_page=300`
+  const data = await fetchJsonDeduped(url, signal)
+  if (!data.verses || !data.verses.length) {
+    throw new ApiError('invalid', 'Invalid QCF response')
+  }
+  return {
+    qcfVerses: data.verses.map(v =>
+      (v.words || [])
+        .filter(w => w.code_v2 && w.v2_page)
+        .map(w => ({ code: w.code_v2, page: w.v2_page, isEnd: w.char_type_name === 'end' }))
+    )
+  }
+}
+
 // Per-verse tafsir (commentary) HTML from quran.com for a given tafsir source.
 export async function fetchTafsir(tafsirId, surahNumber, ayahNumber, signal) {
   const url = `${QURANCOM_API}/tafsirs/${tafsirId}/by_ayah/${surahNumber}:${ayahNumber}`
