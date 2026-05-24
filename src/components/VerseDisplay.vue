@@ -24,7 +24,9 @@ const arabicStyle = computed(() => ({
   fontFamily: store.arabicFontFamily,
   fontSize: store.arabicFontSize * store.arabicFontMetrics.sizeFactor + 'rem',
   lineHeight: store.arabicFontMetrics.lineHeight,
-  overflowWrap: 'break-word'
+  overflowWrap: 'break-word',
+  textAlign: store.justifyText ? 'justify' : 'center',
+  textAlignLast: store.justifyText ? 'center' : 'auto'
 }))
 
 const hasWordTimings = computed(() => {

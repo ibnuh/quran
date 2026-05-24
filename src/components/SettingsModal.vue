@@ -393,6 +393,18 @@ function onLanguageChange(code) {
                     @change="store.setVerseEndOrnament($event.target.checked)"
                   />
                 </label>
+                <label class="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span class="text-sm text-body">Justify Arabic text</span>
+                    <p class="text-xs text-muted/60 mt-0.5">Spread long verses to both edges (mushaf style)</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    :checked="store.justifyText"
+                    class="toggle-switch"
+                    @change="store.setJustifyText($event.target.checked)"
+                  />
+                </label>
               </div>
             </div>
 

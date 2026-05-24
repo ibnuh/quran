@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { toDisplayArabic, isWaqfToken, toVerseTokens } from './arabicText.js'
+import { toDisplayArabic, isWaqfToken, toVerseTokens, toArabicDigits } from './arabicText.js'
+
+describe('toArabicDigits', () => {
+  it('converts western digits to Arabic-Indic numerals', () => {
+    expect(toArabicDigits(1)).toBe('١')
+    expect(toArabicDigits(45)).toBe('٤٥')
+    expect(toArabicDigits(286)).toBe('٢٨٦')
+  })
+})
 
 describe('toDisplayArabic', () => {
   it('renders final alef maqsura (U+0649) as farsi yeh (U+06CC) for display', () => {

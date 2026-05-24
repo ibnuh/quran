@@ -154,6 +154,8 @@ export const usePlayerStore = defineStore('player', {
     verseActions: { bookmark: true, share: true, copy: true },
     // Render the traditional end-of-ayah ornament inline instead of the number badge.
     verseEndOrnament: false,
+    // Justify the Arabic text block (mushaf style) instead of centering it.
+    justifyText: false,
     repeatMode: 'none', // 'none' | 'verse' | 'surah'
     abRepeat: null, // { start: verseIndex, end: verseIndex } for A-B memorization loop
     playbackSpeed: 1,
@@ -504,6 +506,11 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setJustifyText(value) {
+      this.justifyText = !!value
+      this.savePreferences()
+    },
+
     setRepeatMode(mode) {
       this.repeatMode = mode
       this.savePreferences()
@@ -718,6 +725,7 @@ export const usePlayerStore = defineStore('player', {
             highlightStyle: this.highlightStyle,
             verseActions: this.verseActions,
             verseEndOrnament: this.verseEndOrnament,
+            justifyText: this.justifyText,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
             volume: this.volume,
@@ -794,6 +802,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.verseEndOrnament !== undefined) {
           this.verseEndOrnament = !!prefs.verseEndOrnament
+        }
+        if (prefs.justifyText !== undefined) {
+          this.justifyText = !!prefs.justifyText
         }
         if (prefs.repeatMode) {
           this.repeatMode = prefs.repeatMode
