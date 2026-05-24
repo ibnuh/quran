@@ -13,7 +13,7 @@ export function useSwipe(elementRef, { onSwipeLeft, onSwipeRight, threshold = 50
   }
 
   function onTouchEnd(e) {
-    if (!tracking) return
+    if (!tracking) {return}
     tracking = false
 
     const touch = e.changedTouches[0]
@@ -32,14 +32,14 @@ export function useSwipe(elementRef, { onSwipeLeft, onSwipeRight, threshold = 50
 
   onMounted(() => {
     const el = elementRef.value
-    if (!el) return
+    if (!el) {return}
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchend', onTouchEnd, { passive: true })
   })
 
   onBeforeUnmount(() => {
     const el = elementRef.value
-    if (!el) return
+    if (!el) {return}
     el.removeEventListener('touchstart', onTouchStart)
     el.removeEventListener('touchend', onTouchEnd)
   })

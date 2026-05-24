@@ -6,12 +6,12 @@ const emit = defineEmits(['retry'])
 const store = usePlayerStore()
 
 const verseWords = computed(() => {
-  if (!store.currentVerse) return []
+  if (!store.currentVerse) {return []}
   return store.currentVerse.text.split(/\s+/).filter(w => w && !/^[\u06D6-\u06ED]$/.test(w))
 })
 
 const hasWordTimings = computed(() => {
-  if (store.playbackMode !== 'full') return false
+  if (store.playbackMode !== 'full') {return false}
   const timing = store.verseTimings[store.currentVerseIndex]
   return timing && timing.segments && timing.segments.length > 0
 })
@@ -24,7 +24,7 @@ function shareVerse() {
   const surah = store.currentSurah
   const verse = store.currentVerse
   const translation = store.currentTranslationVerse
-  if (!surah || !verse) return
+  if (!surah || !verse) {return}
 
   const text = `${surah.englishName} - Verse ${verse.number}\n\n${verse.text}\n${translation?.text || ''}`
   const url = `${window.location.origin}?surah=${store.currentSurahNum}`
@@ -73,7 +73,7 @@ function shareVerse() {
         <div :key="store.currentSurahNum + '-' + store.currentVerseIndex">
           <div v-if="store.showBismillah" class="bismillah mb-8">
             <p class="text-xl sm:text-2xl text-accent" dir="rtl" lang="ar" :style="{ fontFamily: store.arabicFontFamily }">
-              {{"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}}
+              {{ "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ" }}
             </p>
           </div>
 

@@ -126,10 +126,10 @@ function onLanguageChange(code) {
 }
 
 function onKeydown(e) {
-  if (e.key === 'Escape') emit('close')
+  if (e.key === 'Escape') {emit('close')}
   if (e.key === 'Tab' && panelRef.value) {
     const focusable = panelRef.value.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])')
-    if (focusable.length === 0) return
+    if (focusable.length === 0) {return}
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
     if (e.shiftKey && document.activeElement === first) {
@@ -148,7 +148,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
-  if (previouslyFocused) previouslyFocused.focus()
+  if (previouslyFocused) {previouslyFocused.focus()}
 })
 </script>
 

@@ -28,9 +28,9 @@ function onClickOutside(e) {
 }
 
 function onThemePickerKeydown(e) {
-  if (!showThemePicker.value) return
+  if (!showThemePicker.value) {return}
   const buttons = Array.from(document.querySelectorAll('.theme-picker-wrapper [role="menu"] button'))
-  if (!buttons.length) return
+  if (!buttons.length) {return}
   const current = buttons.indexOf(document.activeElement)
   if (e.key === 'ArrowDown') {
     e.preventDefault()

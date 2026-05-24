@@ -10,10 +10,10 @@ const emit = defineEmits(['close', 'select'])
 let previouslyFocused = null
 
 function onKeydown(e) {
-  if (e.key === 'Escape') emit('close')
+  if (e.key === 'Escape') {emit('close')}
   if (e.key === 'Tab' && panelRef.value) {
     const focusable = panelRef.value.querySelectorAll('button, [tabindex]:not([tabindex="-1"])')
-    if (focusable.length === 0) return
+    if (focusable.length === 0) {return}
     const first = focusable[0]
     const last = focusable[focusable.length - 1]
     if (e.shiftKey && document.activeElement === first) {
@@ -27,7 +27,7 @@ function onKeydown(e) {
 }
 
 function scrollToActive(smooth = false) {
-  if (!listRef.value) return
+  if (!listRef.value) {return}
   const active = listRef.value.querySelector('.verse-active')
   if (active) {
     active.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' })
@@ -42,7 +42,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
-  if (previouslyFocused) previouslyFocused.focus()
+  if (previouslyFocused) {previouslyFocused.focus()}
 })
 
 watch(() => store.currentVerseIndex, async () => {

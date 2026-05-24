@@ -1,27 +1,77 @@
-const TEXT_API = 'https://api.alquran.cloud/v1'
-const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
-const QURANCOM_API = 'https://api.quran.com/api/v4'
+import {
+  TEXT_API,
+  AUDIO_API,
+  QURANCOM_API,
+  MAX_RETRIES,
+  RETRY_DELAY,
+  SURAH_CACHE_MAX
+} from '../config.js'
 
-const MAX_RETRIES = 2
-const RETRY_DELAY = 1000
-
-async function fetchWithRetry(url, retries = MAX_RETRIES, signal) {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url, signal ? { signal } : undefined)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res
-    } catch (err) {
-      if (err.name === 'AbortError') throw err
-      if (attempt === retries) throw err
-      await new Promise(r => setTimeout(r, RETRY_DELAY * Math.pow(2, attempt)))
-    }
+// Error with a machine-readable kind so the UI can show specific, actionable messages.
+export class ApiError extends Error {
+  constructor(kind, message, status) {
+    super(message)
+    this.name = 'ApiError'
+    this.kind = kind // 'network' | 'not-found' | 'invalid' | 'http'
+    this.status = status
   }
 }
 
-// LRU cache for loaded surahs (max 5 entries)
+async function fetchWithRetry(url, retries = MAX_RETRIES, signal) {
+  let lastErr = null
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, signal ? { signal } : undefined)
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new ApiError('not-found', `Not found (HTTP 404)`, 404)
+        }
+        throw new ApiError('http', `HTTP ${res.status}`, res.status)
+      }
+      return res
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw err
+      }
+      // 404 is not transient; do not retry.
+      if (err instanceof ApiError && err.kind === 'not-found') {
+        throw err
+      }
+      lastErr = err
+      if (attempt === retries) {
+        break
+      }
+      await new Promise(r => setTimeout(r, RETRY_DELAY * Math.pow(2, attempt)))
+    }
+  }
+  if (lastErr instanceof ApiError) {
+    throw lastErr
+  }
+  throw new ApiError('network', lastErr?.message || 'Network request failed')
+}
+
+// Deduplicate concurrent identical GETs so loadSurah and preloadNextSurah do not
+// fetch the same resource twice.
+const inflight = new Map()
+
+async function fetchJsonDeduped(url, signal) {
+  if (inflight.has(url)) {
+    return inflight.get(url)
+  }
+  const promise = (async () => {
+    const res = await fetchWithRetry(url, MAX_RETRIES, signal)
+    return res.json()
+  })()
+  inflight.set(url, promise)
+  try {
+    return await promise
+  } finally {
+    inflight.delete(url)
+  }
+}
+
+// LRU cache for loaded surahs.
 const surahCache = new Map()
-const CACHE_MAX = 5
 
 function getCacheKey(surahNum, translationId, reciterId) {
   return `${surahNum}:${translationId}:${reciterId}`
@@ -33,38 +83,46 @@ export function getCachedSurah(surahNum, translationId, reciterId) {
 
 export function cacheSurah(surahNum, translationId, reciterId, data) {
   const key = getCacheKey(surahNum, translationId, reciterId)
-  if (surahCache.has(key)) surahCache.delete(key)
-  if (surahCache.size >= CACHE_MAX) {
+  if (surahCache.has(key)) {
+    surahCache.delete(key)
+  }
+  if (surahCache.size >= SURAH_CACHE_MAX) {
     const oldest = surahCache.keys().next().value
     surahCache.delete(oldest)
   }
   surahCache.set(key, data)
 }
 
+// Strip the leading Bismillah (first 4 words) from verse 1 of every surah except
+// Al-Faatiha (1) and At-Tawbah (9). The regex approach broke due to diacritical
+// mark ordering, so we strip by word count after verifying it starts with baa.
+export function stripBismillahFromVerse(text) {
+  const words = text.split(/\s+/)
+  if (words.length > 4 && /^ب/.test(words[0])) {
+    return words.slice(4).join(' ')
+  }
+  return text
+}
+
 export async function fetchSurahText(surahNumber, translationId, signal) {
   const url = `${TEXT_API}/surah/${surahNumber}/editions/quran-uthmani,${translationId}`
-  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
+  const data = await fetchJsonDeduped(url, signal)
 
-  const data = await res.json()
-
-  if (data.code !== 200 || !data.data || data.data.length < 2) {
-    throw new Error('Invalid text API response')
+  if (data.code !== 200 || !Array.isArray(data.data) || data.data.length < 2) {
+    throw new ApiError('invalid', 'Invalid text API response')
   }
 
   const [arabicData, translationData] = data.data
+  if (!Array.isArray(arabicData?.ayahs) || !Array.isArray(translationData?.ayahs)) {
+    throw new ApiError('invalid', 'Malformed verse data')
+  }
   const stripBismillah = surahNumber !== 1 && surahNumber !== 9
 
   return {
     verses: arabicData.ayahs.map(a => {
-      let text = a.text.replace(/\u0649/g, '\u06CC')
+      let text = a.text.replace(/ى/g, 'ی')
       if (stripBismillah && a.numberInSurah === 1) {
-        // Strip Bismillah (4 words) from the start of verse 1.
-        // The regex approach broke due to diacritical mark ordering differences,
-        // so we strip by word count after verifying it starts with "baa" (U+0628).
-        const words = text.split(/\s+/)
-        if (words.length > 4 && /^\u0628/.test(words[0])) {
-          text = words.slice(4).join(' ')
-        }
+        text = stripBismillahFromVerse(text)
       }
       return { number: a.numberInSurah, text }
     }),
@@ -77,20 +135,21 @@ export async function fetchSurahText(surahNumber, translationId, signal) {
 
 export async function fetchSurahAudio(cdnReciterId, chapterNumber, signal) {
   const url = `${AUDIO_API}/${cdnReciterId}/audio_files?chapter=${chapterNumber}&segments=true`
-  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
-
-  const data = await res.json()
+  const data = await fetchJsonDeduped(url, signal)
 
   if (!data.audio_files || !data.audio_files.length) {
-    throw new Error('No audio data available')
+    throw new ApiError('invalid', 'No audio data available')
   }
 
   const file = data.audio_files[0]
+  if (!file.audio_url) {
+    throw new ApiError('invalid', 'Audio file URL missing')
+  }
 
   return {
     audioUrl: file.audio_url,
     duration: file.duration,
-    verseTimings: file.verse_timings.map(vt => ({
+    verseTimings: (file.verse_timings || []).map(vt => ({
       verseKey: vt.verse_key,
       timestampFrom: vt.timestamp_from,
       timestampTo: vt.timestamp_to,
@@ -107,12 +166,10 @@ export async function fetchSurahAudio(cdnReciterId, chapterNumber, signal) {
 
 export async function fetchVerseAudio(cloudReciterId, surahNumber, signal) {
   const url = `${TEXT_API}/surah/${surahNumber}/${cloudReciterId}`
-  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
+  const data = await fetchJsonDeduped(url, signal)
 
-  const data = await res.json()
-
-  if (data.code !== 200 || !data.data) {
-    throw new Error('Invalid verse audio response')
+  if (data.code !== 200 || !data.data || !Array.isArray(data.data.ayahs)) {
+    throw new ApiError('invalid', 'Invalid verse audio response')
   }
 
   return {
@@ -122,24 +179,19 @@ export async function fetchVerseAudio(cloudReciterId, surahNumber, signal) {
 
 export async function fetchSurahTextQuranCom(surahNumber, translationId, signal) {
   const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?translations=${translationId}&fields=text_uthmani&per_page=300`
-  const res = await fetchWithRetry(url, MAX_RETRIES, signal)
-
-  const data = await res.json()
+  const data = await fetchJsonDeduped(url, signal)
 
   if (!data.verses || !data.verses.length) {
-    throw new Error('Invalid Quran.com API response')
+    throw new ApiError('invalid', 'Invalid Quran.com API response')
   }
 
   const stripBismillah = surahNumber !== 1 && surahNumber !== 9
 
   return {
     verses: data.verses.map(v => {
-      let text = v.text_uthmani.replace(/\u0649/g, '\u06CC')
+      let text = v.text_uthmani.replace(/ى/g, 'ی')
       if (stripBismillah && v.verse_number === 1) {
-        const words = text.split(/\s+/)
-        if (words.length > 4 && /^\u0628/.test(words[0])) {
-          text = words.slice(4).join(' ')
-        }
+        text = stripBismillahFromVerse(text)
       }
       return { number: v.verse_number, text }
     }),

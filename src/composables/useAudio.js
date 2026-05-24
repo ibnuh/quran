@@ -19,7 +19,7 @@ export function useAudio() {
       progress.value = (audio.currentTime / audio.duration) * 100
       duration.value = audio.duration * 1000
     }
-    if (onTimeUpdateCb) onTimeUpdateCb(currentTimeMs.value)
+    if (onTimeUpdateCb) {onTimeUpdateCb(currentTimeMs.value)}
   })
 
   audio.addEventListener('progress', () => {
@@ -32,7 +32,7 @@ export function useAudio() {
     isPlaying.value = false
     progress.value = 0
     currentTimeMs.value = 0
-    if (onEndedCb) onEndedCb()
+    if (onEndedCb) {onEndedCb()}
   })
 
   audio.addEventListener('play', () => {

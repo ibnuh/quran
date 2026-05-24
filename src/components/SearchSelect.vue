@@ -29,7 +29,7 @@ function fuzzyMatch(text, q) {
 }
 
 const filtered = computed(() => {
-  if (!query.value.trim()) return props.options
+  if (!query.value.trim()) {return props.options}
   return props.options.filter(o => fuzzyMatch(o[props.labelKey], query.value))
 })
 
@@ -45,12 +45,12 @@ function open() {
   query.value = ''
   highlightedIndex.value = -1
   nextTick(() => {
-    if (inputRef.value && !isTouchDevice()) inputRef.value.focus()
+    if (inputRef.value && !isTouchDevice()) {inputRef.value.focus()}
   })
   nextTick(() => {
     setTimeout(() => {
       const active = document.querySelector('.option-active')
-      if (active) active.scrollIntoView({ block: 'center' })
+      if (active) {active.scrollIntoView({ block: 'center' })}
     }, 50)
   })
 }
@@ -63,7 +63,7 @@ function select(opt) {
 function scrollHighlightedIntoView() {
   nextTick(() => {
     const el = document.querySelector('.option-highlighted')
-    if (el) el.scrollIntoView({ block: 'nearest' })
+    if (el) {el.scrollIntoView({ block: 'nearest' })}
   })
 }
 

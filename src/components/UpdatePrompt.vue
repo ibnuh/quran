@@ -11,7 +11,7 @@ function onUpdateAvailable(e) {
 
 function applyUpdate() {
   show.value = false
-  if (updateFn) updateFn(true)
+  if (updateFn) {updateFn(true)}
   // Fallback reload in case SW controllerchange doesn't fire
   setTimeout(() => window.location.reload(), 1500)
 }

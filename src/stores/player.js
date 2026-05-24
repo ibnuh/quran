@@ -14,7 +14,7 @@ function detectTranslationFromLocale() {
   for (const locale of locales) {
     const lang = locale.split('-')[0].toLowerCase()
     const match = TRANSLATIONS.find(t => t.language === lang)
-    if (match) return match.identifier
+    if (match) {return match.identifier}
   }
   return 'en.itani'
 }
@@ -23,9 +23,9 @@ let loadAbortController = null
 
 function getResponsiveDefaults() {
   const w = window.innerWidth
-  if (w < 480) return { arabicFontSize: 1.8, translationFontSize: 0.95, contentWidth: 100 }
-  if (w < 768) return { arabicFontSize: 2.0, translationFontSize: 1.0, contentWidth: 95 }
-  if (w < 1024) return { arabicFontSize: 2.5, translationFontSize: 1.1, contentWidth: 85 }
+  if (w < 480) {return { arabicFontSize: 1.8, translationFontSize: 0.95, contentWidth: 100 }}
+  if (w < 768) {return { arabicFontSize: 2.0, translationFontSize: 1.0, contentWidth: 95 }}
+  if (w < 1024) {return { arabicFontSize: 2.5, translationFontSize: 1.1, contentWidth: 85 }}
   return { arabicFontSize: 3.2, translationFontSize: 1.3, contentWidth: 80 }
 }
 
@@ -35,15 +35,15 @@ const pendingArabicFontLoads = new Map()
 let latestArabicFontRequestId = 0
 
 async function ensureArabicFontLoaded(fontId) {
-  if (typeof document === 'undefined' || !document.fonts) return
+  if (typeof document === 'undefined' || !document.fonts) {return}
 
   const font = ARABIC_FONTS.find(f => f.id === fontId)
-  if (!font) return
+  if (!font) {return}
 
   const primaryFamily = font.family.split(',')[0]?.trim()
-  if (!primaryFamily) return
+  if (!primaryFamily) {return}
 
-  if (loadedArabicFontFamilies.has(primaryFamily)) return
+  if (loadedArabicFontFamilies.has(primaryFamily)) {return}
 
   let loadPromise = pendingArabicFontLoads.get(primaryFamily)
   if (!loadPromise) {
@@ -119,7 +119,7 @@ export const usePlayerStore = defineStore('player', {
     },
     currentJuz: (state) => {
       const verse = state.verses[state.currentVerseIndex]
-      if (!verse) return 1
+      if (!verse) {return 1}
       return getJuzForVerse(state.currentSurahNum, verse.number)
     },
     isCurrentBookmarked: (state) => state.bookmarks.some(
@@ -130,7 +130,7 @@ export const usePlayerStore = defineStore('player', {
   actions: {
     async loadSurah() {
       // Abort any in-flight load
-      if (loadAbortController) loadAbortController.abort()
+      if (loadAbortController) {loadAbortController.abort()}
       loadAbortController = new AbortController()
       const signal = loadAbortController.signal
 
@@ -187,7 +187,7 @@ export const usePlayerStore = defineStore('player', {
               audioUrls: []
             }
           } catch (e) {
-            if (e.name === 'AbortError') throw e
+            if (e.name === 'AbortError') {throw e}
             // CDN failed, will try per-verse fallback
           }
         }
@@ -209,7 +209,7 @@ export const usePlayerStore = defineStore('player', {
         const textData = await textPromise
 
         // Check if this load was aborted while awaiting
-        if (signal.aborted) return
+        if (signal.aborted) {return}
 
         this.verses = textData.verses
         this.translationVerses = textData.translationVerses
@@ -233,22 +233,22 @@ export const usePlayerStore = defineStore('player', {
           audioUrls: audioResult.audioUrls
         })
       } catch (err) {
-        if (err.name === 'AbortError') return
+        if (err.name === 'AbortError') {return}
         this.error = 'Failed to load surah. Please check your connection and try again.'
       } finally {
-        if (!signal.aborted) this.isLoading = false
+        if (!signal.aborted) {this.isLoading = false}
       }
     },
 
     // Preload next surah data into cache (no UI state change)
     async preloadNextSurah() {
-      if (!this.canNextSurah) return
+      if (!this.canNextSurah) {return}
       const nextNum = this.currentSurahNum + 1
       const reciter = this.currentReciterData
-      if (!reciter) return
+      if (!reciter) {return}
 
       const cached = getCachedSurah(nextNum, this.currentTranslation, this.currentReciter)
-      if (cached) return
+      if (cached) {return}
 
       try {
         const isQuranCom = this.currentTranslation.startsWith('qdc.')
@@ -293,7 +293,7 @@ export const usePlayerStore = defineStore('player', {
 
     getVerseIndexAtTime(timeMs) {
       const timings = this.verseTimings
-      if (timings.length === 0) return 0
+      if (timings.length === 0) {return 0}
       let lo = 0, hi = timings.length - 1
       while (lo <= hi) {
         const mid = (lo + hi) >> 1
@@ -315,9 +315,9 @@ export const usePlayerStore = defineStore('player', {
 
     getWordIndexAtTime(timeMs, verseIndex) {
       const timing = this.verseTimings[verseIndex]
-      if (!timing || !timing.segments || timing.segments.length === 0) return -1
+      if (!timing || !timing.segments || timing.segments.length === 0) {return -1}
       const maxWordIndex = this._wordCounts?.[verseIndex] ?? -1
-      if (maxWordIndex < 0) return -1
+      if (maxWordIndex < 0) {return -1}
       for (let i = timing.segments.length - 1; i >= 0; i--) {
         const seg = timing.segments[i]
         if (timeMs >= seg.from) {
@@ -391,10 +391,10 @@ export const usePlayerStore = defineStore('player', {
     async applyArabicFont(id, { save = true } = {}) {
       const requestId = ++latestArabicFontRequestId
       await ensureArabicFontLoaded(id)
-      if (requestId !== latestArabicFontRequestId) return
+      if (requestId !== latestArabicFontRequestId) {return}
 
       this.arabicFont = id
-      if (save) this.savePreferences()
+      if (save) {this.savePreferences()}
     },
 
     setArabicFont(id) {
@@ -422,7 +422,7 @@ export const usePlayerStore = defineStore('player', {
       const theme = THEMES.find(t => t.id === id)
       if (theme) {
         const meta = document.querySelector('meta[name="theme-color"]')
-        if (meta) meta.setAttribute('content', theme.colors.primary)
+        if (meta) {meta.setAttribute('content', theme.colors.primary)}
       }
       this.savePreferences()
     },
@@ -470,7 +470,7 @@ export const usePlayerStore = defineStore('player', {
 
     async setJuz(num) {
       const juz = JUZS.find(j => j.number === num)
-      if (!juz) return
+      if (!juz) {return}
       await this.setSurah(juz.startSurah)
       const idx = this.verses.findIndex(v => v.number === juz.startVerse)
       if (idx >= 0) {
@@ -482,7 +482,7 @@ export const usePlayerStore = defineStore('player', {
     toggleBookmark() {
       const verse = this.currentVerse
       const translation = this.currentTranslationVerse
-      if (!verse) return
+      if (!verse) {return}
       const existing = this.bookmarks.findIndex(
         b => b.surahNum === this.currentSurahNum && b.verseIndex === this.currentVerseIndex
       )
@@ -513,7 +513,7 @@ export const usePlayerStore = defineStore('player', {
     addRecentSurah(num) {
       this.recentSurahs = this.recentSurahs.filter(n => n !== num)
       this.recentSurahs.unshift(num)
-      if (this.recentSurahs.length > 10) this.recentSurahs.pop()
+      if (this.recentSurahs.length > 10) {this.recentSurahs.pop()}
       this.savePreferences()
     },
 
@@ -560,35 +560,35 @@ export const usePlayerStore = defineStore('player', {
 
         const prefs = JSON.parse(saved)
         const savedArabicFont = prefs.arabicFont
-        if (prefs.surah) this.currentSurahNum = prefs.surah
-        if (prefs.verse !== undefined) this.currentVerseIndex = prefs.verse
+        if (prefs.surah) {this.currentSurahNum = prefs.surah}
+        if (prefs.verse !== undefined) {this.currentVerseIndex = prefs.verse}
         if (prefs.reciter) {
           // Handle migration from old numeric cdnId format
           if (typeof prefs.reciter === 'number') {
             const found = RECITERS.find(r => r.cdnId === prefs.reciter)
-            if (found) this.currentReciter = found.id
+            if (found) {this.currentReciter = found.id}
           } else {
             this.currentReciter = prefs.reciter
           }
         }
-        if (prefs.translation) this.currentTranslation = prefs.translation
-        if (prefs.arabicFontSize) this.arabicFontSize = prefs.arabicFontSize
-        if (prefs.translationFontSize) this.translationFontSize = prefs.translationFontSize
-        if (prefs.contentWidth) this.contentWidth = prefs.contentWidth
+        if (prefs.translation) {this.currentTranslation = prefs.translation}
+        if (prefs.arabicFontSize) {this.arabicFontSize = prefs.arabicFontSize}
+        if (prefs.translationFontSize) {this.translationFontSize = prefs.translationFontSize}
+        if (prefs.contentWidth) {this.contentWidth = prefs.contentWidth}
         if (prefs.theme) {
           this.theme = prefs.theme
           document.documentElement.setAttribute('data-theme', prefs.theme === 'light' ? '' : prefs.theme)
           const theme = THEMES.find(t => t.id === prefs.theme)
           if (theme) {
             const meta = document.querySelector('meta[name="theme-color"]')
-            if (meta) meta.setAttribute('content', theme.colors.primary)
+            if (meta) {meta.setAttribute('content', theme.colors.primary)}
           }
         }
-        if (prefs.autoHideControls !== undefined) this.autoHideControls = prefs.autoHideControls
-        if (prefs.wordHighlight !== undefined) this.wordHighlight = prefs.wordHighlight
-        if (prefs.highlightStyle) this.highlightStyle = prefs.highlightStyle
-        if (prefs.repeatMode) this.repeatMode = prefs.repeatMode
-        if (prefs.playbackSpeed) this.playbackSpeed = prefs.playbackSpeed
+        if (prefs.autoHideControls !== undefined) {this.autoHideControls = prefs.autoHideControls}
+        if (prefs.wordHighlight !== undefined) {this.wordHighlight = prefs.wordHighlight}
+        if (prefs.highlightStyle) {this.highlightStyle = prefs.highlightStyle}
+        if (prefs.repeatMode) {this.repeatMode = prefs.repeatMode}
+        if (prefs.playbackSpeed) {this.playbackSpeed = prefs.playbackSpeed}
         if (prefs.animations !== undefined) {
           this.animations = prefs.animations
           document.documentElement.classList.toggle('no-animations', !prefs.animations)

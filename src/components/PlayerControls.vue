@@ -37,9 +37,9 @@ function onClickOutside(e) {
 }
 
 function onSpeedMenuKeydown(e) {
-  if (!showSpeedMenu.value) return
+  if (!showSpeedMenu.value) {return}
   const buttons = Array.from(document.querySelectorAll('.speed-wrapper [role="menu"] button'))
-  if (!buttons.length) return
+  if (!buttons.length) {return}
   const current = buttons.indexOf(document.activeElement)
   if (e.key === 'ArrowUp') {
     e.preventDefault()

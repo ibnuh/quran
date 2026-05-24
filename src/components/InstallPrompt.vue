@@ -5,15 +5,15 @@ const show = ref(false)
 const DISMISSED_KEY = 'quran-pwa-install-dismissed'
 
 function checkPrompt() {
-  if (!window.__pwaInstallPrompt) return
+  if (!window.__pwaInstallPrompt) {return}
   const dismissed = localStorage.getItem(DISMISSED_KEY)
-  if (dismissed) return
+  if (dismissed) {return}
   setTimeout(() => { show.value = true }, 3000)
 }
 
 async function install() {
   const prompt = window.__pwaInstallPrompt
-  if (!prompt) return
+  if (!prompt) {return}
   prompt.prompt()
   const { outcome } = await prompt.userChoice
   show.value = false

@@ -37,21 +37,21 @@ const activeThemeColors = computed(() =>
 const WARNING_COLOR = '#d97706'
 
 const statusBarFill = computed(() => {
-  if (showSettings.value || showVerses.value || showBookmarks.value) return activeThemeColors.value.card
-  if (!isOnline.value) return WARNING_COLOR
+  if (showSettings.value || showVerses.value || showBookmarks.value) {return activeThemeColors.value.card}
+  if (!isOnline.value) {return WARNING_COLOR}
   return activeThemeColors.value.primary
 })
 
 function announceToScreenReader(message) {
   const el = document.getElementById('sr-announcements')
-  if (el) el.textContent = message
+  if (el) {el.textContent = message}
 }
 
 function updateHeaderHeight() {
   let newHeaderH = 0
   let newControlsH = 0
-  if (headerRef.value) newHeaderH = headerRef.value.offsetHeight
-  if (controlsRef.value) newControlsH = controlsRef.value.offsetHeight
+  if (headerRef.value) {newHeaderH = headerRef.value.offsetHeight}
+  if (controlsRef.value) {newControlsH = controlsRef.value.offsetHeight}
   requestAnimationFrame(() => {
     if (newHeaderH !== headerHeight.value) {
       headerHeight.value = newHeaderH
@@ -74,12 +74,12 @@ onMounted(() => {
   window.addEventListener('online', onOnline)
   window.addEventListener('offline', onOffline)
   headerObserver = new ResizeObserver(updateHeaderHeight)
-  if (headerRef.value) headerObserver.observe(headerRef.value)
-  if (controlsRef.value) headerObserver.observe(controlsRef.value)
+  if (headerRef.value) {headerObserver.observe(headerRef.value)}
+  if (controlsRef.value) {headerObserver.observe(controlsRef.value)}
   updateHeaderHeight()
 })
 onBeforeUnmount(() => {
-  if (headerObserver) headerObserver.disconnect()
+  if (headerObserver) {headerObserver.disconnect()}
   window.removeEventListener('online', onOnline)
   window.removeEventListener('offline', onOffline)
 })
@@ -91,7 +91,7 @@ const tipAction = ref('') // 'auto-hide' | 'landscape' | 'both'
 let tipTimer = null
 
 function checkMobileTip() {
-  if (tipDismissed.value) return
+  if (tipDismissed.value) {return}
   const isMobile = window.innerWidth < 768 || window.innerHeight < 768
   const isLandscape = window.innerWidth > window.innerHeight
 
@@ -129,7 +129,7 @@ function dismissTipPermanently() {
 }
 
 function applyMobileTip() {
-  if (!store.autoHideControls) store.setAutoHideControls(true)
+  if (!store.autoHideControls) {store.setAutoHideControls(true)}
   dismissTipPermanently()
 }
 
@@ -157,7 +157,7 @@ function hideControls() {
 
 function resetHideTimer() {
   clearTimeout(hideTimer)
-  if (!store.autoHideControls || !audio.isPlaying.value) return
+  if (!store.autoHideControls || !audio.isPlaying.value) {return}
   hideTimer = setTimeout(() => {
     if (store.autoHideControls && audio.isPlaying.value && !showSettings.value && !showVerses.value && !showShortcuts.value && !showBookmarks.value) {
       hideControls()
@@ -166,11 +166,11 @@ function resetHideTimer() {
 }
 
 function onMainTap() {
-  if (showSettings.value || showVerses.value || showShortcuts.value) return
+  if (showSettings.value || showVerses.value || showShortcuts.value) {return}
 
   const isMobileViewport = window.innerWidth < 768 || window.innerHeight < 768
   if (isTouchDevice || isMobileViewport) {
-    if (!store.autoHideControls) return
+    if (!store.autoHideControls) {return}
     if (controlsVisible.value) {
       hideControls()
     } else {
@@ -179,7 +179,7 @@ function onMainTap() {
     return
   }
 
-  if (!store.autoHideControls) return
+  if (!store.autoHideControls) {return}
   if (!controlsVisible.value) {
     showControls()
   } else if (audio.isPlaying.value) {
@@ -197,16 +197,16 @@ let lastTouchTapTime = 0
 let isTouchDevice = false
 
 function shouldIgnoreMobileToggle(target) {
-  if (showSettings.value || showVerses.value || showShortcuts.value) return true
-  if (!target) return false
-  if (headerRef.value?.contains(target)) return true
-  if (controlsRef.value?.contains(target)) return true
-  if (target.closest?.('[role="dialog"], button, input, select, textarea, a, label')) return true
+  if (showSettings.value || showVerses.value || showShortcuts.value) {return true}
+  if (!target) {return false}
+  if (headerRef.value?.contains(target)) {return true}
+  if (controlsRef.value?.contains(target)) {return true}
+  if (target.closest?.('[role="dialog"], button, input, select, textarea, a, label')) {return true}
   return false
 }
 
 function onRootTouchStart(e) {
-  if (e.touches.length !== 1) return
+  if (e.touches.length !== 1) {return}
   const touch = e.touches[0]
   touchStartX = touch.clientX
   touchStartY = touch.clientY
@@ -227,7 +227,7 @@ function onRootTouchEnd(e) {
 
 function onMainClick() {
   // Ignore the synthetic click right after a touch tap to avoid double-fire.
-  if (Date.now() - lastTouchTapTime < 400) return
+  if (Date.now() - lastTouchTapTime < 400) {return}
   onMainTap()
 }
 
@@ -254,10 +254,10 @@ onBeforeUnmount(() => { clearTimeout(hideTimer); clearTimeout(tipTimer); clearTi
 // -- Swipe gestures --
 useSwipe(mainRef, {
   onSwipeLeft: () => {
-    if (store.canNextVerse) handleNextVerse()
+    if (store.canNextVerse) {handleNextVerse()}
   },
   onSwipeRight: () => {
-    if (store.canPrevVerse) handlePrevVerse()
+    if (store.canPrevVerse) {handlePrevVerse()}
   }
 })
 
@@ -266,14 +266,14 @@ const preloadCache = []
 
 function getPreloadCount() {
   const conn = navigator.connection
-  if (!conn) return 3
-  if (conn.effectiveType === '4g') return 5
-  if (conn.effectiveType === '3g') return 3
+  if (!conn) {return 3}
+  if (conn.effectiveType === '4g') {return 5}
+  if (conn.effectiveType === '3g') {return 3}
   return 1
 }
 
 function preloadAhead() {
-  if (store.playbackMode !== 'verse') return
+  if (store.playbackMode !== 'verse') {return}
 
   preloadCache.forEach(a => { a.src = ''; a.load() })
   preloadCache.length = 0
@@ -320,7 +320,7 @@ function debouncedSavePrefs() {
 let lastRafTimeMs = -1
 
 function startWordHighlightLoop() {
-  if (rafId) return
+  if (rafId) {return}
   lastRafTimeMs = -1
   function tick() {
     const timeMs = audio.getLiveTimeMs()
@@ -374,7 +374,7 @@ onBeforeUnmount(() => stopWordHighlightLoop())
 // -- Audio event handlers --
 audio.onTimeUpdate((timeMs) => {
   // Skip when RAF loop is active (it handles everything at higher precision)
-  if (rafId) return
+  if (rafId) {return}
   if (store.playbackMode === 'full') {
     const idx = store.getVerseIndexAtTime(timeMs)
     if (idx !== store.currentVerseIndex) {
@@ -459,7 +459,7 @@ function handlePrevVerse() {
   store.prevVerse()
   if (store.playbackMode === 'full') {
     const timing = store.verseTimings[store.currentVerseIndex]
-    if (timing) audio.seekTo(timing.timestampFrom)
+    if (timing) {audio.seekTo(timing.timestampFrom)}
   } else if (audio.isPlaying.value) {
     audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
     preloadAhead()
@@ -470,7 +470,7 @@ function handleNextVerse() {
   store.nextVerse()
   if (store.playbackMode === 'full') {
     const timing = store.verseTimings[store.currentVerseIndex]
-    if (timing) audio.seekTo(timing.timestampFrom)
+    if (timing) {audio.seekTo(timing.timestampFrom)}
   } else if (audio.isPlaying.value) {
     audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
     preloadAhead()
@@ -493,7 +493,7 @@ function handleVerseSelect(index) {
     const timing = store.verseTimings[index]
     if (timing) {
       audio.seekTo(timing.timestampFrom)
-      if (!audio.isPlaying.value) audio.play()
+      if (!audio.isPlaying.value) {audio.play()}
     }
   } else {
     audio.loadAndPlay(store.audioUrls[index])
@@ -508,7 +508,7 @@ function handleJumpToVerse(index) {
     const timing = store.verseTimings[index]
     if (timing) {
       audio.seekTo(timing.timestampFrom)
-      if (wasPlaying) audio.play()
+      if (wasPlaying) {audio.play()}
     }
   } else if (store.audioUrls.length) {
     if (wasPlaying) {
@@ -590,10 +590,10 @@ watch(
 
 // -- Media Session API (lock screen / notification controls) --
 function updateMediaSession() {
-  if (!('mediaSession' in navigator)) return
+  if (!('mediaSession' in navigator)) {return}
   const surah = store.currentSurah
   const verse = store.currentVerse
-  if (!surah) return
+  if (!surah) {return}
 
   navigator.mediaSession.metadata = new MediaMetadata({
     title: `${surah.englishName} - Verse ${verse?.number || 1}`,
@@ -604,10 +604,10 @@ function updateMediaSession() {
   navigator.mediaSession.setActionHandler('play', togglePlay)
   navigator.mediaSession.setActionHandler('pause', togglePlay)
   navigator.mediaSession.setActionHandler('previoustrack', () => {
-    if (store.canPrevVerse) handlePrevVerse()
+    if (store.canPrevVerse) {handlePrevVerse()}
   })
   navigator.mediaSession.setActionHandler('nexttrack', () => {
-    if (store.canNextVerse) handleNextVerse()
+    if (store.canNextVerse) {handleNextVerse()}
   })
 }
 
@@ -620,7 +620,7 @@ watch(
 let wakeLock = null
 
 async function acquireWakeLock() {
-  if (!('wakeLock' in navigator)) return
+  if (!('wakeLock' in navigator)) {return}
   try {
     wakeLock = await navigator.wakeLock.request('screen')
     wakeLock.addEventListener('release', () => {
@@ -668,7 +668,7 @@ onMounted(async () => {
   await store.loadSurah()
   if (store.currentVerseIndex > 0 && store.playbackMode === 'full') {
     const timing = store.verseTimings[store.currentVerseIndex]
-    if (timing) audio.seekTo(timing.timestampFrom)
+    if (timing) {audio.seekTo(timing.timestampFrom)}
   }
   updateMediaSession()
   checkMobileTip()
@@ -680,7 +680,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  if (orientationCleanup) orientationCleanup()
+  if (orientationCleanup) {orientationCleanup()}
   releaseWakeLock()
   document.removeEventListener('visibilitychange', onVisibilityChange)
 })

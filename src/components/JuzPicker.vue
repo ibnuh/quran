@@ -27,27 +27,27 @@ function onClickOutside(e) {
 }
 
 function onKeydown(e) {
-  if (!showPicker.value) return
+  if (!showPicker.value) {return}
   const buttons = Array.from(pickerRef.value?.querySelectorAll('[role="grid"] button') || [])
-  if (!buttons.length) return
+  if (!buttons.length) {return}
   const current = buttons.indexOf(document.activeElement)
   const cols = 5
   if (e.key === 'ArrowRight') {
     e.preventDefault()
     const next = current + 1
-    if (next < buttons.length) buttons[next].focus()
+    if (next < buttons.length) {buttons[next].focus()}
   } else if (e.key === 'ArrowLeft') {
     e.preventDefault()
     const prev = current - 1
-    if (prev >= 0) buttons[prev].focus()
+    if (prev >= 0) {buttons[prev].focus()}
   } else if (e.key === 'ArrowDown') {
     e.preventDefault()
     const next = current + cols
-    if (next < buttons.length) buttons[next].focus()
+    if (next < buttons.length) {buttons[next].focus()}
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
     const prev = current - cols
-    if (prev >= 0) buttons[prev].focus()
+    if (prev >= 0) {buttons[prev].focus()}
   } else if (e.key === 'Escape') {
     showPicker.value = false
   }
