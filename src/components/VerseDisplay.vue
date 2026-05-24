@@ -1,9 +1,12 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import { buildVerseUrl } from '../composables/useDeepLink.js'
 
 const emit = defineEmits(['retry'])
 const store = usePlayerStore()
+
+const copied = ref(false)
 
 const verseWords = computed(() => {
   if (!store.currentVerse) {return []}
@@ -20,20 +23,51 @@ const isLastVerse = computed(() =>
   store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
 )
 
+function verseReference() {
+  const surah = store.currentSurah
+  const verse = store.currentVerse
+  return `${surah.englishName} ${surah.number}:${verse.number}`
+}
+
+function canonicalUrl() {
+  return `${window.location.origin}${buildVerseUrl(store.currentSurahNum, store.currentVerse.number)}`
+}
+
 function shareVerse() {
   const surah = store.currentSurah
   const verse = store.currentVerse
   const translation = store.currentTranslationVerse
-  if (!surah || !verse) {return}
+  if (!surah || !verse) {
+    return
+  }
 
-  const text = `${surah.englishName} - Verse ${verse.number}\n\n${verse.text}\n${translation?.text || ''}`
-  const url = `${window.location.origin}?surah=${store.currentSurahNum}`
+  const text = `${verseReference()}\n\n${verse.text}\n${translation?.text || ''}`
+  const url = canonicalUrl()
 
   if (navigator.share) {
-    navigator.share({ title: `${surah.englishName} - Verse ${verse.number}`, text, url }).catch(() => {})
+    navigator.share({ title: verseReference(), text, url }).catch(() => {})
   } else {
-    navigator.clipboard.writeText(text).catch(() => {})
+    navigator.clipboard.writeText(`${text}\n${url}`).catch(() => {})
   }
+}
+
+function copyVerse() {
+  const surah = store.currentSurah
+  const verse = store.currentVerse
+  const translation = store.currentTranslationVerse
+  if (!surah || !verse) {
+    return
+  }
+  const text = `${verse.text}\n\n${translation?.text || ''}\n\n${verseReference()}\n${canonicalUrl()}`
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      copied.value = true
+      setTimeout(() => {
+        copied.value = false
+      }, 1500)
+    })
+    .catch(() => {})
 }
 </script>
 
@@ -139,6 +173,21 @@ function shareVerse() {
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
                 <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+              </svg>
+            </button>
+
+            <button
+              class="verse-action-btn"
+              :aria-label="copied ? 'Copied' : 'Copy verse text'"
+              :title="copied ? 'Copied' : 'Copy verse text'"
+              @click="copyVerse"
+            >
+              <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
+                <path d="M20 6L9 17l-5-5"/>
               </svg>
             </button>
           </div>

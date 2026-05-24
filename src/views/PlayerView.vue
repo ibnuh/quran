@@ -11,7 +11,7 @@ import { useAutoHideControls } from '../composables/useAutoHideControls.js'
 import { useMediaSession } from '../composables/useMediaSession.js'
 import { useWakeLock } from '../composables/useWakeLock.js'
 import { useMobileTip } from '../composables/useMobileTip.js'
-import { TOTAL_SURAHS } from '../config.js'
+import { useDeepLink } from '../composables/useDeepLink.js'
 import THEMES from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
@@ -85,6 +85,38 @@ const { controlsVisible, showControls, onMainClick, onRootTouchStart, onRootTouc
 // -- Mobile tip --
 const { showMobileTip, tipMessage, tipAction, checkMobileTip, applyMobileTip, dismissMobileTip } =
   useMobileTip(store)
+
+// -- Deep links (/2/255) --
+function jumpToAyah(ayah) {
+  const idx = store.verses.findIndex(v => v.number === ayah)
+  if (idx >= 0) {
+    handleJumpToVerse(idx)
+  }
+}
+
+function applyDeepLink(surah, ayah) {
+  if (surah === store.currentSurahNum) {
+    if (ayah) {
+      jumpToAyah(ayah)
+    }
+    return
+  }
+  audio.stop()
+  const unsub = watch(
+    () => store.isLoading,
+    loading => {
+      if (!loading && !store.error) {
+        if (ayah) {
+          jumpToAyah(ayah)
+        }
+        unsub()
+      }
+    }
+  )
+  store.setSurah(surah)
+}
+
+const deepLink = useDeepLink(applyDeepLink)
 
 // -- Swipe gestures --
 useSwipe(mainRef, {
@@ -164,16 +196,21 @@ watch(
 onMounted(async () => {
   store.loadPreferences()
 
-  // Handle PWA shortcut query param (?surah=36)
-  const params = new URLSearchParams(window.location.search)
-  const surahParam = parseInt(params.get('surah'))
-  if (surahParam >= 1 && surahParam <= TOTAL_SURAHS) {
-    store.currentSurahNum = surahParam
+  // A deep link (/2/255 or ?surah=36) takes precedence over restored prefs.
+  const { surah, ayah } = deepLink.initial()
+  if (surah) {
+    store.currentSurahNum = surah
     store.currentVerseIndex = 0
   }
 
   audio.setPlaybackRate(store.playbackSpeed)
   await store.loadSurah()
+  if (surah && ayah) {
+    const idx = store.verses.findIndex(v => v.number === ayah)
+    if (idx >= 0) {
+      store.currentVerseIndex = idx
+    }
+  }
   if (store.currentVerseIndex > 0 && store.playbackMode === 'full') {
     const timing = store.verseTimings[store.currentVerseIndex]
     if (timing) {
