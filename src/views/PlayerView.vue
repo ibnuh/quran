@@ -20,6 +20,7 @@ import SettingsBar from '../components/SettingsBar.vue'
 const SettingsModal = defineAsyncComponent(() => import('../components/SettingsModal.vue'))
 const BookmarksPanel = defineAsyncComponent(() => import('../components/BookmarksPanel.vue'))
 const SearchPanel = defineAsyncComponent(() => import('../components/SearchPanel.vue'))
+const TafsirPanel = defineAsyncComponent(() => import('../components/TafsirPanel.vue'))
 import VerseDisplay from '../components/VerseDisplay.vue'
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
@@ -36,12 +37,14 @@ const showVerses = ref(false)
 const showShortcuts = ref(false)
 const showBookmarks = ref(false)
 const showSearch = ref(false)
+const showTafsir = ref(false)
 const isAnyPanelOpen = () =>
   showSettings.value ||
   showVerses.value ||
   showShortcuts.value ||
   showBookmarks.value ||
-  showSearch.value
+  showSearch.value ||
+  showTafsir.value
 
 // -- Layout refs --
 const isOnline = ref(navigator.onLine)
@@ -289,7 +292,7 @@ onMounted(async () => {
       }"
       @click="onMainClick"
     >
-      <VerseDisplay class="mx-auto" @retry="store.loadSurah()" />
+      <VerseDisplay class="mx-auto" @retry="store.loadSurah()" @open-tafsir="showTafsir = true" />
     </main>
 
     <div
@@ -329,6 +332,7 @@ onMounted(async () => {
       @select-surah="applyDeepLink($event)"
       @select-verse="handleJumpToVerse"
     />
+    <TafsirPanel v-if="showTafsir" @close="showTafsir = false" />
 
     <!-- Mobile tip -->
     <Transition name="tip">

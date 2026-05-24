@@ -77,6 +77,16 @@ export default defineConfig({
             }
           },
           {
+            // quran.com text, translations, tajweed, and tafsir.
+            urlPattern: /^https:\/\/api\.quran\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'quran-com-api',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              networkTimeoutSeconds: 10
+            }
+          },
+          {
             // Full-surah MP3s (qurancdn) and the verse.quran.com mirror.
             urlPattern: /^https:\/\/(download\.quranicaudio\.com|verses\.quran\.com)\/.*/i,
             handler: 'CacheFirst',

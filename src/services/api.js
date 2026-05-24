@@ -197,6 +197,16 @@ export async function fetchSurahTajweed(surahNumber, signal) {
   }
 }
 
+// Per-verse tafsir (commentary) HTML from quran.com for a given tafsir source.
+export async function fetchTafsir(tafsirId, surahNumber, ayahNumber, signal) {
+  const url = `${QURANCOM_API}/tafsirs/${tafsirId}/by_ayah/${surahNumber}:${ayahNumber}`
+  const data = await fetchJsonDeduped(url, signal)
+  if (!data.tafsir || typeof data.tafsir.text !== 'string') {
+    throw new ApiError('invalid', 'Invalid tafsir response')
+  }
+  return { text: data.tafsir.text }
+}
+
 export async function fetchSurahTextQuranCom(surahNumber, translationId, signal) {
   const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?translations=${translationId}&fields=text_uthmani&per_page=300`
   const data = await fetchJsonDeduped(url, signal)

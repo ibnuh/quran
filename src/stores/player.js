@@ -153,7 +153,8 @@ export const usePlayerStore = defineStore('player', {
     wordHighlight: true,
     highlightStyle: 'flow', // 'glow' | 'background' | 'underline' | 'minimal' | 'sweep' | 'flow'
     // Per-verse action button visibility (under the verse number).
-    verseActions: { bookmark: true, share: true, copy: true },
+    verseActions: { bookmark: true, share: true, copy: true, tafsir: true },
+    tafsirSource: 169, // quran.com tafsir id (default: Ibn Kathir, abridged, en)
     // Render the traditional end-of-ayah ornament inline instead of the number badge.
     verseEndOrnament: false,
     // Justify the Arabic text block (mushaf style) instead of centering it.
@@ -519,6 +520,11 @@ export const usePlayerStore = defineStore('player', {
       }
     },
 
+    setTafsirSource(id) {
+      this.tafsirSource = id
+      this.savePreferences()
+    },
+
     setVerseEndOrnament(value) {
       this.verseEndOrnament = !!value
       this.savePreferences()
@@ -766,6 +772,7 @@ export const usePlayerStore = defineStore('player', {
             wordHighlight: this.wordHighlight,
             highlightStyle: this.highlightStyle,
             verseActions: this.verseActions,
+            tafsirSource: this.tafsirSource,
             verseEndOrnament: this.verseEndOrnament,
             justifyText: this.justifyText,
             tajweed: this.tajweed,
@@ -840,8 +847,12 @@ export const usePlayerStore = defineStore('player', {
           this.verseActions = {
             bookmark: prefs.verseActions.bookmark !== false,
             share: prefs.verseActions.share !== false,
-            copy: prefs.verseActions.copy !== false
+            copy: prefs.verseActions.copy !== false,
+            tafsir: prefs.verseActions.tafsir !== false
           }
+        }
+        if (typeof prefs.tafsirSource === 'number') {
+          this.tafsirSource = prefs.tafsirSource
         }
         if (prefs.verseEndOrnament !== undefined) {
           this.verseEndOrnament = !!prefs.verseEndOrnament

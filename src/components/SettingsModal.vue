@@ -114,6 +114,7 @@ const HIGHLIGHT_STYLES = [
 ]
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 const VERSE_ACTIONS = [
+  { key: 'tafsir', label: 'Tafsir' },
   { key: 'bookmark', label: 'Bookmark' },
   { key: 'share', label: 'Share' },
   { key: 'copy', label: 'Copy' }

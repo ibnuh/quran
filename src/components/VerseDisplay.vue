@@ -4,7 +4,7 @@ import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
 import { toDisplayArabic, toVerseTokens, toArabicDigits, tajweedColor } from '../utils/arabicText.js'
 
-const emit = defineEmits(['retry'])
+const emit = defineEmits(['retry', 'open-tafsir'])
 const store = usePlayerStore()
 
 const copied = ref(false)
@@ -190,9 +190,22 @@ function copyVerse() {
             </span>
 
             <div
-              v-if="store.verseActions.bookmark || store.verseActions.share || store.verseActions.copy"
+              v-if="store.verseActions.bookmark || store.verseActions.share || store.verseActions.copy || store.verseActions.tafsir"
               class="flex items-center justify-center gap-1"
             >
+              <button
+                v-if="store.verseActions.tafsir"
+                class="verse-action-btn"
+                aria-label="Open tafsir"
+                title="Tafsir (commentary)"
+                @click="emit('open-tafsir')"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted/50">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+              </button>
+
               <button
                 v-if="store.verseActions.bookmark"
                 class="verse-action-btn"
