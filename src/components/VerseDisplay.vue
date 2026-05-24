@@ -18,6 +18,15 @@ const verseTokens = computed(() => {
 
 const verseDisplayText = computed(() => toDisplayArabic(store.currentVerse?.text || ''))
 
+// Per-font display metrics: the size slider multiplies the font's sizeFactor, and the
+// font's lineHeight gives tall-mark scripts room so harakat never overlap.
+const arabicStyle = computed(() => ({
+  fontFamily: store.arabicFontFamily,
+  fontSize: store.arabicFontSize * store.arabicFontMetrics.sizeFactor + 'rem',
+  lineHeight: store.arabicFontMetrics.lineHeight,
+  overflowWrap: 'break-word'
+}))
+
 const hasWordTimings = computed(() => {
   if (store.playbackMode !== 'full') {return false}
   const timing = store.verseTimings[store.currentVerseIndex]
@@ -118,10 +127,10 @@ function copyVerse() {
 
           <p
             v-if="store.wordHighlight && hasWordTimings"
-            class="verse-arabic leading-[2] text-arabic mb-5"
+            class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"
-            :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
+            :style="arabicStyle"
           ><template v-for="(token, i) in verseTokens" :key="i"><span
               class="word-span"
               :class="{
@@ -139,10 +148,10 @@ function copyVerse() {
             >{{ token.display }}</span>{{ i < verseTokens.length - 1 ? ' ' : '' }}</template></p>
           <p
             v-else
-            class="verse-arabic leading-[2] text-arabic mb-5"
+            class="verse-arabic text-arabic mb-5"
             dir="rtl"
             lang="ar"
-            :style="{ fontFamily: store.arabicFontFamily, fontSize: store.arabicFontSize + 'rem', overflowWrap: 'break-word' }"
+            :style="arabicStyle"
           >
             {{ verseDisplayText }}
           </p>

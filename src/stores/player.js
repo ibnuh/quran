@@ -10,7 +10,7 @@ import {
 import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
-import ARABIC_FONTS from '../data/fonts.js'
+import ARABIC_FONTS, { getFontMetrics } from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
 import THEMES, { applyThemeToDocument } from '../data/themes.js'
 import JUZS, { getJuzForVerse } from '../data/juzs.js'
@@ -180,6 +180,7 @@ export const usePlayerStore = defineStore('player', {
       const font = ARABIC_FONTS.find(f => f.id === state.arabicFont)
       return font ? font.family : ARABIC_FONTS[0].family
     },
+    arabicFontMetrics: state => getFontMetrics(state.arabicFont),
     currentJuz: state => {
       const verse = state.verses[state.currentVerseIndex]
       if (!verse) {
