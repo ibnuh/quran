@@ -128,6 +128,8 @@ export default {
     continuousReadingHint: 'عرض كل الآيات في صفحة قابلة للتمرير؛ انقر على آية للتشغيل',
     tajweed: 'ألوان التجويد',
     tajweedHint: 'تلوين الحروف حسب أحكام التجويد',
+    tajweedUnavailableQcf: 'غير متاح مع خط المصحف (QCF)',
+    endOrnamentUnavailableQcf: 'خط المصحف (QCF) يعرض أرقام الآيات الخاصة به',
     justify: 'ضبط النص العربي',
     justifyHint: 'توزيع الآيات الطويلة على الحافتين (نمط المصحف)',
     verseButtons: 'أزرار الآية',

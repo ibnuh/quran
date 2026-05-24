@@ -128,6 +128,8 @@ export default {
     continuousReadingHint: 'Show all verses in a scrollable page; tap a verse to play',
     tajweed: 'Tajweed colors',
     tajweedHint: 'Color-code letters by pronunciation rule',
+    tajweedUnavailableQcf: 'Not available with the mushaf (QCF) font',
+    endOrnamentUnavailableQcf: 'The mushaf (QCF) font shows its own ayah numbers',
     justify: 'Justify Arabic text',
     justifyHint: 'Spread long verses to both edges (mushaf style)',
     verseButtons: 'Verse buttons',

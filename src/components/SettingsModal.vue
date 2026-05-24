@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
 import SearchSelect from './SearchSelect.vue'
+import ToggleRow from './ToggleRow.vue'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS, { LANGUAGES } from '../data/translations.js'
@@ -505,38 +506,19 @@ function onLanguageChange(code) {
             </div>
 
             <div class="border-t border-border pt-5 space-y-4">
-              <label class="flex items-center justify-between cursor-pointer">
-                <span class="text-sm font-medium text-muted">{{
-                  $t('settings.autoHideDuringPlayback')
-                }}</span>
-                <input
-                  type="checkbox"
-                  :checked="store.autoHideControls"
-                  class="toggle-switch"
-                  @change="store.setAutoHideControls($event.target.checked)"
-                />
-              </label>
-              <label class="flex items-center justify-between cursor-pointer">
-                <div>
-                  <span class="text-sm font-medium text-muted">{{
-                    $t('settings.wordHighlight')
-                  }}</span>
-                  <p class="text-xs text-muted/60 mt-0.5">
-                    {{
-                      store.playbackMode === 'verse'
-                        ? $t('settings.wordHighlightHintVerse')
-                        : $t('settings.wordHighlightHint')
-                    }}
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  :checked="store.wordHighlight"
-                  class="toggle-switch"
-                  :disabled="store.playbackMode === 'verse'"
-                  @change="store.setWordHighlight($event.target.checked)"
-                />
-              </label>
+              <ToggleRow
+                :label="$t('settings.autoHideDuringPlayback')"
+                :model-value="store.autoHideControls"
+                @update:model-value="store.setAutoHideControls($event)"
+              />
+              <ToggleRow
+                :label="$t('settings.wordHighlight')"
+                :hint="$t('settings.wordHighlightHint')"
+                :model-value="store.wordHighlight"
+                :disabled="store.playbackMode === 'verse'"
+                :disabled-reason="$t('settings.wordHighlightHintVerse')"
+                @update:model-value="store.setWordHighlight($event)"
+              />
               <div v-if="store.wordHighlight && store.playbackMode !== 'verse'">
                 <label class="block text-sm font-medium text-muted mb-2">{{
                   $t('settings.highlightStyle')
@@ -557,36 +539,18 @@ function onLanguageChange(code) {
                   </button>
                 </div>
               </div>
-              <label class="flex items-center justify-between cursor-pointer">
-                <div>
-                  <span class="text-sm font-medium text-muted">{{
-                    $t('settings.animations')
-                  }}</span>
-                  <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.animationsHint') }}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  :checked="store.animations"
-                  class="toggle-switch"
-                  @change="store.setAnimations($event.target.checked)"
-                />
-              </label>
-              <label class="flex items-center justify-between cursor-pointer">
-                <div>
-                  <span class="text-sm font-medium text-muted">{{
-                    $t('settings.continuousReading')
-                  }}</span>
-                  <p class="text-xs text-muted/60 mt-0.5">
-                    {{ $t('settings.continuousReadingHint') }}
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  :checked="store.readingMode"
-                  class="toggle-switch"
-                  @change="store.setReadingMode($event.target.checked)"
-                />
-              </label>
+              <ToggleRow
+                :label="$t('settings.animations')"
+                :hint="$t('settings.animationsHint')"
+                :model-value="store.animations"
+                @update:model-value="store.setAnimations($event)"
+              />
+              <ToggleRow
+                :label="$t('settings.continuousReading')"
+                :hint="$t('settings.continuousReadingHint')"
+                :model-value="store.readingMode"
+                @update:model-value="store.setReadingMode($event)"
+              />
             </div>
 
             <!-- Verse action buttons -->
@@ -609,59 +573,49 @@ function onLanguageChange(code) {
                     @change="store.setVerseAction(action.key, $event.target.checked)"
                   />
                 </label>
-                <label class="flex items-center justify-between cursor-pointer">
-                  <div>
-                    <span class="text-sm text-body">{{ $t('settings.endOrnament') }}</span>
-                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.endOrnamentHint') }}</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    :checked="store.verseEndOrnament"
-                    class="toggle-switch"
-                    @change="store.setVerseEndOrnament($event.target.checked)"
-                  />
-                </label>
-                <label class="flex items-center justify-between cursor-pointer">
-                  <div>
-                    <span class="text-sm text-body">{{ $t('settings.justify') }}</span>
-                    <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.justifyHint') }}</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    :checked="store.justifyText"
-                    class="toggle-switch"
-                    @change="store.setJustifyText($event.target.checked)"
-                  />
-                </label>
+                <ToggleRow
+                  label-class="text-sm text-body"
+                  :label="$t('settings.endOrnament')"
+                  :hint="$t('settings.endOrnamentHint')"
+                  :model-value="store.verseEndOrnament"
+                  :disabled="store.mushafMode"
+                  :disabled-reason="$t('settings.endOrnamentUnavailableQcf')"
+                  @update:model-value="store.setVerseEndOrnament($event)"
+                />
+                <ToggleRow
+                  label-class="text-sm text-body"
+                  :label="$t('settings.justify')"
+                  :hint="$t('settings.justifyHint')"
+                  :model-value="store.justifyText"
+                  @update:model-value="store.setJustifyText($event)"
+                />
                 <!-- Tajweed colors are letter-level; the mushaf (QCF) font renders whole-word
-                     glyphs, so the two cannot combine. Hide the toggle in QCF mode. -->
-                <template v-if="!store.mushafMode">
-                  <label class="flex items-center justify-between cursor-pointer">
-                    <div>
-                      <span class="text-sm text-body">{{ $t('settings.tajweed') }}</span>
-                      <p class="text-xs text-muted/60 mt-0.5">{{ $t('settings.tajweedHint') }}</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      :checked="store.tajweed"
-                      class="toggle-switch"
-                      @change="store.setTajweed($event.target.checked)"
-                    />
-                  </label>
-                  <div v-if="store.tajweed" class="flex flex-wrap gap-x-3 gap-y-1.5 pt-1">
+                     glyphs, so the two cannot combine. Show it disabled, not hidden. -->
+                <ToggleRow
+                  label-class="text-sm text-body"
+                  :label="$t('settings.tajweed')"
+                  :hint="$t('settings.tajweedHint')"
+                  :model-value="store.tajweed"
+                  :disabled="store.mushafMode"
+                  :disabled-reason="$t('settings.tajweedUnavailableQcf')"
+                  @update:model-value="store.setTajweed($event)"
+                />
+                <div
+                  v-if="store.tajweed && !store.mushafMode"
+                  class="flex flex-wrap gap-x-3 gap-y-1.5 pt-1"
+                >
+                  <span
+                    v-for="rule in TAJWEED_RULES"
+                    :key="rule.key"
+                    class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted"
+                  >
                     <span
-                      v-for="rule in TAJWEED_RULES"
-                      :key="rule.key"
-                      class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted"
-                    >
-                      <span
-                        class="w-2.5 h-2.5 rounded-full"
-                        :style="{ background: tajweedColor(rule.key) }"
-                      ></span>
-                      {{ rule.label }}
-                    </span>
-                  </div>
-                </template>
+                      class="w-2.5 h-2.5 rounded-full"
+                      :style="{ background: tajweedColor(rule.key) }"
+                    ></span>
+                    {{ rule.label }}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1024,41 +978,6 @@ function onLanguageChange(code) {
     width: 24px;
     height: 24px;
   }
-}
-
-.toggle-switch {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 2.75rem;
-  height: 1.5rem;
-  border-radius: 9999px;
-  background: var(--color-border);
-  position: relative;
-  cursor: pointer;
-  transition: background 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-  flex-shrink: 0;
-}
-.toggle-switch::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.toggle-switch:checked {
-  background: var(--color-primary);
-}
-.toggle-switch:checked::after {
-  transform: translateX(1.25rem);
-}
-.toggle-switch:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .settings-panel-enter-active {
