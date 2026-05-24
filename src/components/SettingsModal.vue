@@ -404,6 +404,18 @@ function onLanguageChange(code) {
                   @change="store.setAnimations($event.target.checked)"
                 />
               </label>
+              <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span class="text-sm font-medium text-muted">Continuous reading</span>
+                  <p class="text-xs text-muted/60 mt-0.5">Show all verses in a scrollable page; tap a verse to play</p>
+                </div>
+                <input
+                  type="checkbox"
+                  :checked="store.readingMode"
+                  class="toggle-switch"
+                  @change="store.setReadingMode($event.target.checked)"
+                />
+              </label>
             </div>
 
             <!-- Verse action buttons -->

@@ -22,6 +22,7 @@ const BookmarksPanel = defineAsyncComponent(() => import('../components/Bookmark
 const SearchPanel = defineAsyncComponent(() => import('../components/SearchPanel.vue'))
 const TafsirPanel = defineAsyncComponent(() => import('../components/TafsirPanel.vue'))
 import VerseDisplay from '../components/VerseDisplay.vue'
+const ReadingView = defineAsyncComponent(() => import('../components/ReadingView.vue'))
 import PlayerControls from '../components/PlayerControls.vue'
 import VerseList from '../components/VerseList.vue'
 import KeyboardShortcuts from '../components/KeyboardShortcuts.vue'
@@ -292,7 +293,13 @@ onMounted(async () => {
       }"
       @click="onMainClick"
     >
-      <VerseDisplay class="mx-auto" @retry="store.loadSurah()" @open-tafsir="showTafsir = true" />
+      <VerseDisplay
+        v-if="!store.readingMode || store.isLoading || store.error || !store.totalVerses"
+        class="mx-auto"
+        @retry="store.loadSurah()"
+        @open-tafsir="showTafsir = true"
+      />
+      <ReadingView v-else @select="handleVerseSelect" />
     </main>
 
     <div

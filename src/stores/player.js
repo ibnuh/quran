@@ -163,6 +163,8 @@ export const usePlayerStore = defineStore('player', {
     verseEndOrnament: false,
     // Justify the Arabic text block (mushaf style) instead of centering it.
     justifyText: false,
+    // Continuous reading layout (all verses scrollable) vs single-verse focus.
+    readingMode: false,
     // Tajweed coloring (quran.com annotated text); loaded on demand per surah.
     tajweed: false,
     tajweedVerses: [],
@@ -550,6 +552,11 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setReadingMode(value) {
+      this.readingMode = !!value
+      this.savePreferences()
+    },
+
     async loadTajweed() {
       if (!this.tajweed) {
         return
@@ -822,6 +829,7 @@ export const usePlayerStore = defineStore('player', {
             tafsirSource: this.tafsirSource,
             verseEndOrnament: this.verseEndOrnament,
             justifyText: this.justifyText,
+            readingMode: this.readingMode,
             tajweed: this.tajweed,
             repeatMode: this.repeatMode,
             playbackSpeed: this.playbackSpeed,
@@ -909,6 +917,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.justifyText !== undefined) {
           this.justifyText = !!prefs.justifyText
+        }
+        if (prefs.readingMode !== undefined) {
+          this.readingMode = !!prefs.readingMode
         }
         if (prefs.tajweed !== undefined) {
           this.tajweed = !!prefs.tajweed
