@@ -28,6 +28,15 @@ describe('getVerseIndexAtTime', () => {
     expect(store.getVerseIndexAtTime(25000)).toBe(2)
     expect(store.getVerseIndexAtTime(99999)).toBe(3)
   })
+
+  it('maps a time one ms below a boundary to the previous verse (MP3 seek undershoot)', () => {
+    const store = usePlayerStore()
+    store.verseTimings = [{ timestampFrom: 0 }, { timestampFrom: 10000 }, { timestampFrom: 20000 }]
+    // Seeking to verse 2 (10000ms) can land at 9999ms; this is why a manual
+    // verse seek must suppress the timing-based recompute for a short window.
+    expect(store.getVerseIndexAtTime(9999)).toBe(0)
+    expect(store.getVerseIndexAtTime(10000)).toBe(1)
+  })
 })
 
 describe('computeWordCounts + getWordIndexAtTime', () => {

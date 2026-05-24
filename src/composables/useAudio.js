@@ -85,9 +85,19 @@ export function useAudio() {
     buffered.value = 0
   }
 
+  // Seeks to an exact verse boundary. MP3 seeking snaps to a frame, so the audio
+  // can land a few ms before the target; mark a short window during which the
+  // timing-based verse recompute is suppressed so it does not undo a manual
+  // verse navigation (scrub-bar seeks use seek() and are not marked).
+  let verseSeekUntil = 0
   function seekTo(ms) {
     audio.currentTime = ms / 1000
     currentTimeMs.value = ms
+    verseSeekUntil = Date.now() + 600
+  }
+
+  function isVerseSeekActive() {
+    return Date.now() < verseSeekUntil
   }
 
   function seek(ratio) {
@@ -134,6 +144,7 @@ export function useAudio() {
     stop,
     seekTo,
     seek,
+    isVerseSeekActive,
     setPlaybackRate,
     setVolume,
     getLiveTimeMs,

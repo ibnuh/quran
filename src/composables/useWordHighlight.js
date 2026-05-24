@@ -32,7 +32,11 @@ export function useWordHighlight(store, audio, announce) {
       const timeMs = audio.getLiveTimeMs()
       if (timeMs !== lastRafTimeMs) {
         lastRafTimeMs = timeMs
-        const idx = store.getVerseIndexAtTime(timeMs)
+        // Right after a manual verse seek, keep the explicitly-set index so MP3
+        // seek undershoot does not bounce it back to the previous verse.
+        const idx = audio.isVerseSeekActive()
+          ? store.currentVerseIndex
+          : store.getVerseIndexAtTime(timeMs)
         if (idx !== store.currentVerseIndex) {
           store.currentVerseIndex = idx
           store.currentWordIndex = -1
@@ -64,7 +68,10 @@ export function useWordHighlight(store, audio, announce) {
       return
     }
     if (store.playbackMode === 'full') {
-      const idx = store.getVerseIndexAtTime(timeMs)
+      // Keep the manually-set index during the post-seek window (see RAF note).
+      const idx = audio.isVerseSeekActive()
+        ? store.currentVerseIndex
+        : store.getVerseIndexAtTime(timeMs)
       if (idx !== store.currentVerseIndex) {
         store.currentVerseIndex = idx
         store.currentWordIndex = -1
