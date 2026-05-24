@@ -13,6 +13,7 @@ import { useWakeLock } from '../composables/useWakeLock.js'
 import { useMobileTip } from '../composables/useMobileTip.js'
 import { useDeepLink } from '../composables/useDeepLink.js'
 import { useSleepTimer } from '../composables/useSleepTimer.js'
+import { useSeo } from '../composables/useSeo.js'
 import THEMES, { resolveThemeId } from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
@@ -191,19 +192,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('offline', onOffline)
 })
 
-// -- Dynamic document title --
-watch(
-  () => [store.currentSurah, store.currentVerse],
-  ([surah, verse]) => {
-    if (surah && verse) {
-      document.title = `${surah.englishName} ${verse.number} - Quran Player`
-    } else if (surah) {
-      document.title = `${surah.englishName} - Quran Player`
-    } else {
-      document.title = 'Quran Player'
-    }
-  }
-)
+// -- Document title + sharing metadata (per surah/verse) --
+useSeo(store)
 
 onMounted(async () => {
   store.loadPreferences()

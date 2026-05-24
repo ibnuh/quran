@@ -11,6 +11,14 @@ test('deep link /surah loads that surah at verse 1', async ({ page }) => {
   await expect(verseBadge(page)).toHaveText('1')
 })
 
+test('per-surah SEO metadata updates (title, canonical, og)', async ({ page }) => {
+  await page.goto('/2/5')
+  await waitForSurahLoad(page)
+  await expect(page).toHaveTitle(/Al-Baqara 5/)
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/2\/5$/)
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /Al-Baqara 5/)
+})
+
 test('deep link /surah/ayah loads the requested verse', async ({ page }) => {
   await page.goto('/2/5')
   await waitForSurahLoad(page)
