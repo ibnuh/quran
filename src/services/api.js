@@ -6,6 +6,7 @@ import {
   RETRY_DELAY,
   SURAH_CACHE_MAX
 } from '../config.js'
+import { parseTranslationText } from '../utils/translationText.js'
 
 // Error with a machine-readable kind so the UI can show specific, actionable messages.
 export class ApiError extends Error {
@@ -246,6 +247,25 @@ export async function fetchTafsir(tafsirId, surahNumber, ayahNumber, signal) {
   return { text: data.tafsir.text }
 }
 
+// In-memory cache for footnote bodies (stable content, revisited often while reading).
+const footnoteCache = new Map()
+
+// Lazy-load a single translation footnote by Quran.com foot_note id.
+export async function fetchFootnote(footnoteId, signal) {
+  const key = Number(footnoteId)
+  if (footnoteCache.has(key)) {
+    return { id: key, text: footnoteCache.get(key) }
+  }
+  const url = `${QURANCOM_API}/foot_notes/${footnoteId}`
+  const data = await fetchJsonDeduped(url, signal)
+  if (!data.foot_note || typeof data.foot_note.text !== 'string') {
+    throw new ApiError('invalid', 'Invalid footnote response')
+  }
+  const id = data.foot_note.id ?? key
+  footnoteCache.set(key, data.foot_note.text)
+  return { id, text: data.foot_note.text }
+}
+
 export async function fetchSurahTextQuranCom(surahNumber, translationId, signal) {
   const url = `${QURANCOM_API}/verses/by_chapter/${surahNumber}?translations=${translationId}&fields=text_uthmani&per_page=300`
   const data = await fetchJsonDeduped(url, signal)
@@ -265,9 +285,14 @@ export async function fetchSurahTextQuranCom(surahNumber, translationId, signal)
       }
       return { number: v.verse_number, text }
     }),
-    translationVerses: data.verses.map(v => ({
-      number: v.verse_number,
-      text: (v.translations?.[0]?.text || '').replace(/<[^>]*>/g, '')
-    }))
+    translationVerses: data.verses.map(v => {
+      const parsed = parseTranslationText(v.translations?.[0]?.text || '')
+      return {
+        number: v.verse_number,
+        text: parsed.text,
+        segments: parsed.segments,
+        footnotes: parsed.footnotes
+      }
+    })
   }
 }

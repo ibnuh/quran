@@ -64,6 +64,11 @@ export default {
     copy: 'آیت کا متن کاپی کریں',
     copied: 'کاپی ہو گیا',
     openTafsir: 'تفسیر کھولیں',
+    footnoteN: 'حاشیہ {n}',
+    footnoteTitle: 'حاشیہ {n}',
+    loadingFootnote: 'حاشیہ لوڈ ہو رہا ہے...',
+    footnoteError: 'حاشیہ لوڈ نہ ہو سکا۔ اپنا رابطہ چیک کریں۔',
+    closeFootnote: 'حاشیہ بند کریں',
     retry: 'دوبارہ کوشش',
     retryAria: 'سورہ دوبارہ لوڈ کریں',
     endOf: '{surah} کا اختتام'

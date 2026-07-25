@@ -64,6 +64,11 @@ export default {
     copy: 'نسخ نص الآية',
     copied: 'تم النسخ',
     openTafsir: 'فتح التفسير',
+    footnoteN: 'الحاشية {n}',
+    footnoteTitle: 'الحاشية {n}',
+    loadingFootnote: 'جارٍ تحميل الحاشية...',
+    footnoteError: 'تعذّر تحميل الحاشية. تحقق من اتصالك.',
+    closeFootnote: 'إغلاق الحاشية',
     retry: 'إعادة المحاولة',
     retryAria: 'إعادة تحميل السورة',
     endOf: 'نهاية {surah}'

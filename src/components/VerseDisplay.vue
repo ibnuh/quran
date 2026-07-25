@@ -1,13 +1,53 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
 import VerseArabic from './VerseArabic.vue'
+import FootnotePopover from './FootnotePopover.vue'
 
 const emit = defineEmits(['retry', 'open-tafsir'])
 const store = usePlayerStore()
 
 const copied = ref(false)
+// { id, label, rect } while a footnote popover is open.
+const openFootnote = ref(null)
+
+const translationSegments = computed(() => {
+  const verse = store.currentTranslationVerse
+  if (verse?.segments?.length) {
+    return verse.segments
+  }
+  const text = verse?.text
+  return text ? [{ type: 'text', value: text }] : []
+})
+
+function openFootnoteAt(segment, event) {
+  const el = event.currentTarget
+  const rect = el?.getBoundingClientRect?.()
+  openFootnote.value = {
+    id: segment.id,
+    label: segment.label,
+    rect: rect
+      ? {
+          top: rect.top,
+          left: rect.left,
+          bottom: rect.bottom,
+          right: rect.right,
+          width: rect.width,
+          height: rect.height
+        }
+      : null
+  }
+}
+
+function closeFootnote() {
+  openFootnote.value = null
+}
+
+watch(
+  () => [store.currentVerseIndex, store.currentSurahNum, store.currentTranslation],
+  closeFootnote
+)
 
 // Per-font display metrics: the size slider multiplies the font's sizeFactor, and the
 // font's lineHeight gives tall-mark scripts room so harakat never overlap.
@@ -268,8 +308,30 @@ function copyVerse() {
               maxWidth: store.contentWidth * 0.75 + 'rem'
             }"
           >
-            {{ store.currentTranslationVerse?.text }}
+            <template v-for="(seg, si) in translationSegments" :key="si">
+              <span v-if="seg.type === 'text'">{{ seg.value }}</span>
+              <button
+                v-else-if="seg.type === 'footnote'"
+                type="button"
+                class="fn-marker"
+                :class="{ 'fn-marker-active': openFootnote?.id === seg.id }"
+                :aria-label="$t('verse.footnoteN', { n: seg.label })"
+                :aria-expanded="openFootnote?.id === seg.id ? 'true' : 'false'"
+                :title="$t('verse.footnoteN', { n: seg.label })"
+                @click="openFootnoteAt(seg, $event)"
+              >
+                {{ seg.label }}
+              </button>
+            </template>
           </p>
+
+          <FootnotePopover
+            v-if="openFootnote"
+            :footnote-id="openFootnote.id"
+            :label="openFootnote.label"
+            :anchor="openFootnote.rect"
+            @close="closeFootnote"
+          />
 
           <div
             v-for="extra in store.currentExtraTranslations"
@@ -405,6 +467,34 @@ function copyVerse() {
 .verse-translation {
   animation: translation-rise 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
   animation-delay: 0.22s;
+}
+
+.fn-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15em;
+  min-height: 1.15em;
+  margin-inline: 0.05em;
+  padding: 0.15em 0.3em;
+  vertical-align: super;
+  font-size: 0.72em;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition:
+    background 0.15s var(--ease-out),
+    color 0.15s var(--ease-out);
+}
+.fn-marker:hover {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+.fn-marker-active {
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  color: var(--color-primary);
 }
 @keyframes translation-rise {
   from {

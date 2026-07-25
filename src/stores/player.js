@@ -11,6 +11,7 @@ import {
   cacheSurah
 } from '../services/api.js'
 import { parseTajweed } from '../utils/arabicText.js'
+import { resolveTranslationSource } from '../utils/translationText.js'
 import { ensureQcfPageFont } from '../utils/qcfFonts.js'
 import { setUiLocale, t } from '../i18n/index.js'
 import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
@@ -291,17 +292,13 @@ export const usePlayerStore = defineStore('player', {
       }
 
       try {
-        const isQuranCom = this.currentTranslation.startsWith('qdc.')
+        const source = resolveTranslationSource(this.currentTranslation)
         // Start the text fetch in parallel; settle to a result/error object so a
         // text rejection never becomes unhandled if audio fails first.
         const textSettled = (
-          isQuranCom
-            ? fetchSurahTextQuranCom(
-                this.currentSurahNum,
-                parseInt(this.currentTranslation.slice(4)),
-                signal
-              )
-            : fetchSurahText(this.currentSurahNum, this.currentTranslation, signal)
+          source.kind === 'qurancom'
+            ? fetchSurahTextQuranCom(this.currentSurahNum, source.editionId, signal)
+            : fetchSurahText(this.currentSurahNum, source.editionId, signal)
         ).then(
           data => ({ data }),
           error => ({ error })
@@ -427,11 +424,11 @@ export const usePlayerStore = defineStore('player', {
       }
 
       try {
-        const isQuranCom = this.currentTranslation.startsWith('qdc.')
+        const source = resolveTranslationSource(this.currentTranslation)
         const [textData, audioData] = await Promise.all([
-          isQuranCom
-            ? fetchSurahTextQuranCom(nextNum, parseInt(this.currentTranslation.slice(4)))
-            : fetchSurahText(nextNum, this.currentTranslation),
+          source.kind === 'qurancom'
+            ? fetchSurahTextQuranCom(nextNum, source.editionId)
+            : fetchSurahText(nextNum, source.editionId),
           reciter.cdnId
             ? fetchSurahAudio(reciter.cdnId, nextNum).catch(() => null)
             : Promise.resolve(null)

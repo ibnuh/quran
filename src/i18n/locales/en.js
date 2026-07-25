@@ -64,6 +64,11 @@ export default {
     copy: 'Copy verse text',
     copied: 'Copied',
     openTafsir: 'Open tafsir',
+    footnoteN: 'Footnote {n}',
+    footnoteTitle: 'Footnote {n}',
+    loadingFootnote: 'Loading footnote...',
+    footnoteError: 'Could not load footnote. Check your connection.',
+    closeFootnote: 'Close footnote',
     retry: 'Retry',
     retryAria: 'Retry loading surah',
     endOf: 'End of {surah}'
