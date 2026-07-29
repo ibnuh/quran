@@ -402,9 +402,10 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.75rem;
+  box-sizing: border-box;
   height: 1.75rem;
-  padding: 0 0.45rem;
+  min-width: 1.75rem;
+  padding: 0 0.2rem;
   border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -439,9 +440,10 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
+  box-sizing: border-box;
   height: 2rem;
-  padding: 0 0.55rem;
+  min-width: 2rem;
+  padding: 0 0.2rem;
   border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -510,9 +512,10 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.4rem;
+  box-sizing: border-box;
   height: 1.4rem;
-  padding: 0 0.3rem;
+  min-width: 1.4rem;
+  padding: 0 0.15rem;
   border-radius: 9999px;
   font-size: 0.7rem;
   font-weight: 700;

@@ -473,15 +473,17 @@ function copyVerse() {
 }
 
 .fn-marker {
-  /* Enlarge the hit area without inflating line height. */
+  /* Equal height/min-width keeps single digits as true circles; multi-digit
+     labels grow into a pill via horizontal padding only. */
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.35em;
-  min-height: 1.35em;
+  box-sizing: border-box;
+  height: 1.4em;
+  min-width: 1.4em;
   margin-inline: 0.1em;
-  padding: 0.15em 0.38em;
+  padding: 0 0.15em;
   vertical-align: super;
   font-size: 0.68em;
   font-weight: 700;
