@@ -480,12 +480,12 @@ function copyVerse() {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  height: 1.4em;
-  min-width: 1.4em;
+  height: 1.35em;
+  min-width: 1.35em;
   margin-inline: 0.1em;
-  padding: 0 0.15em;
+  padding: 0 0.12em;
   vertical-align: super;
-  font-size: 0.68em;
+  font-size: 0.58em;
   font-weight: 700;
   line-height: 1;
   color: var(--color-primary);

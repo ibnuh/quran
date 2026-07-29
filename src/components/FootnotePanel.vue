@@ -360,11 +360,11 @@ watch(
               <div v-if="fn.id === activeId || bodies[fn.id]" class="fn-card-body">
                 <p
                   v-if="bodies[fn.id]"
-                  class="text-sm sm:text-[0.95rem] text-body leading-relaxed whitespace-pre-wrap"
+                  class="fn-body text-body leading-relaxed whitespace-pre-wrap"
                 >
                   {{ bodies[fn.id] }}
                 </p>
-                <p v-else-if="fn.id === activeId && loading" class="text-sm text-muted">
+                <p v-else-if="fn.id === activeId && loading" class="fn-body text-muted">
                   {{ $t('verse.loadingFootnote') }}
                 </p>
               </div>
@@ -372,10 +372,7 @@ watch(
           </div>
 
           <!-- Single note: clean reading body -->
-          <p
-            v-else
-            class="text-sm sm:text-[0.95rem] text-body leading-relaxed whitespace-pre-wrap"
-          >
+          <p v-else class="fn-body text-body leading-relaxed whitespace-pre-wrap">
             {{ bodies[activeId] }}
           </p>
         </div>
@@ -528,6 +525,16 @@ watch(
 }
 .fn-card-body {
   padding: 0 0.85rem 0.8rem;
+}
+
+.fn-body {
+  font-size: 0.8125rem; /* 13px – smaller than body translation */
+  line-height: 1.55;
+}
+@media (min-width: 640px) {
+  .fn-body {
+    font-size: 0.875rem; /* 14px */
+  }
 }
 
 .fn-skeleton {
