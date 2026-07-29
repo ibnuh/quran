@@ -551,6 +551,12 @@ function onLanguageChange(code) {
                 :model-value="store.readingMode"
                 @update:model-value="store.setReadingMode($event)"
               />
+              <ToggleRow
+                :label="$t('settings.footnotes')"
+                :hint="$t('settings.footnotesHint')"
+                :model-value="store.showFootnotes"
+                @update:model-value="store.setShowFootnotes($event)"
+              />
             </div>
 
             <!-- Verse action buttons -->

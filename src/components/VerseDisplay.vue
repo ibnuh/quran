@@ -3,17 +3,22 @@ import { computed, ref, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
 import VerseArabic from './VerseArabic.vue'
-import FootnotePopover from './FootnotePopover.vue'
+import FootnotePanel from './FootnotePanel.vue'
 
 const emit = defineEmits(['retry', 'open-tafsir'])
 const store = usePlayerStore()
 
 const copied = ref(false)
-// { id, label, rect } while a footnote popover is open.
+// { id, label } while the footnote side panel is open.
 const openFootnote = ref(null)
 
 const translationSegments = computed(() => {
   const verse = store.currentTranslationVerse
+  // When footnotes are disabled, always render plain text (no markers).
+  if (!store.showFootnotes) {
+    const text = verse?.text
+    return text ? [{ type: 'text', value: text }] : []
+  }
   if (verse?.segments?.length) {
     return verse.segments
   }
@@ -21,22 +26,10 @@ const translationSegments = computed(() => {
   return text ? [{ type: 'text', value: text }] : []
 })
 
-function openFootnoteAt(segment, event) {
-  const el = event.currentTarget
-  const rect = el?.getBoundingClientRect?.()
+function openFootnoteAt(segment) {
   openFootnote.value = {
     id: segment.id,
-    label: segment.label,
-    rect: rect
-      ? {
-          top: rect.top,
-          left: rect.left,
-          bottom: rect.bottom,
-          right: rect.right,
-          width: rect.width,
-          height: rect.height
-        }
-      : null
+    label: segment.label
   }
 }
 
@@ -44,8 +37,12 @@ function closeFootnote() {
   openFootnote.value = null
 }
 
+function selectFootnote(fn) {
+  openFootnote.value = { id: fn.id, label: fn.label }
+}
+
 watch(
-  () => [store.currentVerseIndex, store.currentSurahNum, store.currentTranslation],
+  () => [store.currentVerseIndex, store.currentSurahNum, store.currentTranslation, store.showFootnotes],
   closeFootnote
 )
 
@@ -318,19 +315,19 @@ function copyVerse() {
                 :aria-label="$t('verse.footnoteN', { n: seg.label })"
                 :aria-expanded="openFootnote?.id === seg.id ? 'true' : 'false'"
                 :title="$t('verse.footnoteN', { n: seg.label })"
-                @click="openFootnoteAt(seg, $event)"
+                @click="openFootnoteAt(seg)"
               >
                 {{ seg.label }}
               </button>
             </template>
           </p>
 
-          <FootnotePopover
+          <FootnotePanel
             v-if="openFootnote"
             :footnote-id="openFootnote.id"
             :label="openFootnote.label"
-            :anchor="openFootnote.rect"
             @close="closeFootnote"
+            @select="selectFootnote"
           />
 
           <div
@@ -473,28 +470,34 @@ function copyVerse() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.15em;
-  min-height: 1.15em;
-  margin-inline: 0.05em;
-  padding: 0.15em 0.3em;
+  min-width: 1.25em;
+  min-height: 1.25em;
+  margin-inline: 0.08em;
+  padding: 0.2em 0.35em;
   vertical-align: super;
-  font-size: 0.72em;
-  font-weight: 600;
+  font-size: 0.7em;
+  font-weight: 700;
   line-height: 1;
   color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
   border-radius: 9999px;
   cursor: pointer;
   transition:
     background 0.15s var(--ease-out),
-    color 0.15s var(--ease-out);
+    color 0.15s var(--ease-out),
+    border-color 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out);
 }
 .fn-marker:hover {
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
 }
 .fn-marker-active {
-  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
-  color: var(--color-primary);
+  color: white;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 @keyframes translation-rise {
   from {

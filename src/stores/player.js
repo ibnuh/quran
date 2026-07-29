@@ -160,6 +160,8 @@ export const usePlayerStore = defineStore('player', {
     // Per-verse action button visibility (under the verse number).
     verseActions: { bookmark: true, share: true, copy: true, tafsir: true },
     tafsirSource: 169, // quran.com tafsir id (default: Ibn Kathir, abridged, en)
+    // Show clickable footnote markers in the primary translation (when available).
+    showFootnotes: true,
     // Render the traditional end-of-ayah ornament inline instead of the number badge.
     verseEndOrnament: false,
     // Justify the Arabic text block (mushaf style) instead of centering it.
@@ -587,6 +589,11 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    setShowFootnotes(value) {
+      this.showFootnotes = !!value
+      this.savePreferences()
+    },
+
     setVerseEndOrnament(value) {
       this.verseEndOrnament = !!value
       this.savePreferences()
@@ -910,6 +917,7 @@ export const usePlayerStore = defineStore('player', {
             highlightStyle: this.highlightStyle,
             verseActions: this.verseActions,
             tafsirSource: this.tafsirSource,
+            showFootnotes: this.showFootnotes,
             verseEndOrnament: this.verseEndOrnament,
             justifyText: this.justifyText,
             readingMode: this.readingMode,
@@ -999,6 +1007,9 @@ export const usePlayerStore = defineStore('player', {
         }
         if (typeof prefs.tafsirSource === 'number') {
           this.tafsirSource = prefs.tafsirSource
+        }
+        if (prefs.showFootnotes !== undefined) {
+          this.showFootnotes = !!prefs.showFootnotes
         }
         if (prefs.verseEndOrnament !== undefined) {
           this.verseEndOrnament = !!prefs.verseEndOrnament

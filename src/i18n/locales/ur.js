@@ -93,6 +93,8 @@ export default {
     closeTafsir: 'تفسیر بند کریں',
     loadingTafsir: 'تفسیر لوڈ ہو رہی ہے...',
     tafsirError: 'تفسیر لوڈ نہ ہو سکی۔ اپنا رابطہ چیک کریں۔',
+    footnotes: 'حواشی',
+    footnoteList: 'اس آیت کے حواشی',
     shortcuts: 'کی بورڈ شارٹ کٹس',
     closeShortcuts: 'شارٹ کٹس بند کریں',
     shortcutPlay: 'چلائیں / وقفہ',
@@ -132,6 +134,8 @@ export default {
     continuousReading: 'مسلسل پڑھائی',
     continuousReadingHint:
       'تمام آیات اسکرول ہونے والے صفحے میں دکھائیں؛ چلانے کے لیے آیت پر ٹیپ کریں',
+    footnotes: 'ترجمے کے حواشی',
+    footnotesHint: 'دستیاب ہونے پر ترجمے میں کلک کے قابل حاشیہ کے نشانات دکھائیں',
     tajweed: 'تجوید کے رنگ',
     tajweedHint: 'حروف کو تجوید کے قواعد کے مطابق رنگ دیں',
     tajweedUnavailableQcf: 'مصحف (QCF) فونٹ کے ساتھ دستیاب نہیں',

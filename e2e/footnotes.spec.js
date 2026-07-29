@@ -15,7 +15,7 @@ function mockQuranComWithFootnotes(page) {
             text_uthmani: '\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u0650',
             translations: [
               {
-                text: 'In the name of Allah,<sup foot_note=195932>1</sup> the Entirely Merciful.'
+                text: 'In the name of Allah,<sup foot_note=195932>1</sup> the Entirely Merciful.<sup foot_note=195931>2</sup>'
               }
             ]
           },
@@ -67,9 +67,23 @@ function mockQuranComWithFootnotes(page) {
       })
     })
   })
+
+  page.route(/api\.quran\.com\/api\/v4\/foot_notes\/195931/, route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        foot_note: {
+          id: 195931,
+          text: 'Ar-Rahman and Ar-Raheem are two names of Allah derived from mercy.',
+          language_name: 'english'
+        }
+      })
+    })
+  })
 }
 
-test.beforeEach(async ({ page }) => {
+async function startWithSahih(page) {
   mockApi(page)
   mockQuranComWithFootnotes(page)
   await page.goto('/')
@@ -83,37 +97,74 @@ test.beforeEach(async ({ page }) => {
         version: 2,
         translation: 'en.sahih',
         surah: 1,
-        verse: 0
+        verse: 0,
+        showFootnotes: true
       }
     ]
   )
   await page.reload()
   await waitForSurahLoad(page)
-})
+}
 
-test('footnote marker opens a popover with note text', async ({ page }) => {
+test('footnote marker opens a right panel with note text', async ({ page }) => {
+  await startWithSahih(page)
+
   const marker = page.getByRole('button', { name: 'Footnote 1' })
   await expect(marker).toBeVisible()
   await marker.click()
 
-  const dialog = page.getByRole('dialog', { name: /Footnote 1/i })
+  const dialog = page.getByRole('dialog', { name: 'Footnotes' })
   await expect(dialog).toBeVisible()
   await expect(
     dialog.getByText('Allah is a proper name referring to the Lord of all existence.')
   ).toBeVisible()
 })
 
-test('footnote popover can be closed', async ({ page }) => {
+test('footnote panel can switch between notes on the same verse', async ({ page }) => {
+  await startWithSahih(page)
+
   await page.getByRole('button', { name: 'Footnote 1' }).click()
-  const dialog = page.getByRole('dialog', { name: /Footnote 1/i })
+  const dialog = page.getByRole('dialog', { name: 'Footnotes' })
+  await expect(dialog).toBeVisible()
+
+  // Tab list for multi-note verses: select footnote 2.
+  await dialog.getByRole('tab', { name: 'Footnote 2' }).click()
+  await expect(
+    dialog.getByText('Ar-Rahman and Ar-Raheem are two names of Allah derived from mercy.')
+  ).toBeVisible()
+})
+
+test('footnote panel can be closed', async ({ page }) => {
+  await startWithSahih(page)
+
+  await page.getByRole('button', { name: 'Footnote 1' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Footnotes' })
   await expect(dialog).toBeVisible()
   await dialog.getByLabel('Close footnote').click()
   await expect(dialog).toHaveCount(0)
 })
 
 test('verses without footnotes show plain translation', async ({ page }) => {
-  // Navigate to verse 2 (no footnotes in the mock).
+  await startWithSahih(page)
+
   await page.getByRole('button', { name: 'Next verse' }).click()
   await expect(page.getByRole('button', { name: /Footnote/ })).toHaveCount(0)
   await expect(page.locator('.verse-translation')).toContainText('All praise is due to Allah.')
+})
+
+test('footnotes can be disabled in settings', async ({ page }) => {
+  await startWithSahih(page)
+
+  await expect(page.getByRole('button', { name: 'Footnote 1' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  const modal = page.getByRole('dialog', { name: 'Settings' })
+  // Label text includes the hint line, so match by partial text and scroll into view.
+  const footnotesToggle = modal.locator('label', { hasText: 'Translation footnotes' })
+  await footnotesToggle.scrollIntoViewIfNeeded()
+  await footnotesToggle.locator('input[type="checkbox"]').uncheck()
+  await modal.getByLabel('Close settings').click()
+
+  await expect(page.getByRole('button', { name: /Footnote/ })).toHaveCount(0)
+  await expect(page.locator('.verse-translation')).toContainText('In the name of Allah')
 })
