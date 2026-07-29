@@ -106,7 +106,7 @@ async function startWithSahih(page) {
   await waitForSurahLoad(page)
 }
 
-test('footnote marker opens a right panel with note text', async ({ page }) => {
+test('footnote marker opens a sheet with note text', async ({ page }) => {
   await startWithSahih(page)
 
   const marker = page.getByRole('button', { name: 'Footnote 1' })
@@ -115,6 +115,7 @@ test('footnote marker opens a right panel with note text', async ({ page }) => {
 
   const dialog = page.getByRole('dialog', { name: 'Footnotes' })
   await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('Note 1 of 2')
   await expect(
     dialog.getByText('Allah is a proper name referring to the Lord of all existence.')
   ).toBeVisible()
@@ -129,9 +130,14 @@ test('footnote panel can switch between notes on the same verse', async ({ page 
 
   // Tab list for multi-note verses: select footnote 2.
   await dialog.getByRole('tab', { name: 'Footnote 2' }).click()
+  await expect(dialog).toContainText('Note 2 of 2')
   await expect(
     dialog.getByText('Ar-Rahman and Ar-Raheem are two names of Allah derived from mercy.')
   ).toBeVisible()
+
+  // Prev/next chevrons also cycle notes.
+  await dialog.getByLabel('Previous footnote').click()
+  await expect(dialog).toContainText('Note 1 of 2')
 })
 
 test('footnote panel can be closed', async ({ page }) => {
@@ -142,6 +148,16 @@ test('footnote panel can be closed', async ({ page }) => {
   await expect(dialog).toBeVisible()
   await dialog.getByLabel('Close footnote').click()
   await expect(dialog).toHaveCount(0)
+})
+
+test('tapping the same footnote marker again closes the sheet', async ({ page }) => {
+  await startWithSahih(page)
+
+  const marker = page.locator('.fn-marker').filter({ hasText: '1' }).first()
+  await marker.click()
+  await expect(page.getByRole('dialog', { name: 'Footnotes' })).toBeVisible()
+  await marker.click()
+  await expect(page.getByRole('dialog', { name: 'Footnotes' })).toHaveCount(0)
 })
 
 test('verses without footnotes show plain translation', async ({ page }) => {

@@ -27,6 +27,11 @@ const translationSegments = computed(() => {
 })
 
 function openFootnoteAt(segment) {
+  // Toggle closed when the same marker is tapped again.
+  if (openFootnote.value?.id === segment.id) {
+    openFootnote.value = null
+    return
+  }
   openFootnote.value = {
     id: segment.id,
     label: segment.label
@@ -314,6 +319,7 @@ function copyVerse() {
                 :class="{ 'fn-marker-active': openFootnote?.id === seg.id }"
                 :aria-label="$t('verse.footnoteN', { n: seg.label })"
                 :aria-expanded="openFootnote?.id === seg.id ? 'true' : 'false'"
+                :aria-controls="openFootnote?.id === seg.id ? 'footnote-panel' : undefined"
                 :title="$t('verse.footnoteN', { n: seg.label })"
                 @click="openFootnoteAt(seg)"
               >
@@ -467,15 +473,17 @@ function copyVerse() {
 }
 
 .fn-marker {
+  /* Enlarge the hit area without inflating line height. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.25em;
-  min-height: 1.25em;
-  margin-inline: 0.08em;
-  padding: 0.2em 0.35em;
+  min-width: 1.35em;
+  min-height: 1.35em;
+  margin-inline: 0.1em;
+  padding: 0.15em 0.38em;
   vertical-align: super;
-  font-size: 0.7em;
+  font-size: 0.68em;
   font-weight: 700;
   line-height: 1;
   color: var(--color-primary);
@@ -487,11 +495,24 @@ function copyVerse() {
     background 0.15s var(--ease-out),
     color 0.15s var(--ease-out),
     border-color 0.15s var(--ease-out),
-    box-shadow 0.15s var(--ease-out);
+    box-shadow 0.15s var(--ease-out),
+    transform 0.15s var(--ease-out);
+}
+.fn-marker::before {
+  content: '';
+  position: absolute;
+  inset: -0.35em -0.4em;
 }
 .fn-marker:hover {
   background: color-mix(in srgb, var(--color-primary) 20%, transparent);
   border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+.fn-marker:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.fn-marker:active {
+  transform: scale(0.94);
 }
 .fn-marker-active {
   color: white;
