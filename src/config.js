@@ -4,6 +4,8 @@
 // -- Persistence --
 export const STORAGE_KEY = 'quran-player-prefs'
 export const TIP_DISMISSED_KEY = 'quran-tip-dismissed'
+// One-time “what's new” banners for returning users (key includes feature id).
+export const FOOTNOTES_ANNOUNCED_KEY = 'quran-footnotes-announced'
 // Bump when the persisted preferences shape changes in a non-additive way.
 export const PREFS_VERSION = 2
 

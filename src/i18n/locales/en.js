@@ -184,6 +184,13 @@ export default {
     enable: 'Enable',
     dismiss: 'Dismiss'
   },
+  feature: {
+    footnotesTitle: 'New: translation footnotes',
+    footnotesBody:
+      'Some translations (like Saheeh International) now show numbered notes. Tap a marker in the translation to read it. You can turn this off in Settings.',
+    gotIt: 'Got it',
+    dismiss: 'Dismiss'
+  },
   errors: {
     notFoundAudio: 'Audio is unavailable for this reciter and surah.',
     notFoundText: 'This surah or translation could not be found.',

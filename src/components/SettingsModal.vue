@@ -79,6 +79,7 @@ function resetSettings() {
     localStorage.removeItem('quran-player-prefs')
     localStorage.removeItem('quran-tip-dismissed')
     localStorage.removeItem('quran-pwa-install-dismissed')
+    localStorage.removeItem('quran-footnotes-announced')
     window.location.reload()
   }
 }

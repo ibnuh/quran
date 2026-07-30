@@ -2,6 +2,7 @@
 import { onErrorCaptured, ref, defineAsyncComponent } from 'vue'
 import UpdatePrompt from './components/UpdatePrompt.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
+import FeatureAnnouncement from './components/FeatureAnnouncement.vue'
 
 // Debug overlay is a dev-only tool. Gating on import.meta.env.DEV means the dynamic
 // import lives in a dead branch in production, so Rollup drops the chunk entirely
@@ -64,6 +65,7 @@ function reload() {
 
   <UpdatePrompt />
   <InstallPrompt />
+  <FeatureAnnouncement />
   <component :is="DebugPanel" v-if="showDebug && DebugPanel" />
 
   <!-- Screen reader announcements -->
