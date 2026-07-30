@@ -70,8 +70,17 @@ const props = defineProps({
   currentTimeMs: { type: Number, default: 0 },
   durationMs: { type: Number, default: 0 },
   sleepMinutes: { type: Number, default: 0 },
-  sleepRemainingMs: { type: Number, default: 0 }
+  sleepRemainingMs: { type: Number, default: 0 },
+  // Read mode: hide progress/seek/speed/tools, keep nav + play.
+  compact: { type: Boolean, default: false }
 })
+
+const canPlay = computed(
+  () =>
+    !store.audioUnavailable &&
+    !!store.playbackMode &&
+    (store.playbackMode === 'full' ? !!store.audioUrl : store.audioUrls.length > 0)
+)
 
 const emit = defineEmits([
   'toggle-play',
@@ -137,8 +146,10 @@ function clearRepeat() {
 <template>
   <div
     class="px-4 sm:px-12 pb-1 pt-3 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]"
+    :class="{ 'pt-2 pb-2': compact }"
   >
     <ProgressBar
+      v-if="!compact"
       :progress="progress"
       :buffered="buffered"
       :current-time-ms="currentTimeMs"
@@ -146,10 +157,14 @@ function clearRepeat() {
       @seek="emit('seek', $event)"
     />
 
-    <div class="grid grid-cols-[1fr_auto_1fr] items-center mt-1 landscape-compact:mt-1">
+    <div
+      class="grid grid-cols-[1fr_auto_1fr] items-center landscape-compact:mt-1"
+      :class="compact ? 'mt-0' : 'mt-1'"
+    >
       <!-- Left group: repeat utility on the edge, navigation hugging Play -->
       <div class="flex items-center justify-between gap-1 sm:gap-2 min-w-0">
         <button
+          v-if="!compact"
           class="flex ctrl-btn"
           :class="store.repeatMode !== 'none' ? 'text-primary!' : ''"
           :aria-label="$t('controls.cycleRepeat')"
@@ -174,6 +189,7 @@ function clearRepeat() {
                 : $t('controls.repeatSurah')
           }}</span>
         </button>
+        <span v-else class="w-8 shrink-0" aria-hidden="true"></span>
 
         <div class="flex items-center gap-1 sm:gap-2">
           <button
@@ -204,8 +220,11 @@ function clearRepeat() {
 
       <!-- Center: Play button -->
       <button
-        class="play-btn w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 cursor-pointer shrink-0"
+        class="play-btn w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 shrink-0"
+        :class="canPlay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'"
+        :disabled="!canPlay && !isPlaying"
         :aria-label="isPlaying ? $t('controls.pause') : $t('controls.play')"
+        :title="!canPlay && !isPlaying ? $t('controls.audioUnavailable') : undefined"
         @click="emit('toggle-play')"
       >
         <Transition name="play-icon" mode="out-in">
@@ -255,7 +274,7 @@ function clearRepeat() {
 
         <div class="flex items-center gap-1 sm:gap-2">
           <!-- Speed -->
-          <div class="relative speed-wrapper">
+          <div v-if="!compact" class="relative speed-wrapper">
             <button
               class="flex ctrl-btn"
               :class="store.playbackSpeed !== 1 ? 'text-primary!' : ''"
@@ -291,7 +310,7 @@ function clearRepeat() {
           </div>
 
           <!-- Tools: volume, sleep timer, A-B repeat -->
-          <div class="relative tools-wrapper">
+          <div v-if="!compact" class="relative tools-wrapper">
             <button
               class="flex ctrl-btn"
               :class="toolsActive ? 'text-primary!' : ''"
@@ -401,8 +420,11 @@ function clearRepeat() {
     </div>
 
     <div
-      class="text-center mt-2 mb-3 landscape-compact:hidden"
-      :class="store.currentVerse ? '' : 'invisible'"
+      class="text-center landscape-compact:hidden"
+      :class="[
+        compact ? 'mt-1 mb-1' : 'mt-2 mb-3',
+        store.currentVerse ? '' : 'invisible'
+      ]"
     >
       <div class="relative inline-flex items-center gap-1 jump-verse-input-wrapper">
         <button

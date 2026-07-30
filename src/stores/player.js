@@ -168,6 +168,10 @@ export const usePlayerStore = defineStore('player', {
     justifyText: false,
     // Continuous reading layout (all verses scrollable) vs single-verse focus.
     readingMode: false,
+    // Read mode: text-first continuous layout, compact player, select without auto-play.
+    readMode: false,
+    // Soft audio failure: text loaded but playback is unavailable for this surah/reciter.
+    audioUnavailable: false,
     // Tajweed coloring (quran.com annotated text); loaded on demand per surah.
     tajweed: false,
     tajweedVerses: [],
@@ -242,26 +246,13 @@ export const usePlayerStore = defineStore('player', {
       this.isLoading = true
       this.error = null
       this.errorKind = null
+      this.audioUnavailable = false
       // Tajweed text, QCF glyphs, and extra translations are surah-specific; reload.
       this.tajweedVerses = []
       this.qcfVerses = []
       this.extraTranslationVerses = []
 
       const reciter = this.currentReciterData
-      if (!reciter) {
-        this.error = 'Unknown reciter selected.'
-        this.errorKind = 'audio'
-        this.isLoading = false
-        return
-      }
-
-      // Check if neither audio source is available
-      if (!reciter.cdnId && !reciter.cloudId) {
-        this.error = 'No audio source available for this reciter.'
-        this.errorKind = 'audio'
-        this.isLoading = false
-        return
-      }
 
       // Check cache first
       const cached = getCachedSurah(
@@ -276,6 +267,7 @@ export const usePlayerStore = defineStore('player', {
         this.audioUrl = cached.audioUrl
         this.verseTimings = cached.verseTimings
         this.audioUrls = cached.audioUrls
+        this.audioUnavailable = !cached.playbackMode
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
         }
@@ -306,11 +298,12 @@ export const usePlayerStore = defineStore('player', {
           error => ({ error })
         )
 
-        // Try full surah audio first, then fall back to per-verse.
+        // Try full surah audio first, then fall back to per-verse. Audio failure is
+        // soft: reading still works without playable audio.
         let audioResult = null
         let audioError = null
 
-        if (reciter.cdnId) {
+        if (reciter?.cdnId) {
           try {
             const data = await fetchSurahAudio(reciter.cdnId, this.currentSurahNum, signal)
             audioResult = {
@@ -328,7 +321,7 @@ export const usePlayerStore = defineStore('player', {
           }
         }
 
-        if (!audioResult && reciter.cloudId) {
+        if (!audioResult && reciter?.cloudId) {
           try {
             const data = await fetchVerseAudio(reciter.cloudId, this.currentSurahNum, signal)
             audioResult = {
@@ -346,18 +339,19 @@ export const usePlayerStore = defineStore('player', {
           }
         }
 
+        if (!audioResult && !reciter) {
+          audioError = new Error('Unknown reciter selected.')
+        } else if (!audioResult && reciter && !reciter.cdnId && !reciter.cloudId) {
+          audioError = new Error('No audio source available for this reciter.')
+        }
+
         const { data: textData, error: textError } = await textSettled
 
         if (signal.aborted) {
           return
         }
 
-        if (!audioResult) {
-          this.error = errorMessageFor(audioError, { isAudio: true })
-          this.errorKind = 'audio'
-          return
-        }
-
+        // Text is required; audio is optional so pure reading still works offline-ish.
         if (textError) {
           this.error = errorMessageFor(textError, { isAudio: false })
           this.errorKind = 'text'
@@ -366,10 +360,23 @@ export const usePlayerStore = defineStore('player', {
 
         this.verses = textData.verses
         this.translationVerses = textData.translationVerses
-        this.playbackMode = audioResult.mode
-        this.audioUrl = audioResult.audioUrl
-        this.verseTimings = audioResult.verseTimings
-        this.audioUrls = audioResult.audioUrls
+
+        if (audioResult) {
+          this.playbackMode = audioResult.mode
+          this.audioUrl = audioResult.audioUrl
+          this.verseTimings = audioResult.verseTimings
+          this.audioUrls = audioResult.audioUrls
+          this.audioUnavailable = false
+        } else {
+          this.playbackMode = null
+          this.audioUrl = null
+          this.verseTimings = []
+          this.audioUrls = []
+          this.audioUnavailable = true
+          // Keep a soft message available for play attempts; do not block the UI.
+          void audioError
+        }
+
         this.errorKind = null
 
         if (this.currentVerseIndex >= this.verses.length) {
@@ -377,14 +384,14 @@ export const usePlayerStore = defineStore('player', {
         }
         this.computeWordCounts()
 
-        // Cache the result
+        // Cache the result (including text-only loads so re-entry stays instant).
         cacheSurah(this.currentSurahNum, this.currentTranslation, this.currentReciter, {
           verses: textData.verses,
           translationVerses: textData.translationVerses,
-          playbackMode: audioResult.mode,
-          audioUrl: audioResult.audioUrl,
-          verseTimings: audioResult.verseTimings,
-          audioUrls: audioResult.audioUrls
+          playbackMode: this.playbackMode,
+          audioUrl: this.audioUrl,
+          verseTimings: this.verseTimings,
+          audioUrls: this.audioUrls
         })
 
         if (this.tajweed) {
@@ -606,6 +613,15 @@ export const usePlayerStore = defineStore('player', {
 
     setReadingMode(value) {
       this.readingMode = !!value
+      this.savePreferences()
+    },
+
+    setReadMode(value) {
+      this.readMode = !!value
+      // Read mode always uses the continuous list layout.
+      if (this.readMode) {
+        this.readingMode = true
+      }
       this.savePreferences()
     },
 
@@ -921,6 +937,7 @@ export const usePlayerStore = defineStore('player', {
             verseEndOrnament: this.verseEndOrnament,
             justifyText: this.justifyText,
             readingMode: this.readingMode,
+            readMode: this.readMode,
             tajweed: this.tajweed,
             mushafMode: this.mushafMode,
             repeatMode: this.repeatMode,
@@ -1019,6 +1036,12 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.readingMode !== undefined) {
           this.readingMode = !!prefs.readingMode
+        }
+        if (prefs.readMode !== undefined) {
+          this.readMode = !!prefs.readMode
+          if (this.readMode) {
+            this.readingMode = true
+          }
         }
         if (prefs.tajweed !== undefined) {
           this.tajweed = !!prefs.tajweed

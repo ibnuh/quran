@@ -78,11 +78,17 @@ const {
   handlePrevSurah,
   handleNextSurah,
   handleVerseSelect,
+  playFromVerse,
   handleJumpToVerse,
   handleGoToBookmark,
   handleSeek,
   handleSetSpeed
 } = playback
+
+// Read mode and continuous reading both use the multi-verse scroll layout.
+const useReadingLayout = computed(
+  () => store.readMode || store.readingMode
+)
 
 useWordHighlight(store, audio, announce)
 useWakeLock(audio.isPlaying)
@@ -102,14 +108,18 @@ const {
   onRootTouchEnd
 } = useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, controlsRef })
 
-// In reading mode, tapping the already-active verse toggles the controls (an easy way
-// to reveal/hide them); tapping any other verse selects and plays it.
+// Continuous layout: tap inactive verse selects it (and plays in listen mode).
+// Tap active verse toggles chrome. In read mode, selection never auto-plays.
 function onReadingSelect(i) {
   if (i === store.currentVerseIndex) {
     toggleControls()
-  } else {
-    handleVerseSelect(i)
+    return
   }
+  handleVerseSelect(i, { play: !store.readMode })
+}
+
+function onPlayFromHere(i) {
+  playFromVerse(i)
 }
 
 // -- Mobile tip --
@@ -321,12 +331,12 @@ onMounted(async () => {
       @click="onMainClick"
     >
       <VerseDisplay
-        v-if="!store.readingMode || store.isLoading || store.error || !store.totalVerses"
+        v-if="!useReadingLayout || store.isLoading || store.error || !store.totalVerses"
         class="mx-auto"
         @retry="store.loadSurah()"
         @open-tafsir="showTafsir = true"
       />
-      <ReadingView v-else @select="onReadingSelect" />
+      <ReadingView v-else @select="onReadingSelect" @play-from="onPlayFromHere" />
     </main>
 
     <div
@@ -351,6 +361,7 @@ onMounted(async () => {
         :duration-ms="audio.duration.value"
         :sleep-minutes="sleepTimer.activeMinutes.value"
         :sleep-remaining-ms="sleepTimer.remainingMs.value"
+        :compact="store.readMode"
         @toggle-play="togglePlay"
         @prev-verse="handlePrevVerse"
         @next-verse="handleNextVerse"

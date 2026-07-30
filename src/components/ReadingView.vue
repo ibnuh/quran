@@ -4,7 +4,7 @@ import { usePlayerStore } from '../stores/player.js'
 import VerseArabic from './VerseArabic.vue'
 
 const store = usePlayerStore()
-const emit = defineEmits(['select'])
+const emit = defineEmits(['select', 'play-from'])
 const rowsRef = ref(null)
 
 // Reading rows use a slightly smaller Arabic size; alignment follows the justify setting.
@@ -17,6 +17,18 @@ const readingStyle = computed(() => ({
   textAlign: justify.value ? 'justify' : 'right',
   textAlignLast: justify.value ? 'right' : 'auto'
 }))
+
+const canPlay = computed(
+  () =>
+    !store.audioUnavailable &&
+    !!store.playbackMode &&
+    (store.playbackMode === 'full' ? !!store.audioUrl : store.audioUrls.length > 0)
+)
+
+// Bismillah for the surah header (not tied to current verse index).
+const showSurahBismillah = computed(
+  () => store.currentSurahNum !== 1 && store.currentSurahNum !== 9
+)
 
 function scrollToActive(smooth = true) {
   const el = rowsRef.value?.querySelector('.reading-row-active')
@@ -41,7 +53,7 @@ onMounted(() => nextTick(() => scrollToActive(false)))
 <template>
   <div ref="rowsRef" class="w-full max-w-3xl mx-auto py-2">
     <p
-      v-if="store.showBismillah"
+      v-if="showSurahBismillah"
       class="text-center text-accent mb-6 text-xl sm:text-2xl"
       dir="rtl"
       lang="ar"
@@ -50,29 +62,52 @@ onMounted(() => nextTick(() => scrollToActive(false)))
       {{ 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ' }}
     </p>
 
-    <button
+    <div
       v-for="(verse, i) in store.verses"
       :key="i"
-      type="button"
-      class="reading-row w-full text-right rounded-xl px-4 py-4 mb-2 cursor-pointer transition-colors"
+      class="reading-row w-full text-right rounded-xl px-4 py-4 mb-2 transition-colors"
       :class="i === store.currentVerseIndex ? 'reading-row-active bg-primary/10' : 'hover:bg-card'"
       :aria-current="i === store.currentVerseIndex ? 'true' : undefined"
-      @click="emit('select', i)"
     >
-      <VerseArabic :index="i" :p-style="readingStyle">
-        <template #trailing>
-          <span class="reading-ayah-num"
-            ><span class="reading-ayah-num-inner">{{ verse.number }}</span></span
-          >
-        </template>
-      </VerseArabic>
-      <p
-        class="text-muted font-light mt-2 text-left leading-relaxed"
-        :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
+      <button
+        type="button"
+        class="w-full text-right cursor-pointer"
+        :aria-label="$t('reading.selectVerse', { n: verse.number })"
+        @click="emit('select', i)"
       >
-        {{ store.translationVerses[i]?.text }}
-      </p>
-    </button>
+        <VerseArabic :index="i" :p-style="readingStyle">
+          <template #trailing>
+            <span class="reading-ayah-num"
+              ><span class="reading-ayah-num-inner">{{ verse.number }}</span></span
+            >
+          </template>
+        </VerseArabic>
+        <p
+          class="text-muted font-light mt-2 text-left leading-relaxed"
+          :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
+        >
+          {{ store.translationVerses[i]?.text }}
+        </p>
+      </button>
+
+      <!-- Read mode: optional play from the focused verse -->
+      <div
+        v-if="store.readMode && i === store.currentVerseIndex && canPlay"
+        class="mt-2.5 flex justify-start"
+      >
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 px-3 py-1.5 rounded-full cursor-pointer transition-colors"
+          :aria-label="$t('reading.playFromHere')"
+          @click.stop="emit('play-from', i)"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          {{ $t('reading.playFromHere') }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 

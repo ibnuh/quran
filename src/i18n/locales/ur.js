@@ -51,6 +51,7 @@ export default {
     setB: 'ب مقرر کریں',
     clear: 'صاف کریں',
     sleepTimer: 'سلیپ ٹائمر',
+    audioUnavailable: 'اس سورہ کے لیے آڈیو دستیاب نہیں',
     verseOf: 'آیت {current} از {total}',
     jumpToVerse: 'آیت پر جائیں',
     goTo: 'جائیں',
@@ -136,9 +137,13 @@ export default {
     highlightStyle: 'نمایاں کرنے کا انداز',
     animations: 'اینیمیشنز',
     animationsHint: 'ٹرانزیشنز اور اینیمیشنز فعال کریں',
+    readMode: 'پڑھنے کا موڈ',
+    readModeHint:
+      'پڑھائی پر توجہ: مسلسل آیات، چھوٹا پلیئر، اور بغیر خودکار چلائے منتخب کرنے کے لیے ٹیپ',
     continuousReading: 'مسلسل پڑھائی',
     continuousReadingHint:
       'تمام آیات اسکرول ہونے والے صفحے میں دکھائیں؛ چلانے کے لیے آیت پر ٹیپ کریں',
+    continuousReadingForcedByRead: 'پڑھنے کے موڈ میں ہمیشہ آن رہتا ہے',
     footnotes: 'ترجمے کے حواشی',
     footnotesHint: 'دستیاب ہونے پر ترجمے میں کلک کے قابل حاشیہ کے نشانات دکھائیں',
     tajweed: 'تجوید کے رنگ',
@@ -184,6 +189,10 @@ export default {
     enableAutoHide: 'خودکار چھپانا فعال کریں',
     enable: 'فعال کریں',
     dismiss: 'برخاست'
+  },
+  reading: {
+    selectVerse: 'آیت {n} منتخب کریں',
+    playFromHere: 'یہاں سے چلائیں'
   },
   feature: {
     footnotesTitle: 'نیا: ترجمے کے حواشی',

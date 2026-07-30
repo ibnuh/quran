@@ -547,9 +547,21 @@ function onLanguageChange(code) {
                 @update:model-value="store.setAnimations($event)"
               />
               <ToggleRow
+                :label="$t('settings.readMode')"
+                :hint="$t('settings.readModeHint')"
+                :model-value="store.readMode"
+                @update:model-value="store.setReadMode($event)"
+              />
+              <ToggleRow
                 :label="$t('settings.continuousReading')"
-                :hint="$t('settings.continuousReadingHint')"
+                :hint="
+                  store.readMode
+                    ? $t('settings.continuousReadingForcedByRead')
+                    : $t('settings.continuousReadingHint')
+                "
                 :model-value="store.readingMode"
+                :disabled="store.readMode"
+                :disabled-reason="$t('settings.continuousReadingForcedByRead')"
                 @update:model-value="store.setReadingMode($event)"
               />
               <ToggleRow

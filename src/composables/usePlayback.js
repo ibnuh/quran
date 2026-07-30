@@ -51,10 +51,23 @@ export function usePlayback(store, audio) {
     }
   )
 
+  function hasPlayableAudio() {
+    if (store.audioUnavailable || !store.playbackMode) {
+      return false
+    }
+    if (store.playbackMode === 'full') {
+      return !!store.audioUrl
+    }
+    return store.audioUrls.length > 0
+  }
+
   // -- Controls --
   function togglePlay() {
     if (audio.isPlaying.value) {
       audio.pause()
+      return
+    }
+    if (!hasPlayableAudio()) {
       return
     }
     if (store.playbackMode === 'full' && store.audioUrl) {
@@ -101,8 +114,14 @@ export function usePlayback(store, audio) {
     store.nextSurah()
   }
 
-  function handleVerseSelect(index) {
+  // Select a verse. By default starts (or continues) playback.
+  // Pass { play: false } for read-mode focus without auto-play.
+  function handleVerseSelect(index, options = {}) {
+    const play = options.play !== false
     store.setVerse(index)
+    if (!play || !hasPlayableAudio()) {
+      return
+    }
     if (store.playbackMode === 'full') {
       const timing = store.verseTimings[index]
       if (timing) {
@@ -115,6 +134,11 @@ export function usePlayback(store, audio) {
       audio.loadAndPlay(store.audioUrls[index])
       preloadAhead()
     }
+  }
+
+  // Start playback from the current (or given) verse. Used by Read mode "Play from here".
+  function playFromVerse(index = store.currentVerseIndex) {
+    handleVerseSelect(index, { play: true })
   }
 
   function handleJumpToVerse(index) {
@@ -298,12 +322,14 @@ export function usePlayback(store, audio) {
   return {
     continuingPlayback,
     preloadAhead,
+    hasPlayableAudio,
     togglePlay,
     handlePrevVerse,
     handleNextVerse,
     handlePrevSurah,
     handleNextSurah,
     handleVerseSelect,
+    playFromVerse,
     handleJumpToVerse,
     handleGoToBookmark,
     handleSeek,

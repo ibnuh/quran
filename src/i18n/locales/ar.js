@@ -51,6 +51,7 @@ export default {
     setB: 'تعيين ب',
     clear: 'مسح',
     sleepTimer: 'مؤقت النوم',
+    audioUnavailable: 'الصوت غير متوفر لهذه السورة',
     verseOf: 'الآية {current} من {total}',
     jumpToVerse: 'الانتقال إلى آية',
     goTo: 'انتقل إلى',
@@ -136,8 +137,12 @@ export default {
     highlightStyle: 'نمط التظليل',
     animations: 'الحركات',
     animationsHint: 'تفعيل الانتقالات والحركات',
+    readMode: 'وضع القراءة',
+    readModeHint:
+      'التركيز على القراءة: آيات متواصلة، مشغّل مضغوط، والنقر للتحديد دون تشغيل تلقائي',
     continuousReading: 'قراءة متواصلة',
     continuousReadingHint: 'عرض كل الآيات في صفحة قابلة للتمرير؛ انقر على آية للتشغيل',
+    continuousReadingForcedByRead: 'مفعّل دائماً أثناء وضع القراءة',
     footnotes: 'حواشي الترجمة',
     footnotesHint: 'إظهار علامات الحواشي القابلة للنقر في الترجمة عند توفرها',
     tajweed: 'ألوان التجويد',
@@ -183,6 +188,10 @@ export default {
     enableAutoHide: 'تفعيل الإخفاء التلقائي',
     enable: 'تفعيل',
     dismiss: 'تجاهل'
+  },
+  reading: {
+    selectVerse: 'تحديد الآية {n}',
+    playFromHere: 'تشغيل من هنا'
   },
   feature: {
     footnotesTitle: 'جديد: حواشي الترجمة',

@@ -51,6 +51,7 @@ export default {
     setB: 'Set B',
     clear: 'Clear',
     sleepTimer: 'Sleep timer',
+    audioUnavailable: 'Audio is not available for this surah',
     verseOf: 'Verse {current} of {total}',
     jumpToVerse: 'Jump to verse',
     goTo: 'Go to',
@@ -136,8 +137,12 @@ export default {
     highlightStyle: 'Highlight Style',
     animations: 'Animations',
     animationsHint: 'Enable transitions and animations',
+    readMode: 'Read mode',
+    readModeHint:
+      'Focus on reading: continuous verses, compact player, and tap to select without auto-play',
     continuousReading: 'Continuous reading',
     continuousReadingHint: 'Show all verses in a scrollable page; tap a verse to play',
+    continuousReadingForcedByRead: 'Always on while Read mode is enabled',
     footnotes: 'Translation footnotes',
     footnotesHint: 'Show clickable note markers in the translation when available',
     tajweed: 'Tajweed colors',
@@ -183,6 +188,10 @@ export default {
     enableAutoHide: 'Enable Auto-hide',
     enable: 'Enable',
     dismiss: 'Dismiss'
+  },
+  reading: {
+    selectVerse: 'Select verse {n}',
+    playFromHere: 'Play from here'
   },
   feature: {
     footnotesTitle: 'New: translation footnotes',
