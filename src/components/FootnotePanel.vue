@@ -4,7 +4,6 @@ import { usePlayerStore } from '../stores/player.js'
 import { fetchFootnote } from '../services/api.js'
 
 const props = defineProps({
-  // Footnote currently focused in the panel (the one the user clicked).
   footnoteId: { type: Number, required: true },
   label: { type: String, default: '' }
 })
@@ -13,13 +12,16 @@ const emit = defineEmits(['close', 'select'])
 
 const store = usePlayerStore()
 const panelRef = ref(null)
-const listRef = ref(null)
 
 // Non-modal sheet: Esc closes, but Tab is free so markers stay reachable.
 function onKeydown(e) {
   if (e.key === 'Escape') {
     e.stopPropagation()
     emit('close')
+  } else if (e.key === 'ArrowLeft') {
+    goRelative(-1)
+  } else if (e.key === 'ArrowRight') {
+    goRelative(1)
   }
 }
 
@@ -42,7 +44,6 @@ const verseFootnotes = computed(() => {
   if (Array.isArray(list) && list.length) {
     return list
   }
-  // Fallback when the verse list is not yet available.
   return [{ id: props.footnoteId, label: props.label || '1' }]
 })
 
@@ -59,6 +60,8 @@ const activeLabel = computed(() => {
   return match?.label || props.label || String(activeIndex.value + 1)
 })
 
+const activeText = computed(() => bodies.value[activeId.value] || '')
+
 let requestId = 0
 async function loadBodies() {
   const ids = verseFootnotes.value.map(f => f.id).filter(id => Number.isFinite(id))
@@ -66,7 +69,6 @@ async function loadBodies() {
     return
   }
 
-  // Only show the loading spinner when the active note is not cached yet.
   const needActive = !bodies.value[props.footnoteId]
   const req = ++requestId
   if (needActive) {
@@ -132,18 +134,6 @@ function goRelative(delta) {
   selectNote(list[next])
 }
 
-async function scrollActiveIntoView() {
-  await nextTick()
-  const root = listRef.value
-  if (!root) {
-    return
-  }
-  const active = root.querySelector('[data-fn-active="true"]')
-  if (active && typeof active.scrollIntoView === 'function') {
-    active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }
-}
-
 // Close when clicking outside the sheet, but ignore footnote markers so the
 // parent can toggle/switch notes without a race against this handler.
 function onPointerDownOutside(e) {
@@ -166,13 +156,10 @@ function onPointerDownOutside(e) {
 
 onMounted(async () => {
   loadBodies()
-  scrollActiveIntoView()
   document.addEventListener('keydown', onKeydown, true)
-  // Defer so the opening click on the marker does not immediately close the sheet.
   requestAnimationFrame(() => {
     document.addEventListener('pointerdown', onPointerDownOutside, true)
   })
-  // Move focus into the sheet for screen readers without trapping Tab.
   await nextTick()
   panelRef.value?.focus?.()
 })
@@ -182,13 +169,8 @@ onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onPointerDownOutside, true)
 })
 
-// Reload when the focused note changes (bodies for the verse are reused).
-watch(() => props.footnoteId, () => {
-  loadBodies()
-  scrollActiveIntoView()
-})
+watch(() => props.footnoteId, loadBodies)
 
-// Clear and reload when the verse or translation changes.
 watch(
   () => [store.currentVerseIndex, store.currentSurahNum, store.currentTranslation],
   () => {
@@ -210,36 +192,25 @@ watch(
       <div
         ref="panelRef"
         id="footnote-panel"
-        class="fn-sheet pointer-events-auto w-full sm:max-w-lg max-h-[min(55vh,28rem)] flex flex-col shadow-2xl outline-none"
+        class="fn-sheet pointer-events-auto w-full sm:max-w-md max-h-[min(42vh,22rem)] flex flex-col outline-none"
         tabindex="-1"
       >
-        <!-- Grab affordance -->
-        <div class="flex justify-center pt-2.5 pb-1" aria-hidden="true">
-          <div class="w-10 h-1 rounded-full bg-border"></div>
+        <div class="flex justify-center pt-2 pb-0.5" aria-hidden="true">
+          <div class="w-8 h-1 rounded-full bg-border"></div>
         </div>
 
-        <header class="shrink-0 flex items-start justify-between gap-3 px-4 pb-2.5">
-          <div class="min-w-0 flex items-start gap-3">
-            <span class="fn-badge shrink-0 mt-0.5" aria-hidden="true">
-              {{ activeLabel }}
-            </span>
-            <div class="min-w-0">
-              <h3 class="text-sm font-semibold text-body leading-snug">
-                {{ $t('verse.footnoteTitle', { n: activeLabel }) }}
-              </h3>
-              <p class="text-xs text-muted mt-0.5 truncate">
-                <span>{{ verseRef }}</span>
-                <template v-if="hasMultiple">
-                  <span class="mx-1.5 text-border" aria-hidden="true">·</span>
-                  <span>{{
-                    $t('panels.footnoteOf', { current: activeIndex + 1, total: noteCount })
-                  }}</span>
-                </template>
-              </p>
-            </div>
+        <header class="shrink-0 flex items-center gap-2.5 px-3.5 pb-2.5 pt-1">
+          <span class="fn-badge shrink-0" aria-hidden="true">{{ activeLabel }}</span>
+
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium text-body truncate">{{ verseRef }}</p>
+            <p v-if="hasMultiple" class="text-xs text-muted truncate">
+              {{ $t('panels.footnoteOf', { current: activeIndex + 1, total: noteCount }) }}
+            </p>
+            <p v-else class="text-xs text-muted truncate">{{ $t('panels.footnotes') }}</p>
           </div>
 
-          <div class="flex items-center gap-0.5 shrink-0">
+          <div class="flex items-center shrink-0">
             <template v-if="hasMultiple">
               <button
                 type="button"
@@ -277,108 +248,39 @@ watch(
           </div>
         </header>
 
-        <!-- Quick jump pills when the verse has more than one note -->
-        <div
-          v-if="hasMultiple"
-          class="shrink-0 flex flex-wrap gap-1.5 px-4 pb-2.5"
-          role="tablist"
-          :aria-label="$t('panels.footnoteList')"
-        >
-          <button
-            v-for="fn in verseFootnotes"
-            :key="fn.id"
-            type="button"
-            role="tab"
-            class="fn-tab"
-            :class="{ 'fn-tab-active': fn.id === activeId }"
-            :aria-selected="fn.id === activeId"
-            :aria-label="$t('verse.footnoteN', { n: fn.label })"
-            @click="selectNote(fn)"
-          >
-            {{ fn.label }}
-          </button>
-        </div>
+        <div class="fn-divider mx-3.5" aria-hidden="true"></div>
 
-        <div class="fn-divider mx-4" aria-hidden="true"></div>
-
-        <div ref="listRef" class="flex-1 overflow-y-auto overscroll-contain px-4 py-3.5 min-h-0">
+        <div class="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 min-h-0">
           <div
-            v-if="loading && !bodies[activeId]"
-            class="py-5 space-y-2.5"
+            v-if="loading && !activeText"
+            class="py-3 space-y-2"
             role="status"
             :aria-label="$t('verse.loadingFootnote')"
           >
             <div class="fn-skeleton h-3 w-full rounded"></div>
-            <div class="fn-skeleton h-3 w-[92%] rounded"></div>
-            <div class="fn-skeleton h-3 w-[78%] rounded"></div>
+            <div class="fn-skeleton h-3 w-[90%] rounded"></div>
+            <div class="fn-skeleton h-3 w-[72%] rounded"></div>
             <p class="sr-only">{{ $t('verse.loadingFootnote') }}</p>
           </div>
 
-          <div v-else-if="error && !bodies[activeId]" class="text-center py-5 px-2">
-            <div
-              class="mx-auto mb-3 w-10 h-10 rounded-full bg-surface flex items-center justify-center text-muted"
-              aria-hidden="true"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-                />
-              </svg>
-            </div>
+          <div v-else-if="error && !activeText" class="text-center py-4">
             <p class="text-sm text-muted mb-3">{{ $t('verse.footnoteError') }}</p>
             <button
               type="button"
-              class="bg-primary hover:bg-primary-dark text-white px-5 py-2 rounded-lg text-sm cursor-pointer transition-colors"
+              class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded-lg text-sm cursor-pointer transition-colors"
               @click="loadBodies"
             >
               {{ $t('verse.retry') }}
             </button>
           </div>
 
-          <!-- Multi-note: stacked cards so the whole verse's notes are scannable -->
-          <div v-else-if="hasMultiple" class="space-y-2">
-            <article
-              v-for="fn in verseFootnotes"
-              :key="fn.id"
-              class="fn-card"
-              :class="{ 'fn-card-active': fn.id === activeId }"
-              :data-fn-active="fn.id === activeId ? 'true' : undefined"
-              :aria-current="fn.id === activeId ? 'true' : undefined"
-            >
-              <button
-                type="button"
-                class="fn-card-head"
-                :aria-label="$t('verse.selectFootnote', { n: fn.label })"
-                :aria-expanded="fn.id === activeId"
-                @click="selectNote(fn)"
-              >
-                <span class="fn-card-num" aria-hidden="true">{{ fn.label }}</span>
-                <span class="text-xs font-medium text-muted">
-                  {{ $t('verse.footnoteTitle', { n: fn.label }) }}
-                </span>
-              </button>
-              <div v-if="fn.id === activeId || bodies[fn.id]" class="fn-card-body">
-                <p
-                  v-if="bodies[fn.id]"
-                  class="fn-body text-body leading-relaxed whitespace-pre-wrap"
-                >
-                  {{ bodies[fn.id] }}
-                </p>
-                <p v-else-if="fn.id === activeId && loading" class="fn-body text-muted">
-                  {{ $t('verse.loadingFootnote') }}
-                </p>
-              </div>
-            </article>
-          </div>
-
-          <!-- Single note: clean reading body -->
-          <p v-else class="fn-body text-body leading-relaxed whitespace-pre-wrap">
-            {{ bodies[activeId] }}
+          <p
+            v-else
+            class="fn-body text-body leading-relaxed whitespace-pre-wrap"
+            :key="activeId"
+          >
+            {{ activeText }}
           </p>
-        </div>
-
-        <div class="shrink-0 px-4 pb-3 pt-0.5 text-center">
-          <p class="text-[0.7rem] text-muted/70">{{ $t('panels.dismissHint') }}</p>
         </div>
       </div>
     </div>
@@ -388,11 +290,11 @@ watch(
 <style scoped>
 .fn-sheet {
   background: var(--color-card);
-  border-radius: 1.1rem;
+  border-radius: 1rem;
   border: 1px solid var(--color-border);
   box-shadow:
-    0 -4px 24px color-mix(in srgb, var(--color-body) 8%, transparent),
-    0 12px 40px color-mix(in srgb, var(--color-body) 12%, transparent);
+    0 -2px 16px color-mix(in srgb, var(--color-body) 6%, transparent),
+    0 8px 28px color-mix(in srgb, var(--color-body) 10%, transparent);
 }
 
 .fn-badge {
@@ -400,15 +302,14 @@ watch(
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  height: 1.75rem;
-  min-width: 1.75rem;
+  height: 1.6rem;
+  min-width: 1.6rem;
   padding: 0 0.2rem;
   border-radius: 9999px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: white;
   background: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .fn-icon-btn {
@@ -433,108 +334,14 @@ watch(
   outline-offset: 2px;
 }
 
-.fn-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 2rem;
-  min-width: 2rem;
-  padding: 0 0.2rem;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  cursor: pointer;
-  transition:
-    background 0.15s var(--ease-out, ease),
-    color 0.15s var(--ease-out, ease),
-    border-color 0.15s var(--ease-out, ease),
-    box-shadow 0.15s var(--ease-out, ease);
-}
-.fn-tab:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
-  color: var(--color-body);
-}
-.fn-tab:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-.fn-tab-active {
-  color: white;
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
-}
-
 .fn-divider {
   height: 1px;
   background: var(--color-border);
 }
 
-.fn-card {
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: var(--color-surface);
-  overflow: hidden;
-  transition:
-    border-color 0.15s var(--ease-out, ease),
-    box-shadow 0.15s var(--ease-out, ease),
-    background 0.15s var(--ease-out, ease);
-}
-.fn-card-active {
-  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
-  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-card));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
-}
-.fn-card-head {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  text-align: start;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  color: inherit;
-}
-.fn-card-head:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-.fn-card-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 1.4rem;
-  min-width: 1.4rem;
-  padding: 0 0.15rem;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-}
-.fn-card-active .fn-card-num {
-  color: white;
-  background: var(--color-primary);
-}
-.fn-card-body {
-  padding: 0 0.85rem 0.8rem;
-}
-
 .fn-body {
-  font-size: 0.8125rem; /* 13px – smaller than body translation */
-  line-height: 1.55;
-}
-@media (min-width: 640px) {
-  .fn-body {
-    font-size: 0.875rem; /* 14px */
-  }
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
 .fn-skeleton {
@@ -586,7 +393,7 @@ watch(
 }
 .fn-sheet-enter-from .fn-sheet,
 .fn-sheet-leave-to .fn-sheet {
-  transform: translateY(1rem);
+  transform: translateY(0.75rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

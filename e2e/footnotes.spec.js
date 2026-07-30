@@ -127,15 +127,15 @@ test('footnote panel can switch between notes on the same verse', async ({ page 
   await page.getByRole('button', { name: 'Footnote 1' }).click()
   const dialog = page.getByRole('dialog', { name: 'Footnotes' })
   await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('Note 1 of 2')
 
-  // Tab list for multi-note verses: select footnote 2.
-  await dialog.getByRole('tab', { name: 'Footnote 2' }).click()
+  // Next/prev cycle notes within the verse.
+  await dialog.getByLabel('Next footnote').click()
   await expect(dialog).toContainText('Note 2 of 2')
   await expect(
     dialog.getByText('Ar-Rahman and Ar-Raheem are two names of Allah derived from mercy.')
   ).toBeVisible()
 
-  // Prev/next chevrons also cycle notes.
   await dialog.getByLabel('Previous footnote').click()
   await expect(dialog).toContainText('Note 1 of 2')
 })
