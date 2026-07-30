@@ -85,10 +85,8 @@ const {
   handleSetSpeed
 } = playback
 
-// Read mode and continuous reading both use the multi-verse scroll layout.
-const useReadingLayout = computed(
-  () => store.readMode || store.readingMode
-)
+// Layout is independent of Read/Listen: continuous list vs centered single verse.
+const useReadingLayout = computed(() => store.readingMode)
 
 useWordHighlight(store, audio, announce)
 useWakeLock(audio.isPlaying)
@@ -375,7 +373,11 @@ onMounted(async () => {
     </div>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
-    <VerseList v-if="showVerses" @close="showVerses = false" @select="handleVerseSelect" />
+    <VerseList
+      v-if="showVerses"
+      @close="showVerses = false"
+      @select="i => handleVerseSelect(i, { play: !store.readMode })"
+    />
     <BookmarksPanel
       v-if="showBookmarks"
       @close="showBookmarks = false"

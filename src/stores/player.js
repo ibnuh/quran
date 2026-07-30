@@ -618,10 +618,6 @@ export const usePlayerStore = defineStore('player', {
 
     setReadMode(value) {
       this.readMode = !!value
-      // Read mode always uses the continuous list layout.
-      if (this.readMode) {
-        this.readingMode = true
-      }
       this.savePreferences()
     },
 
@@ -1039,9 +1035,6 @@ export const usePlayerStore = defineStore('player', {
         }
         if (prefs.readMode !== undefined) {
           this.readMode = !!prefs.readMode
-          if (this.readMode) {
-            this.readingMode = true
-          }
         }
         if (prefs.tajweed !== undefined) {
           this.tajweed = !!prefs.tajweed

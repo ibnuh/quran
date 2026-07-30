@@ -552,18 +552,41 @@ function onLanguageChange(code) {
                 :model-value="store.readMode"
                 @update:model-value="store.setReadMode($event)"
               />
-              <ToggleRow
-                :label="$t('settings.continuousReading')"
-                :hint="
-                  store.readMode
-                    ? $t('settings.continuousReadingForcedByRead')
-                    : $t('settings.continuousReadingHint')
-                "
-                :model-value="store.readingMode"
-                :disabled="store.readMode"
-                :disabled-reason="$t('settings.continuousReadingForcedByRead')"
-                @update:model-value="store.setReadingMode($event)"
-              />
+
+              <!-- Layout is independent of Read/Listen so readers can keep a centered verse. -->
+              <div>
+                <label class="block text-sm font-medium text-muted mb-1">{{
+                  $t('settings.readingLayout')
+                }}</label>
+                <p class="text-xs text-muted/60 mb-2">{{ $t('settings.readingLayoutHint') }}</p>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    class="py-2 px-2 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                    :class="
+                      !store.readingMode
+                        ? 'bg-primary text-white'
+                        : 'bg-surface text-body hover:bg-border'
+                    "
+                    @click="store.setReadingMode(false)"
+                  >
+                    {{ $t('settings.layoutSingle') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="py-2 px-2 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                    :class="
+                      store.readingMode
+                        ? 'bg-primary text-white'
+                        : 'bg-surface text-body hover:bg-border'
+                    "
+                    @click="store.setReadingMode(true)"
+                  >
+                    {{ $t('settings.layoutContinuous') }}
+                  </button>
+                </div>
+              </div>
+
               <ToggleRow
                 :label="$t('settings.footnotes')"
                 :hint="$t('settings.footnotesHint')"
