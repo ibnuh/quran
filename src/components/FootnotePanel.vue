@@ -13,15 +13,22 @@ const emit = defineEmits(['close', 'select'])
 const store = usePlayerStore()
 const panelRef = ref(null)
 
-// Non-modal sheet: Esc closes, but Tab is free so markers stay reachable.
+// Non-modal sheet: Esc closes, arrows cycle notes (and must not change verses).
+// Tab is free so markers stay reachable. Capture phase + stopPropagation so global
+// player shortcuts (ArrowLeft/Right for prev/next verse) do not also fire.
 function onKeydown(e) {
   if (e.key === 'Escape') {
+    e.preventDefault()
     e.stopPropagation()
     emit('close')
-  } else if (e.key === 'ArrowLeft') {
-    goRelative(-1)
-  } else if (e.key === 'ArrowRight') {
-    goRelative(1)
+    return
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault()
+    e.stopPropagation()
+    if (hasMultiple.value) {
+      goRelative(e.key === 'ArrowRight' ? 1 : -1)
+    }
   }
 }
 
@@ -183,104 +190,130 @@ watch(
 <template>
   <Transition name="fn-sheet" appear>
     <div
-      class="fn-layer fixed inset-x-0 bottom-0 z-50 flex justify-center pointer-events-none px-3 pb-3 sm:px-4 sm:pb-4"
-      style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px))"
+      class="fn-layer fixed inset-0 z-50 pointer-events-none"
       role="dialog"
       :aria-label="$t('panels.footnotes')"
       aria-modal="false"
     >
+      <!-- Soft dim only. The whole layer is pointer-events-none so markers and the
+           rest of the page stay interactive; close is handled by onPointerDownOutside. -->
+      <div class="fn-backdrop absolute inset-0" aria-hidden="true"></div>
+
       <div
-        ref="panelRef"
-        id="footnote-panel"
-        class="fn-sheet pointer-events-auto w-full sm:max-w-md max-h-[min(42vh,22rem)] flex flex-col outline-none"
-        tabindex="-1"
+        class="fn-sheet-wrap absolute inset-x-0 bottom-0 flex justify-center px-3 pb-3 sm:px-4 sm:pb-4"
+        style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px))"
       >
-        <div class="flex justify-center pt-2 pb-0.5" aria-hidden="true">
-          <div class="w-8 h-1 rounded-full bg-border"></div>
-        </div>
+        <div
+          ref="panelRef"
+          id="footnote-panel"
+          class="fn-sheet pointer-events-auto w-full sm:max-w-md max-h-[min(42vh,22rem)] flex flex-col outline-none"
+          tabindex="-1"
+        >
+          <div class="flex justify-center pt-2 pb-0.5" aria-hidden="true">
+            <div class="w-8 h-1 rounded-full bg-border"></div>
+          </div>
 
-        <header class="shrink-0 flex items-center gap-2.5 px-3.5 pb-2.5 pt-1">
-          <span class="fn-badge shrink-0" aria-hidden="true">{{ activeLabel }}</span>
+          <header class="shrink-0 flex items-center gap-2.5 px-3.5 pb-2.5 pt-1">
+            <span class="fn-badge shrink-0" aria-hidden="true">{{ activeLabel }}</span>
 
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-body truncate">{{ verseRef }}</p>
-            <p v-if="hasMultiple" class="text-xs text-muted truncate">
-              {{ $t('panels.footnoteOf', { current: activeIndex + 1, total: noteCount }) }}
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-body truncate">{{ verseRef }}</p>
+              <p v-if="hasMultiple" class="text-xs text-muted truncate">
+                {{ $t('panels.footnoteOf', { current: activeIndex + 1, total: noteCount }) }}
+              </p>
+              <p v-else class="text-xs text-muted truncate">{{ $t('panels.footnotes') }}</p>
+            </div>
+
+            <div class="flex items-center shrink-0">
+              <template v-if="hasMultiple">
+                <button
+                  type="button"
+                  class="fn-icon-btn"
+                  :aria-label="$t('panels.prevFootnote')"
+                  @click="goRelative(-1)"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="fn-icon-btn"
+                  :aria-label="$t('panels.nextFootnote')"
+                  @click="goRelative(1)"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+                  </svg>
+                </button>
+              </template>
+              <button
+                type="button"
+                class="fn-icon-btn"
+                :aria-label="$t('verse.closeFootnote')"
+                @click="emit('close')"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="fn-divider mx-3.5" aria-hidden="true"></div>
+
+          <div class="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 min-h-0">
+            <div
+              v-if="loading && !activeText"
+              class="py-3 space-y-2"
+              role="status"
+              :aria-label="$t('verse.loadingFootnote')"
+            >
+              <div class="fn-skeleton h-3 w-full rounded"></div>
+              <div class="fn-skeleton h-3 w-[90%] rounded"></div>
+              <div class="fn-skeleton h-3 w-[72%] rounded"></div>
+              <p class="sr-only">{{ $t('verse.loadingFootnote') }}</p>
+            </div>
+
+            <div v-else-if="error && !activeText" class="text-center py-4">
+              <p class="text-sm text-muted mb-3">{{ $t('verse.footnoteError') }}</p>
+              <button
+                type="button"
+                class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded-lg text-sm cursor-pointer transition-colors"
+                @click="loadBodies"
+              >
+                {{ $t('verse.retry') }}
+              </button>
+            </div>
+
+            <p
+              v-else
+              class="fn-body text-body leading-relaxed whitespace-pre-wrap"
+              :key="activeId"
+            >
+              {{ activeText }}
             </p>
-            <p v-else class="text-xs text-muted truncate">{{ $t('panels.footnotes') }}</p>
           </div>
-
-          <div class="flex items-center shrink-0">
-            <template v-if="hasMultiple">
-              <button
-                type="button"
-                class="fn-icon-btn"
-                :aria-label="$t('panels.prevFootnote')"
-                @click="goRelative(-1)"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="fn-icon-btn"
-                :aria-label="$t('panels.nextFootnote')"
-                @click="goRelative(1)"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
-                </svg>
-              </button>
-            </template>
-            <button
-              type="button"
-              class="fn-icon-btn"
-              :aria-label="$t('verse.closeFootnote')"
-              @click="emit('close')"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-                />
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        <div class="fn-divider mx-3.5" aria-hidden="true"></div>
-
-        <div class="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 min-h-0">
-          <div
-            v-if="loading && !activeText"
-            class="py-3 space-y-2"
-            role="status"
-            :aria-label="$t('verse.loadingFootnote')"
-          >
-            <div class="fn-skeleton h-3 w-full rounded"></div>
-            <div class="fn-skeleton h-3 w-[90%] rounded"></div>
-            <div class="fn-skeleton h-3 w-[72%] rounded"></div>
-            <p class="sr-only">{{ $t('verse.loadingFootnote') }}</p>
-          </div>
-
-          <div v-else-if="error && !activeText" class="text-center py-4">
-            <p class="text-sm text-muted mb-3">{{ $t('verse.footnoteError') }}</p>
-            <button
-              type="button"
-              class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded-lg text-sm cursor-pointer transition-colors"
-              @click="loadBodies"
-            >
-              {{ $t('verse.retry') }}
-            </button>
-          </div>
-
-          <p
-            v-else
-            class="fn-body text-body leading-relaxed whitespace-pre-wrap"
-            :key="activeId"
-          >
-            {{ activeText }}
-          </p>
         </div>
       </div>
     </div>
@@ -288,6 +321,11 @@ watch(
 </template>
 
 <style scoped>
+.fn-backdrop {
+  background: color-mix(in srgb, var(--color-body) 18%, transparent);
+  backdrop-filter: blur(1px);
+}
+
 .fn-sheet {
   background: var(--color-card);
   border-radius: 1rem;
@@ -381,6 +419,12 @@ watch(
 .fn-sheet-leave-active {
   transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
+.fn-sheet-enter-active .fn-backdrop {
+  transition: opacity 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.fn-sheet-leave-active .fn-backdrop {
+  transition: opacity 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+}
 .fn-sheet-enter-active .fn-sheet {
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -391,6 +435,10 @@ watch(
 .fn-sheet-leave-to {
   opacity: 0;
 }
+.fn-sheet-enter-from .fn-backdrop,
+.fn-sheet-leave-to .fn-backdrop {
+  opacity: 0;
+}
 .fn-sheet-enter-from .fn-sheet,
 .fn-sheet-leave-to .fn-sheet {
   transform: translateY(0.75rem);
@@ -399,12 +447,17 @@ watch(
 @media (prefers-reduced-motion: reduce) {
   .fn-sheet-enter-active,
   .fn-sheet-leave-active,
+  .fn-sheet-enter-active .fn-backdrop,
+  .fn-sheet-leave-active .fn-backdrop,
   .fn-sheet-enter-active .fn-sheet,
   .fn-sheet-leave-active .fn-sheet {
     transition: none;
   }
   .fn-skeleton {
     animation: none;
+  }
+  .fn-backdrop {
+    backdrop-filter: none;
   }
 }
 </style>

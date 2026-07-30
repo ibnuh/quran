@@ -140,6 +140,35 @@ test('footnote panel can switch between notes on the same verse', async ({ page 
   await expect(dialog).toContainText('Note 1 of 2')
 })
 
+test('arrow keys cycle footnotes without changing the verse', async ({ page }) => {
+  await startWithSahih(page)
+
+  await page.getByRole('button', { name: 'Footnote 1' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Footnotes' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('Note 1 of 2')
+
+  // Stay on verse 1 of Al-Fatiha while cycling notes.
+  await page.keyboard.press('ArrowRight')
+  await expect(dialog).toContainText('Note 2 of 2')
+  await expect(dialog).toBeVisible()
+  await expect(page.locator('.verse-translation')).toContainText('In the name of Allah')
+
+  await page.keyboard.press('ArrowLeft')
+  await expect(dialog).toContainText('Note 1 of 2')
+  await expect(page.locator('.verse-translation')).toContainText('In the name of Allah')
+})
+
+test('clicking outside the sheet closes footnotes', async ({ page }) => {
+  await startWithSahih(page)
+
+  await page.getByRole('button', { name: 'Footnote 1' }).click()
+  await expect(page.getByRole('dialog', { name: 'Footnotes' })).toBeVisible()
+  // Backdrop is visual-only; outside clicks hit page content and close via the pointer handler.
+  await page.locator('header').first().click({ position: { x: 8, y: 8 } })
+  await expect(page.getByRole('dialog', { name: 'Footnotes' })).toHaveCount(0)
+})
+
 test('footnote panel can be closed', async ({ page }) => {
   await startWithSahih(page)
 

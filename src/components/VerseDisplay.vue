@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
+import { fetchFootnote } from '../services/api.js'
 import VerseArabic from './VerseArabic.vue'
 import FootnotePanel from './FootnotePanel.vue'
 
@@ -26,12 +27,21 @@ const translationSegments = computed(() => {
   return text ? [{ type: 'text', value: text }] : []
 })
 
+// Warm the footnote cache on hover/focus so the sheet opens instantly.
+function prefetchFootnote(segment) {
+  if (!segment?.id || !Number.isFinite(segment.id)) {
+    return
+  }
+  void fetchFootnote(segment.id).catch(() => {})
+}
+
 function openFootnoteAt(segment) {
   // Toggle closed when the same marker is tapped again.
   if (openFootnote.value?.id === segment.id) {
     openFootnote.value = null
     return
   }
+  prefetchFootnote(segment)
   openFootnote.value = {
     id: segment.id,
     label: segment.label
@@ -321,6 +331,8 @@ function copyVerse() {
                 :aria-expanded="openFootnote?.id === seg.id ? 'true' : 'false'"
                 :aria-controls="openFootnote?.id === seg.id ? 'footnote-panel' : undefined"
                 :title="$t('verse.footnoteN', { n: seg.label })"
+                @mouseenter="prefetchFootnote(seg)"
+                @focus="prefetchFootnote(seg)"
                 @click="openFootnoteAt(seg)"
               >
                 {{ seg.label }}
