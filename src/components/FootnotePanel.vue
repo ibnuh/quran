@@ -321,9 +321,11 @@ watch(
 </template>
 
 <style scoped>
+/* Black scrim (same idea as tafsir/settings overlays). Using --color-body washed
+   the screen pale in dark themes because body text is light there. */
 .fn-backdrop {
-  background: color-mix(in srgb, var(--color-body) 18%, transparent);
-  backdrop-filter: blur(1px);
+  background: color-mix(in srgb, #000 40%, transparent);
+  backdrop-filter: blur(2px);
 }
 
 .fn-sheet {
