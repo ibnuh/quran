@@ -24,6 +24,7 @@ const selectedOption = computed(() =>
 const selectedLabel = computed(() =>
   selectedOption.value ? selectedOption.value[props.labelKey] : props.placeholder
 )
+const selectedBadge = computed(() => selectedOption.value?.badge || '')
 
 function fuzzyMatch(text, q) {
   const lower = text.toLowerCase()
@@ -117,7 +118,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     aria-haspopup="listbox"
     @click="open"
   >
-    <span class="truncate" :class="{ 'opacity-60': !selectedOption }">{{ selectedLabel }}</span>
+    <span class="min-w-0 flex-1 flex items-center gap-1.5 truncate">
+      <span class="truncate" :class="{ 'opacity-60': !selectedOption }">{{ selectedLabel }}</span>
+      <span
+        v-if="selectedBadge"
+        class="ss-badge shrink-0"
+        :title="selectedBadge"
+      >{{ selectedBadge }}</span>
+    </span>
     <svg class="shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
       <path d="M7 10l5 5 5-5z" />
     </svg>
@@ -163,7 +171,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
               @click="select(opt)"
               @mouseenter="highlightedIndex = i"
             >
-              <span>{{ opt[labelKey] }}</span>
+              <span class="flex-1 min-w-0 flex items-center gap-2 truncate">
+                <span class="truncate">{{ opt[labelKey] }}</span>
+                <span
+                  v-if="opt.badge"
+                  class="ss-badge shrink-0"
+                  :title="opt.badge"
+                >{{ opt.badge }}</span>
+              </span>
               <svg
                 v-if="opt[valueKey] === modelValue"
                 width="18"
@@ -228,6 +243,22 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 }
 .search-input:focus {
   border-color: var(--color-primary);
+}
+
+.ss-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.4rem;
+  border-radius: 9999px;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  white-space: nowrap;
 }
 
 .option-item {

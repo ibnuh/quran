@@ -2,6 +2,8 @@
 // Markers look like: <sup foot_note=195935>1</sup> or <sup foot_note="177007">1</sup>
 // Other tags (e.g. <i class="s"> on Bridges) are stripped to plain text.
 
+import { FOOTNOTE_QURANCOM_IDS } from '../data/footnoteEditions.js'
+
 const FOOTNOTE_SUP_RE =
   /<sup\b[^>]*\bfoot_note\s*=\s*["']?(\d+)["']?[^>]*>([\s\S]*?)<\/sup>/gi
 
@@ -93,10 +95,20 @@ export function parseTranslationText(html) {
   return { text, segments, footnotes }
 }
 
-// Cloud edition identifiers that have a same-family Quran.com resource with footnotes.
+// Cloud edition identifiers that have a same-family Quran.com resource (often with notes).
+// Prefer close text matches so readers are not surprised by wording changes.
 export const CLOUD_TO_QURANCOM = {
+  // English
   'en.sahih': 20,
-  'en.hilali': 203
+  'en.hilali': 203,
+  // French / Indonesian / Italian / Hausa / Albanian / Urdu
+  'fr.hamidullah': 31,
+  'id.indonesian': 33,
+  'it.piccardo': 153,
+  'ha.gumi': 115,
+  'sq.ahmeti': 88,
+  'ur.jalandhry': 54,
+  'ur.maududi': 97
 }
 
 /**
@@ -116,4 +128,22 @@ export function resolveTranslationSource(identifier) {
     return { kind: 'qurancom', editionId: CLOUD_TO_QURANCOM[id] }
   }
   return { kind: 'cloud', editionId: id }
+}
+
+/**
+ * Whether this catalog identifier is expected to offer translation footnotes.
+ * True for mapped cloud editions and for qdc.* resources known to embed notes.
+ * Coverage varies by verse; the badge means "notes available in this edition", not
+ * "every ayah has a note".
+ */
+export function translationHasFootnotes(identifier) {
+  const id = String(identifier || '')
+  if (id.startsWith('qdc.')) {
+    const num = parseInt(id.slice(4), 10)
+    return Number.isFinite(num) && FOOTNOTE_QURANCOM_IDS.has(num)
+  }
+  if (Object.prototype.hasOwnProperty.call(CLOUD_TO_QURANCOM, id)) {
+    return FOOTNOTE_QURANCOM_IDS.has(CLOUD_TO_QURANCOM[id])
+  }
+  return false
 }

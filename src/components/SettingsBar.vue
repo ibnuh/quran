@@ -5,6 +5,7 @@ import SearchSelect from './SearchSelect.vue'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS from '../data/translations.js'
+import { translationHasFootnotes } from '../utils/translationText.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import { t } from '../i18n/index.js'
 
@@ -27,15 +28,16 @@ const reciterOptions = computed(() => RECITERS.map(r => ({ value: r.id, label: r
 const currentLang = computed(() => {
   const id = store.currentTranslation
   if (id.startsWith('qdc.')) {
-    const t = TRANSLATIONS.find(t => t.identifier === id)
-    return t ? t.language : 'en'
+    const match = TRANSLATIONS.find(tr => tr.identifier === id)
+    return match ? match.language : 'en'
   }
   return id.split('.')[0] || 'en'
 })
 const translationOptions = computed(() =>
-  TRANSLATIONS.filter(t => t.language === currentLang.value).map(t => ({
-    value: t.identifier,
-    label: t.englishName
+  TRANSLATIONS.filter(tr => tr.language === currentLang.value).map(tr => ({
+    value: tr.identifier,
+    label: tr.englishName,
+    badge: translationHasFootnotes(tr.identifier) ? t('settings.footnotesBadge') : ''
   }))
 )
 // "Mushaf (QCF)" lives in the font dropdown: picking it enables mushaf glyph mode,

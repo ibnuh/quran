@@ -148,6 +148,9 @@ export default {
     continuousReadingHint: 'Show all verses in a scrollable page; tap a verse to play',
     footnotes: 'Translation footnotes',
     footnotesHint: 'Show clickable note markers in the translation when available',
+    footnotesBadge: 'Notes',
+    footnotesAvailableHint:
+      'This edition includes footnotes. Tap numbered markers in the translation to read them.',
     tajweed: 'Tajweed colors',
     tajweedHint: 'Color-code letters by pronunciation rule',
     tajweedUnavailableQcf: 'Not available with the mushaf (QCF) font',

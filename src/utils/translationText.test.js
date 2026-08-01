@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { parseTranslationText, resolveTranslationSource, CLOUD_TO_QURANCOM } from './translationText.js'
+import {
+  parseTranslationText,
+  resolveTranslationSource,
+  translationHasFootnotes,
+  CLOUD_TO_QURANCOM
+} from './translationText.js'
 
 describe('parseTranslationText', () => {
   it('returns plain text unchanged when there is no HTML', () => {
@@ -77,9 +82,34 @@ describe('resolveTranslationSource', () => {
 
   it('keeps unmapped cloud editions on the cloud API', () => {
     expect(resolveTranslationSource('en.itani')).toEqual({ kind: 'cloud', editionId: 'en.itani' })
-    expect(resolveTranslationSource('ur.jalandhry')).toEqual({
+    expect(resolveTranslationSource('en.pickthall')).toEqual({
       kind: 'cloud',
-      editionId: 'ur.jalandhry'
+      editionId: 'en.pickthall'
     })
+  })
+
+  it('routes additional mapped cloud editions to quran.com', () => {
+    expect(resolveTranslationSource('fr.hamidullah')).toEqual({
+      kind: 'qurancom',
+      editionId: 31
+    })
+    expect(resolveTranslationSource('ur.jalandhry')).toEqual({
+      kind: 'qurancom',
+      editionId: 54
+    })
+  })
+})
+
+describe('translationHasFootnotes', () => {
+  it('is true for Saheeh and known qdc note editions', () => {
+    expect(translationHasFootnotes('en.sahih')).toBe(true)
+    expect(translationHasFootnotes('qdc.54')).toBe(true)
+    expect(translationHasFootnotes('qdc.20')).toBe(true)
+  })
+
+  it('is false for plain cloud editions without a note-capable twin', () => {
+    expect(translationHasFootnotes('en.itani')).toBe(false)
+    expect(translationHasFootnotes('en.pickthall')).toBe(false)
+    expect(translationHasFootnotes('qdc.84')).toBe(false)
   })
 })

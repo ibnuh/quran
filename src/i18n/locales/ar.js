@@ -148,6 +148,9 @@ export default {
     continuousReadingHint: 'عرض كل الآيات في صفحة قابلة للتمرير؛ انقر على آية للتشغيل',
     footnotes: 'حواشي الترجمة',
     footnotesHint: 'إظهار علامات الحواشي القابلة للنقر في الترجمة عند توفرها',
+    footnotesBadge: 'حواشٍ',
+    footnotesAvailableHint:
+      'تتضمن هذه الترجمة حواشي. انقر على العلامات المرقّمة في الترجمة لقراءتها.',
     tajweed: 'ألوان التجويد',
     tajweedHint: 'تلوين الحروف حسب أحكام التجويد',
     tajweedUnavailableQcf: 'غير متاح مع خط المصحف (QCF)',

@@ -7,6 +7,7 @@ import ToggleRow from './ToggleRow.vue'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import TRANSLATIONS, { LANGUAGES } from '../data/translations.js'
+import { translationHasFootnotes } from '../utils/translationText.js'
 import ARABIC_FONTS from '../data/fonts.js'
 import THEMES from '../data/themes.js'
 import { TAJWEED_RULES, tajweedColor } from '../utils/arabicText.js'
@@ -107,21 +108,32 @@ const languageOptions = computed(() =>
     label: l.name
   }))
 )
+const footnotesBadge = computed(() => t('settings.footnotesBadge'))
+
 const translationOptions = computed(() =>
-  TRANSLATIONS.filter(t => t.language === selectedLanguage.value).map(t => ({
-    value: t.identifier,
-    label: t.englishName
+  TRANSLATIONS.filter(tr => tr.language === selectedLanguage.value).map(tr => ({
+    value: tr.identifier,
+    label: tr.englishName,
+    badge: translationHasFootnotes(tr.identifier) ? footnotesBadge.value : ''
   }))
 )
 // Extra translations are alquran.cloud editions (quran.com qdc.* are excluded), and
 // exclude the current primary and any already added.
 const extraTranslationOptions = computed(() =>
   TRANSLATIONS.filter(
-    t =>
-      !t.identifier.startsWith('qdc.') &&
-      t.identifier !== store.currentTranslation &&
-      !store.extraTranslations.includes(t.identifier)
-  ).map(t => ({ value: t.identifier, label: `${t.englishName} (${t.language})` }))
+    tr =>
+      !tr.identifier.startsWith('qdc.') &&
+      tr.identifier !== store.currentTranslation &&
+      !store.extraTranslations.includes(tr.identifier)
+  ).map(tr => ({
+    value: tr.identifier,
+    label: `${tr.englishName} (${tr.language})`,
+    badge: translationHasFootnotes(tr.identifier) ? footnotesBadge.value : ''
+  }))
+)
+
+const currentTranslationHasFootnotes = computed(() =>
+  translationHasFootnotes(store.currentTranslation)
 )
 const extraTranslationChips = computed(() =>
   store.extraTranslations.map(id => {
@@ -283,6 +295,12 @@ function onLanguageChange(code) {
                 :placeholder="$t('settings.searchTranslation')"
                 @update:model-value="store.setTranslation($event)"
               />
+              <p
+                v-if="currentTranslationHasFootnotes"
+                class="text-xs text-muted/70 mt-1.5 leading-relaxed"
+              >
+                {{ $t('settings.footnotesAvailableHint') }}
+              </p>
             </div>
             <div>
               <label class="block text-sm font-medium text-muted mb-1.5">{{
