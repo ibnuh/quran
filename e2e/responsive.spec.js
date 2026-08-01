@@ -37,6 +37,7 @@ test('wide screens keep the centered surah title', async ({ page }) => {
 test('a long verse is not clipped at the top on small screens', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 })
   // Override with a tall verse that exceeds the viewport height.
+  // Default locale uses en.sahih → quran.com, so both text APIs must return the long ayah.
   const longText = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ '.repeat(14).trim()
   await page.route(/api\.alquran\.cloud\/v1\/surah/, route => {
     route.fulfill({
@@ -47,6 +48,21 @@ test('a long verse is not clipped at the top on small screens', async ({ page })
         data: [
           { edition: { identifier: 'quran-uthmani' }, ayahs: [{ numberInSurah: 1, text: longText }] },
           { edition: { identifier: 'en.itani' }, ayahs: [{ numberInSurah: 1, text: 'A long verse.' }] }
+        ]
+      })
+    })
+  })
+  await page.route(/api\.quran\.com\/api\/v4\/verses\/by_chapter\//, route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        verses: [
+          {
+            verse_number: 1,
+            text_uthmani: longText,
+            translations: [{ text: 'A long verse.' }]
+          }
         ]
       })
     })

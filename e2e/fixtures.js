@@ -27,6 +27,32 @@ export function mockApi(page) {
     })
   })
 
+  // Mock quran.com (default English is en.sahih, which routes here). Keep text stable
+  // so tests do not depend on the live network.
+  page.route(/api\.quran\.com\/api\/v4\/verses\/by_chapter\//, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        verses: Array.from({ length: 7 }, (_, i) => ({
+          verse_number: i + 1,
+          text_uthmani: `\u0622\u064A\u064E\u0629\u064F \u0627\u0644\u0652\u0622\u064A\u064E\u0629\u0650 ${i + 1}`,
+          translations: [{ text: `This is verse ${i + 1}` }]
+        }))
+      })
+    })
+  })
+
+  page.route(/api\.quran\.com\/api\/v4\/foot_notes\//, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        foot_note: { id: 1, text: 'Mock footnote.', language_name: 'english' }
+      })
+    })
+  })
+
   // Mock qurancdn.com: /api/qdc/audio/reciters/{id}/audio_files?chapter={n}&segments=true
   page.route(/api\.qurancdn\.com/, (route) => {
     route.fulfill({

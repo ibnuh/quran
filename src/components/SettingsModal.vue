@@ -297,7 +297,7 @@ function onLanguageChange(code) {
               />
               <p
                 v-if="currentTranslationHasFootnotes"
-                class="text-xs text-muted/70 mt-1.5 leading-relaxed"
+                class="text-xs text-muted mt-1.5 leading-relaxed"
               >
                 {{ $t('settings.footnotesAvailableHint') }}
               </p>
