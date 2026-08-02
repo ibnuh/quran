@@ -267,7 +267,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden"
+    class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden overscroll-x-none max-w-full"
     @mousemove="showControls"
     @touchstart.capture.passive="onRootTouchStart"
     @touchend.capture.passive="onRootTouchEnd"
@@ -316,7 +316,7 @@ onMounted(async () => {
 
     <main
       ref="mainRef"
-      class="h-full flex flex-col overflow-y-auto scrollable cursor-pointer select-none"
+      class="h-full flex flex-col overflow-y-auto overflow-x-hidden scrollable cursor-pointer select-none max-w-full"
       :style="{
         transition: 'padding-top 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
         paddingTop: (headerHeight || 16) + 24 + 'px',

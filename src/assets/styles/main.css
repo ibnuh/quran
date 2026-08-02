@@ -165,14 +165,32 @@ body {
 html {
   background: var(--color-surface);
   height: 100%;
+  width: 100%;
   overflow: hidden;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  /* Vertical browser panning only. Custom JS still handles verse swipe; this blocks
+     sideways rubber-banding / horizontal page scroll. Pinch-zoom is also suppressed
+     where the browser honors touch-action (pairs with the viewport meta). */
+  touch-action: pan-y;
 }
 body {
   overflow: hidden;
+  overflow-x: hidden;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior-x: none;
+  position: relative;
 }
 
 /* Safe area insets for notched devices - applied per-element so backgrounds extend edge-to-edge */
+
+/* Vertical scroll only: never allow sideways scroll from long Arabic lines or menus. */
+.scrollable {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
 
 /* Only reserve scrollbar gutter on desktop where scrollbars are visible */
 @media (pointer: fine) {
