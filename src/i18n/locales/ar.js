@@ -32,7 +32,11 @@ export default {
     listenMode: 'استماع',
     readMode: 'قراءة',
     layoutSingle: 'مفرد',
-    layoutContinuous: 'متصل'
+    layoutContinuous: 'متصل',
+    activityMode: 'النشاط',
+    layoutMode: 'التخطيط',
+    modeMenu: 'الوضع: {summary}',
+    modeMenuHint: 'متاح أيضاً في الإعدادات · القراءة'
   },
   controls: {
     play: 'تشغيل',

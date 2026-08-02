@@ -32,7 +32,11 @@ export default {
     listenMode: 'سنیں',
     readMode: 'پڑھیں',
     layoutSingle: 'واحد',
-    layoutContinuous: 'مسلسل'
+    layoutContinuous: 'مسلسل',
+    activityMode: 'سرگرمی',
+    layoutMode: 'لے آؤٹ',
+    modeMenu: 'موڈ: {summary}',
+    modeMenuHint: 'ترتیبات · پڑھائی میں بھی دستیاب'
   },
   controls: {
     play: 'چلائیں',

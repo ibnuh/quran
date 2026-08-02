@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../stores/player.js'
 import THEMES from '../data/themes.js'
 import JuzPicker from './JuzPicker.vue'
@@ -13,30 +14,58 @@ const emit = defineEmits([
   'toggle-search'
 ])
 const store = usePlayerStore()
+const { t } = useI18n()
 const showThemePicker = ref(false)
 const showMoreMenu = ref(false)
+const showModeMenu = ref(false)
+
+const activityLabel = computed(() =>
+  store.readMode ? t('header.readMode') : t('header.listenMode')
+)
+const layoutLabel = computed(() =>
+  store.readingMode ? t('header.layoutContinuous') : t('header.layoutSingle')
+)
+const modeSummary = computed(() => `${activityLabel.value} · ${layoutLabel.value}`)
 
 function handleSettingsClick() {
   emit('open-settings')
 }
 
+function closeAllMenus() {
+  showThemePicker.value = false
+  showMoreMenu.value = false
+  showModeMenu.value = false
+}
+
 function toggleThemePicker() {
-  showThemePicker.value = !showThemePicker.value
-  if (showThemePicker.value) {
-    showMoreMenu.value = false
-  }
+  const next = !showThemePicker.value
+  closeAllMenus()
+  showThemePicker.value = next
 }
 
 function toggleMoreMenu() {
-  showMoreMenu.value = !showMoreMenu.value
-  if (showMoreMenu.value) {
-    showThemePicker.value = false
-  }
+  const next = !showMoreMenu.value
+  closeAllMenus()
+  showMoreMenu.value = next
+}
+
+function toggleModeMenu() {
+  const next = !showModeMenu.value
+  closeAllMenus()
+  showModeMenu.value = next
 }
 
 function selectTheme(id) {
   store.setTheme(id)
   showThemePicker.value = false
+}
+
+function setActivity(readMode) {
+  store.setReadMode(readMode)
+}
+
+function setLayout(readingMode) {
+  store.setReadingMode(readingMode)
 }
 
 function onMoreAction(action) {
@@ -56,6 +85,9 @@ function onClickOutside(e) {
   }
   if (showMoreMenu.value && !e.target.closest('.more-menu-wrapper')) {
     showMoreMenu.value = false
+  }
+  if (showModeMenu.value && !e.target.closest('.mode-menu-wrapper')) {
+    showModeMenu.value = false
   }
 }
 
@@ -101,6 +133,15 @@ function onMoreMenuKeydown(e) {
   }
 }
 
+function onModeMenuKeydown(e) {
+  if (!showModeMenu.value) {
+    return
+  }
+  if (e.key === 'Escape') {
+    showModeMenu.value = false
+  }
+}
+
 function onDocumentKeydown(e) {
   if (e.key !== 'Escape') {
     return
@@ -110,6 +151,9 @@ function onDocumentKeydown(e) {
   }
   if (showThemePicker.value) {
     showThemePicker.value = false
+  }
+  if (showModeMenu.value) {
+    showModeMenu.value = false
   }
 }
 
@@ -182,64 +226,157 @@ onBeforeUnmount(() => {
         >
           {{ store.currentSurah ? store.currentSurah.name : $t('app.name') }}
         </h1>
-        <!-- English name + mode chips share one row to avoid a third header band -->
-        <div
-          class="flex items-center justify-center gap-2 min-w-0 landscape-compact:hidden"
+        <p
+          class="text-[0.65rem] sm:text-[0.7rem] truncate opacity-90 landscape-compact:hidden"
           :class="store.currentSurah ? '' : 'invisible'"
         >
-          <p class="text-[0.65rem] sm:text-[0.7rem] truncate opacity-90 min-w-0 max-w-[40%]">
-            {{
-              store.currentSurah
-                ? store.currentSurah.englishName + ' · ' + store.currentSurah.englishNameTranslation
-                : '&nbsp;'
-            }}
-          </p>
-          <div class="mode-chips shrink-0" aria-label="Reading modes">
-            <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
-              <button
-                type="button"
-                class="mode-chip"
-                :class="{ 'mode-chip-active': !store.readMode }"
-                :aria-pressed="!store.readMode"
-                @click="store.setReadMode(false)"
-              >
-                {{ $t('header.listenMode') }}
-              </button>
-              <button
-                type="button"
-                class="mode-chip"
-                :class="{ 'mode-chip-active': store.readMode }"
-                :aria-pressed="store.readMode"
-                @click="store.setReadMode(true)"
-              >
-                {{ $t('header.readMode') }}
-              </button>
-            </div>
-            <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
-              <button
-                type="button"
-                class="mode-chip"
-                :class="{ 'mode-chip-active': !store.readingMode }"
-                :aria-pressed="!store.readingMode"
-                @click="store.setReadingMode(false)"
-              >
-                {{ $t('header.layoutSingle') }}
-              </button>
-              <button
-                type="button"
-                class="mode-chip"
-                :class="{ 'mode-chip-active': store.readingMode }"
-                :aria-pressed="store.readingMode"
-                @click="store.setReadingMode(true)"
-              >
-                {{ $t('header.layoutContinuous') }}
-              </button>
-            </div>
-          </div>
-        </div>
+          {{
+            store.currentSurah
+              ? store.currentSurah.englishName + ' · ' + store.currentSurah.englishNameTranslation
+              : '&nbsp;'
+          }}
+        </p>
       </div>
 
       <div class="flex items-center gap-0.5 sm:gap-1">
+        <!-- Mode menu: activity (Listen/Read) + layout (Single/Continuous) -->
+        <div class="relative mode-menu-wrapper">
+          <button
+            type="button"
+            class="mode-trigger header-btn"
+            :aria-label="$t('header.modeMenu', { summary: modeSummary })"
+            aria-haspopup="menu"
+            :aria-expanded="showModeMenu"
+            @click.stop="toggleModeMenu"
+          >
+            <svg
+              v-if="!store.readMode"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"
+              />
+            </svg>
+            <svg
+              v-else
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
+              />
+            </svg>
+            <span class="mode-trigger-label hidden sm:inline">{{ modeSummary }}</span>
+            <span class="mode-trigger-label sm:hidden">{{ activityLabel }}</span>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="mode-trigger-caret shrink-0 opacity-80"
+              aria-hidden="true"
+            >
+              <path d="M7 10l5 5 5-5H7z" />
+            </svg>
+          </button>
+          <Transition name="theme-pop">
+            <div
+              v-if="showModeMenu"
+              role="menu"
+              class="mode-menu absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[220px]"
+              @keydown="onModeMenuKeydown"
+              @click.stop
+            >
+              <p class="mode-menu-label px-2 pt-1 pb-1.5">{{ $t('header.activityMode') }}</p>
+              <div
+                class="mode-seg"
+                role="group"
+                :aria-label="$t('header.activityMode')"
+              >
+                <button
+                  type="button"
+                  role="menuitemradio"
+                  class="mode-seg-btn"
+                  :class="{ 'mode-seg-active': !store.readMode }"
+                  :aria-checked="!store.readMode"
+                  @click="setActivity(false)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
+                  </svg>
+                  {{ $t('header.listenMode') }}
+                </button>
+                <button
+                  type="button"
+                  role="menuitemradio"
+                  class="mode-seg-btn"
+                  :class="{ 'mode-seg-active': store.readMode }"
+                  :aria-checked="store.readMode"
+                  @click="setActivity(true)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path
+                      d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
+                    />
+                  </svg>
+                  {{ $t('header.readMode') }}
+                </button>
+              </div>
+
+              <p class="mode-menu-label px-2 pt-3 pb-1.5">{{ $t('header.layoutMode') }}</p>
+              <div
+                class="mode-seg"
+                role="group"
+                :aria-label="$t('header.layoutMode')"
+              >
+                <button
+                  type="button"
+                  role="menuitemradio"
+                  class="mode-seg-btn"
+                  :class="{ 'mode-seg-active': !store.readingMode }"
+                  :aria-checked="!store.readingMode"
+                  @click="setLayout(false)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path
+                      d="M4 6h16v2H4V6zm0 5h10v2H4v-2zm0 5h16v2H4v-2z"
+                    />
+                  </svg>
+                  {{ $t('header.layoutSingle') }}
+                </button>
+                <button
+                  type="button"
+                  role="menuitemradio"
+                  class="mode-seg-btn"
+                  :class="{ 'mode-seg-active': store.readingMode }"
+                  :aria-checked="store.readingMode"
+                  @click="setLayout(true)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path
+                      d="M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"
+                    />
+                  </svg>
+                  {{ $t('header.layoutContinuous') }}
+                </button>
+              </div>
+
+              <p class="mode-menu-hint px-2 pt-2.5 pb-1">
+                {{ $t('header.modeMenuHint') }}
+              </p>
+            </div>
+          </Transition>
+        </div>
+
         <button
           class="hidden sm:flex header-btn opacity-60 hover:opacity-100 relative"
           :aria-label="$t('header.showBookmarks')"
@@ -464,65 +601,21 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Mobile: surah names + mode chips in one compact block (no third band) -->
+    <!-- Mobile: compact surah names only (mode lives in the toolbar pill) -->
     <div
       v-if="store.currentSurah"
-      class="sm:hidden landscape-compact:hidden flex flex-col gap-1 pb-1.5"
+      class="sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1.5"
     >
-      <div class="flex items-center justify-between gap-3">
-        <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
-          {{ store.currentSurah.englishName
-          }}<span class="opacity-60"> · {{ store.currentSurah.englishNameTranslation }}</span>
-        </span>
-        <span
-          class="surah-title-sm min-w-0 flex-1 truncate text-right font-arabic text-[0.95rem]"
-          dir="rtl"
-          lang="ar"
-          >{{ store.currentSurah.name }}</span
-        >
-      </div>
-      <div class="mode-chips justify-center">
-        <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
-          <button
-            type="button"
-            class="mode-chip"
-            :class="{ 'mode-chip-active': !store.readMode }"
-            :aria-pressed="!store.readMode"
-            @click="store.setReadMode(false)"
-          >
-            {{ $t('header.listenMode') }}
-          </button>
-          <button
-            type="button"
-            class="mode-chip"
-            :class="{ 'mode-chip-active': store.readMode }"
-            :aria-pressed="store.readMode"
-            @click="store.setReadMode(true)"
-          >
-            {{ $t('header.readMode') }}
-          </button>
-        </div>
-        <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
-          <button
-            type="button"
-            class="mode-chip"
-            :class="{ 'mode-chip-active': !store.readingMode }"
-            :aria-pressed="!store.readingMode"
-            @click="store.setReadingMode(false)"
-          >
-            {{ $t('header.layoutSingle') }}
-          </button>
-          <button
-            type="button"
-            class="mode-chip"
-            :class="{ 'mode-chip-active': store.readingMode }"
-            :aria-pressed="store.readingMode"
-            @click="store.setReadingMode(true)"
-          >
-            {{ $t('header.layoutContinuous') }}
-          </button>
-        </div>
-      </div>
+      <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
+        {{ store.currentSurah.englishName
+        }}<span class="opacity-60"> · {{ store.currentSurah.englishNameTranslation }}</span>
+      </span>
+      <span
+        class="surah-title-sm min-w-0 flex-1 truncate text-right font-arabic text-[0.95rem]"
+        dir="rtl"
+        lang="ar"
+        >{{ store.currentSurah.name }}</span
+      >
     </div>
   </header>
 </template>
@@ -562,44 +655,84 @@ onBeforeUnmount(() => {
   transform: scale(0.93);
 }
 
-.mode-chips {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.mode-chip-group {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px;
-  border-radius: 9999px;
+.mode-trigger {
+  gap: 0.3rem;
+  padding-inline: 0.45rem;
+  max-width: 11.5rem;
   background: rgba(255, 255, 255, 0.12);
 }
-.mode-chip {
-  border: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.6rem;
+.mode-trigger:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.mode-trigger-label {
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  line-height: 1;
-  padding: 0.22rem 0.45rem;
-  border-radius: 9999px;
-  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 8.5rem;
+}
+.mode-trigger-caret {
+  transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.mode-trigger[aria-expanded='true'] .mode-trigger-caret {
+  transform: rotate(180deg);
+}
+
+.mode-menu-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.mode-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border-radius: 0.7rem;
+  background: var(--color-surface);
+}
+
+.mode-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
   transition:
     background 0.15s cubic-bezier(0.25, 1, 0.5, 1),
     color 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.mode-chip:hover {
-  color: #fff;
+.mode-seg-btn:hover {
+  color: var(--color-body);
+  background: color-mix(in srgb, var(--color-card) 70%, transparent);
 }
-.mode-chip-active {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
+.mode-seg-active {
+  background: var(--color-card);
+  color: var(--color-primary);
+  box-shadow: 0 1px 2px color-mix(in srgb, #000 10%, transparent);
 }
-.mode-chip:active {
-  transform: scale(0.97);
+.mode-seg-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.mode-menu-hint {
+  font-size: 0.65rem;
+  line-height: 1.35;
+  color: var(--color-muted);
 }
 
 .theme-pop-enter-active {

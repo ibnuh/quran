@@ -32,7 +32,11 @@ export default {
     listenMode: 'Listen',
     readMode: 'Read',
     layoutSingle: 'Single',
-    layoutContinuous: 'Continuous'
+    layoutContinuous: 'Continuous',
+    activityMode: 'Activity',
+    layoutMode: 'Layout',
+    modeMenu: 'Mode: {summary}',
+    modeMenuHint: 'Also available under Settings · Reading'
   },
   controls: {
     play: 'Play',
