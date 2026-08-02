@@ -382,11 +382,12 @@ onMounted(async () => {
     <Transition name="residual-progress">
       <div
         v-if="!controlsVisible && (audio.progress.value > 0 || audio.isPlaying.value)"
-        class="fixed bottom-0 left-0 right-0 z-30 h-[3px] pointer-events-none"
+        class="residual-progress fixed bottom-0 left-0 right-0 z-30 h-[3px] pointer-events-none"
+        :class="{ 'residual-progress-playing': audio.isPlaying.value }"
         aria-hidden="true"
       >
         <div
-          class="h-full bg-primary transition-[width] duration-150 ease-linear"
+          class="residual-progress-fill h-full transition-[width] duration-150 ease-linear"
           :style="{ width: Math.min(100, Math.max(0, audio.progress.value)) + '%' }"
         ></div>
       </div>
@@ -490,5 +491,34 @@ onMounted(async () => {
 .residual-progress-enter-from,
 .residual-progress-leave-to {
   opacity: 0;
+}
+
+.residual-progress-fill {
+  background: var(--color-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+.residual-progress-playing .residual-progress-fill {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary) 80%, #000),
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 75%, #fff)
+  );
+  background-size: 200% 100%;
+  animation: residual-shimmer 2.4s linear infinite;
+}
+@keyframes residual-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .residual-progress-playing .residual-progress-fill {
+    animation: none;
+    background: var(--color-primary);
+  }
 }
 </style>

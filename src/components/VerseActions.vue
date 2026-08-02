@@ -66,7 +66,9 @@ function copyVerse() {
 <template>
   <div
     v-if="hasAnyAction"
-    class="flex items-center gap-1"
+    class="verse-actions"
+    role="toolbar"
+    :aria-label="$t('verse.actions')"
     @click.stop
   >
     <button
@@ -78,8 +80,8 @@ function copyVerse() {
       @click="emit('open-tafsir')"
     >
       <svg
-        width="14"
-        height="14"
+        width="15"
+        height="15"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -103,8 +105,8 @@ function copyVerse() {
       @click="store.toggleBookmark()"
     >
       <svg
-        width="14"
-        height="14"
+        width="15"
+        height="15"
         viewBox="0 0 24 24"
         :fill="store.isCurrentBookmarked ? 'currentColor' : 'none'"
         stroke="currentColor"
@@ -124,8 +126,8 @@ function copyVerse() {
       @click="shareVerse"
     >
       <svg
-        width="14"
-        height="14"
+        width="15"
+        height="15"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -147,8 +149,8 @@ function copyVerse() {
     >
       <svg
         v-if="!copied"
-        width="14"
-        height="14"
+        width="15"
+        height="15"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -160,8 +162,8 @@ function copyVerse() {
       </svg>
       <svg
         v-else
-        width="14"
-        height="14"
+        width="15"
+        height="15"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -175,22 +177,37 @@ function copyVerse() {
 </template>
 
 <style scoped>
+.verse-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-card));
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  box-shadow: 0 1px 2px color-mix(in srgb, #000 4%, transparent);
+}
+
 .verse-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 9999px;
   cursor: pointer;
-  color: color-mix(in srgb, var(--color-muted) 70%, transparent);
+  color: var(--color-muted);
   transition:
     background 0.15s var(--ease-out, ease),
-    color 0.15s var(--ease-out, ease);
+    color 0.15s var(--ease-out, ease),
+    transform 0.1s ease;
 }
 .verse-action-btn:hover {
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
+}
+.verse-action-btn:active {
+  transform: scale(0.94);
 }
 .verse-action-btn:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -198,8 +215,10 @@ function copyVerse() {
 }
 .verse-action-btn.is-active {
   color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 .verse-action-btn.is-copied {
   color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 </style>

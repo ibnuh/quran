@@ -87,19 +87,26 @@ function clearAllBookmarks() {
             <button
               v-for="(bm, i) in store.bookmarks"
               :key="bm.surahNum + '-' + bm.verseIndex"
-              class="w-full text-left p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-surface transition-colors cursor-pointer group"
+              class="bookmark-card w-full text-left p-3.5 rounded-xl border border-border hover:border-primary/30 hover:bg-surface transition-colors cursor-pointer group"
               @click="goToBookmark(i)"
             >
               <div class="flex items-start justify-between gap-2 mb-1.5">
-                <span class="text-xs font-medium text-primary"
-                  >{{ bm.surahName }} {{ bm.verseNumber }}</span
-                >
+                <span class="text-xs font-semibold text-primary tracking-wide">
+                  {{ bm.surahName }}
+                  <span class="text-muted font-medium">· {{ bm.verseNumber }}</span>
+                </span>
                 <button
-                  class="shrink-0 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-muted hover:text-red-500 transition-all cursor-pointer"
-                  :aria-label="'Remove bookmark for ' + bm.surahName + ' verse ' + bm.verseNumber"
+                  type="button"
+                  class="bookmark-remove shrink-0 w-8 h-8 -mt-1 -mr-1 rounded-full flex items-center justify-center text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors cursor-pointer"
+                  :aria-label="
+                    $t('panels.removeBookmarkItem', {
+                      surah: bm.surahName,
+                      verse: bm.verseNumber
+                    })
+                  "
                   @click.stop="store.removeBookmark(i)"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path
                       d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
                     />
@@ -109,7 +116,7 @@ function clearAllBookmarks() {
               <p class="text-lg leading-relaxed text-arabic mb-1.5" dir="rtl" lang="ar">
                 {{ bm.verseText }}
               </p>
-              <p class="text-xs text-muted/70 line-clamp-2" v-if="bm.translationText">
+              <p v-if="bm.translationText" class="text-xs text-muted/70 line-clamp-2">
                 {{ bm.translationText }}
               </p>
             </button>
@@ -142,5 +149,16 @@ function clearAllBookmarks() {
 }
 .panel-leave-to > :last-child {
   transform: translateX(100%);
+}
+
+/* On fine pointers, de-emphasize remove until hover so the card stays calm. */
+@media (hover: hover) and (pointer: fine) {
+  .bookmark-remove {
+    opacity: 0;
+  }
+  .bookmark-card:hover .bookmark-remove,
+  .bookmark-card:focus-within .bookmark-remove {
+    opacity: 1;
+  }
 }
 </style>

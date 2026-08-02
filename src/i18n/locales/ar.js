@@ -68,6 +68,7 @@ export default {
     seek: 'تغيير موضع الصوت'
   },
   verse: {
+    actions: 'إجراءات الآية',
     bookmark: 'وضع علامة على الآية',
     removeBookmark: 'إزالة العلامة',
     share: 'مشاركة الآية',
@@ -91,6 +92,7 @@ export default {
     clearAll: 'مسح الكل',
     noBookmarks: 'لا توجد علامات بعد',
     noBookmarksHint: 'انقر على أيقونة العلامة في أي آية لحفظها هنا',
+    removeBookmarkItem: 'إزالة العلامة لـ {surah} الآية {verse}',
     close: 'إغلاق',
     searchPlaceholder: 'ابحث عن سور أو آيات في هذه السورة',
     searchQuery: 'استعلام البحث',

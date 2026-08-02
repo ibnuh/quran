@@ -68,6 +68,7 @@ export default {
     seek: 'Seek audio'
   },
   verse: {
+    actions: 'Verse actions',
     bookmark: 'Bookmark this verse',
     removeBookmark: 'Remove bookmark',
     share: 'Share this verse',
@@ -91,6 +92,7 @@ export default {
     clearAll: 'Clear all',
     noBookmarks: 'No bookmarks yet',
     noBookmarksHint: 'Tap the bookmark icon on any verse to save it here',
+    removeBookmarkItem: 'Remove bookmark for {surah} verse {verse}',
     close: 'Close',
     searchPlaceholder: 'Search surahs or verses in this surah',
     searchQuery: 'Search query',

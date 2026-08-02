@@ -241,7 +241,10 @@ function clearRepeat() {
       <!-- Center: Play button -->
       <button
         class="play-btn w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 shrink-0"
-        :class="canPlay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'"
+        :class="[
+          canPlay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed',
+          isPlaying ? 'play-btn-playing' : ''
+        ]"
         :disabled="!canPlay && !isPlaying"
         :aria-label="isPlaying ? $t('controls.pause') : $t('controls.play')"
         :title="!canPlay && !isPlaying ? $t('controls.audioUnavailable') : undefined"
@@ -467,16 +470,26 @@ function clearRepeat() {
     >
       <div class="relative inline-flex items-center gap-1 jump-verse-input-wrapper">
         <button
-          class="text-xs text-muted hover:text-primary transition-colors cursor-pointer px-2.5 py-1 min-h-11 rounded-full border border-border bg-surface/80 hover:border-primary/40 hover:bg-primary/5"
+          class="verse-chip text-xs text-muted hover:text-primary transition-colors cursor-pointer px-3 py-1.5 min-h-10 rounded-full border border-border bg-surface/80 hover:border-primary/40 hover:bg-primary/5 inline-flex items-center gap-1.5"
           :aria-label="$t('controls.jumpToVerse')"
+          :aria-expanded="showJumpInput"
           @click.stop="showJumpInput = !showJumpInput"
         >
-          {{
-            $t('controls.verseOf', {
-              current: store.currentVerse?.number || 0,
-              total: store.totalVerses || 0
-            })
-          }}
+          <span class="font-semibold text-body tabular-nums">{{
+            store.currentVerse?.number || 0
+          }}</span>
+          <span class="opacity-50">/</span>
+          <span class="tabular-nums">{{ store.totalVerses || 0 }}</span>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="opacity-60"
+            aria-hidden="true"
+          >
+            <path d="M7 10l5 5 5-5H7z" />
+          </svg>
         </button>
         <Transition name="speed-pop">
           <div
@@ -521,6 +534,7 @@ function clearRepeat() {
     transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     background-color 0.15s ease,
     box-shadow 0.2s ease;
+  position: relative;
 }
 .play-btn:hover {
   background-color: var(--color-primary-dark);
@@ -530,6 +544,40 @@ function clearRepeat() {
 .play-btn:active {
   transform: scale(0.95);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.play-btn-playing {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 18%, transparent),
+    0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+.play-btn-playing::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  animation: play-pulse 1.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  pointer-events: none;
+}
+@keyframes play-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .play-btn-playing::after {
+    animation: none;
+    display: none;
+  }
 }
 
 .play-icon-enter-active,

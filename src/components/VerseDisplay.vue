@@ -147,10 +147,10 @@ const isLastVerse = computed(
             animate
           />
 
-          <div class="flex flex-col items-center gap-2.5 mt-4 mb-5">
+          <div class="flex flex-col items-center gap-3 mt-5 mb-6">
             <span
               v-if="!store.verseEndOrnament"
-              class="verse-badge inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-bold w-8 h-8 rounded-full"
+              class="verse-badge inline-flex items-center justify-center bg-primary/10 text-primary text-xs font-bold w-8 h-8 rounded-full ring-1 ring-primary/15"
             >
               {{ store.currentVerse.number }}
             </span>

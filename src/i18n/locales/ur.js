@@ -68,6 +68,7 @@ export default {
     seek: 'آڈیو منتقل کریں'
   },
   verse: {
+    actions: 'آیت کی کارروائیاں',
     bookmark: 'اس آیت کو بک مارک کریں',
     removeBookmark: 'بک مارک ہٹائیں',
     share: 'آیت شیئر کریں',
@@ -91,6 +92,7 @@ export default {
     clearAll: 'سب صاف کریں',
     noBookmarks: 'ابھی کوئی بک مارک نہیں',
     noBookmarksHint: 'یہاں محفوظ کرنے کے لیے کسی بھی آیت پر بک مارک آئیکن دبائیں',
+    removeBookmarkItem: '{surah} آیت {verse} کا بک مارک ہٹائیں',
     close: 'بند کریں',
     searchPlaceholder: 'سورتیں یا اس سورہ کی آیات تلاش کریں',
     searchQuery: 'تلاش',

@@ -132,55 +132,74 @@ function onTouchEnd() {
 .progress-track {
   width: 100%;
   height: 4px;
-  border-radius: 3px;
+  border-radius: 9999px;
   background: var(--color-border);
   position: relative;
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  transition:
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    height 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   transform-origin: center;
+  overflow: hidden;
 }
-.progress-wrapper:hover .progress-track {
-  transform: scaleY(2);
+.progress-wrapper:hover .progress-track,
+.progress-wrapper:focus-visible .progress-track {
+  height: 6px;
 }
 .progress-buffered {
   position: absolute;
   inset: 0;
   height: 100%;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--color-muted) 30%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-muted) 28%, transparent);
   pointer-events: none;
 }
 .progress-fill {
   position: absolute;
   inset: 0;
   height: 100%;
-  border-radius: 3px;
-  background: var(--color-primary);
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary) 88%, #000) 0%,
+    var(--color-primary) 100%
+  );
   pointer-events: none;
 }
 .progress-thumb {
   position: absolute;
   top: 50%;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--color-primary);
+  border: 2px solid color-mix(in srgb, var(--color-card) 90%, #fff);
   transform: translate(-50%, -50%) scale(0);
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   pointer-events: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 4px color-mix(in srgb, #000 18%, transparent);
+  z-index: 1;
 }
 .progress-wrapper:hover .progress-thumb,
+.progress-wrapper:focus-visible .progress-thumb,
 .progress-thumb-active {
   transform: translate(-50%, -50%) scale(1) !important;
+}
+.progress-thumb-active {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent),
+    0 1px 4px color-mix(in srgb, #000 18%, transparent);
 }
 
 @media (pointer: coarse) {
   .progress-wrapper {
     height: 44px;
   }
+  .progress-track {
+    height: 5px;
+  }
   .progress-thumb {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     transform: translate(-50%, -50%) scale(1);
   }
 }

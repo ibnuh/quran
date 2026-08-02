@@ -133,8 +133,12 @@ onMounted(() => nextTick(() => scrollToActive(false)))
     <div
       v-for="(verse, i) in store.verses"
       :key="i"
-      class="reading-row w-full text-right rounded-xl px-4 py-4 mb-2 transition-colors"
-      :class="i === store.currentVerseIndex ? 'reading-row-active bg-primary/10' : 'hover:bg-card'"
+      class="reading-row w-full text-right rounded-xl px-4 py-4 mb-2 transition-[background-color,box-shadow,border-color] duration-200"
+      :class="
+        i === store.currentVerseIndex
+          ? 'reading-row-active'
+          : 'hover:bg-card/80'
+      "
       :aria-current="i === store.currentVerseIndex ? 'true' : undefined"
     >
       <!-- Arabic + plain translation stay in one select control; interactive
@@ -231,6 +235,16 @@ onMounted(() => nextTick(() => scrollToActive(false)))
 .reading-row {
   content-visibility: auto;
   contain-intrinsic-size: auto 7rem;
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.reading-row-active {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  box-shadow:
+    inset 3px 0 0 var(--color-primary),
+    0 1px 3px color-mix(in srgb, #000 5%, transparent);
 }
 
 .reading-ayah-num {
@@ -256,9 +270,13 @@ onMounted(() => nextTick(() => scrollToActive(false)))
   border: 1.5px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
   color: var(--color-accent);
 }
+.reading-row-active .reading-ayah-num {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
 .reading-ayah-num-inner {
   display: block;
   line-height: 1;
 }
-
 </style>
