@@ -225,6 +225,19 @@ onBeforeUnmount(() => {
 useSeo(store)
 
 onMounted(async () => {
+  // If we just accepted a PWA update, drop stale audio runtime caches again in
+  // case the previous SW still served them during activation.
+  try {
+    const { consumeSwJustUpdated, clearAudioRuntimeCaches } = await import(
+      '../utils/swAudio.js'
+    )
+    if (consumeSwJustUpdated()) {
+      await clearAudioRuntimeCaches()
+    }
+  } catch {
+    // ignore
+  }
+
   store.loadPreferences()
 
   // A deep link (/2/255 or ?surah=36) takes precedence over restored prefs.
@@ -243,17 +256,10 @@ onMounted(async () => {
       store.currentVerseIndex = idx
     }
   }
-  // Attach full-surah audio on mount. Seek is queued until metadata is ready so we
-  // never leave the element at an invalid currentTime (which made Play look dead).
-  if (store.playbackMode === 'full' && store.audioUrl) {
-    audio.load(store.audioUrl)
-    if (store.currentVerseIndex > 0) {
-      const timing = store.verseTimings[store.currentVerseIndex]
-      if (timing) {
-        audio.seekTo(timing.timestampFrom)
-      }
-    }
-  }
+  // Do NOT load+seek full-surah audio on mount for mid-surah restores.
+  // After a PWA Update, eager mid-file seeks poison the media pipeline
+  // (PIPELINE_ERROR_READ) until a hard reload. Verse index is already restored;
+  // Play will attach the source and seek in the user-gesture path.
   mediaSession.update()
   checkMobileTip()
 

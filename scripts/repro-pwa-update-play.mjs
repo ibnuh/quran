@@ -331,6 +331,20 @@ async function main() {
   }
 
   console.log('\n=== 4) Click Update ===')
+  // Mirror production UpdatePrompt: clear audio caches + mark boot recovery before SW swap.
+  await page.evaluate(async () => {
+    try {
+      sessionStorage.setItem('quran-sw-just-updated', '1')
+      const keys = await caches.keys()
+      for (const name of keys) {
+        if (name.includes('quran-audio') || name.includes('quran-verse-audio')) {
+          await caches.delete(name)
+        }
+      }
+    } catch {
+      // ignore
+    }
+  })
   const updateBtn = page.getByRole('button', { name: /^Update$/i })
   if ((await updateBtn.count()) === 0) {
     console.error('No Update button — cannot complete real update flow')

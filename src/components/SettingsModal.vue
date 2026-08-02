@@ -114,6 +114,11 @@ async function forceUpdate() {
       if (waiting) {
         updateAvailable.value = true
         updateStatus.value = t('settings.updateFound')
+        const { clearAudioRuntimeCaches, markSwJustUpdated } = await import(
+          '../utils/swAudio.js'
+        )
+        markSwJustUpdated()
+        await clearAudioRuntimeCaches()
         const reloadOnce = () => {
           window.location.reload()
         }

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { clearAudioRuntimeCaches, markSwJustUpdated } from '../utils/swAudio.js'
 
 const show = ref(false)
 const applying = ref(false)
@@ -39,6 +40,11 @@ async function applyUpdate() {
   // Keep the toast visible so the user sees progress before reload.
 
   try {
+    // Drop cached MP3s before the new SW claims clients. Stale CacheFirst range
+    // entries are what make mid-surah Play dead until a hard reload.
+    markSwJustUpdated()
+    await clearAudioRuntimeCaches()
+
     armReloadOnControllerChange()
 
     const reg = await navigator.serviceWorker?.getRegistration()
@@ -53,6 +59,7 @@ async function applyUpdate() {
     }
   } catch {
     // Still attempt a reload; a full navigation is the recovery path.
+    markSwJustUpdated()
     window.location.reload()
   }
 }

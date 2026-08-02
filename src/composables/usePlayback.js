@@ -317,24 +317,28 @@ export function usePlayback(store, audio) {
     store.currentWordIndex = -1
   })
 
-  // Preload full surah audio when its URL changes; continue playing if we were.
+  // When the surah audio URL changes while the app is already running, keep the
+  // element in sync. Do not eager-load on first mount (immediate): post-SW-update
+  // mid-file restore seeks poison the element before the user hits Play.
   watch(
     () => store.audioUrl,
-    url => {
-      if (url && store.playbackMode === 'full') {
-        const wasPlaying = audio.isPlaying.value || continuingPlayback.value
-        audio.stop()
-        continuingPlayback.value = false
-        if (wasPlaying) {
-          void audio.loadAndPlay(url)
-        } else {
-          audio.load(url)
-        }
+    (url, prev) => {
+      if (!url || store.playbackMode !== 'full') {
+        return
       }
-    },
-    // Immediate: attach the current surah file as soon as the composable mounts so
-    // the first Play after a reload/update does not hit an empty <audio> element.
-    { immediate: true }
+      // Skip the initial empty→url transition from loadSurah on boot.
+      if (prev == null && !continuingPlayback.value && !audio.isPlaying.value) {
+        return
+      }
+      const wasPlaying = audio.isPlaying.value || continuingPlayback.value
+      audio.stop()
+      continuingPlayback.value = false
+      if (wasPlaying) {
+        void audio.loadAndPlay(url)
+      } else {
+        audio.load(url)
+      }
+    }
   )
 
   // Stop audio when the surah or reciter changes.
