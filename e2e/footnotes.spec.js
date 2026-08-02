@@ -204,7 +204,8 @@ test('footnotes can be disabled in settings', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal = page.getByRole('dialog', { name: 'Settings' })
-  // Label text includes the hint line, so match by partial text and scroll into view.
+  // Footnotes live on the Reading tab after the settings IA split.
+  await modal.getByRole('tab', { name: 'Reading' }).click()
   const footnotesToggle = modal.locator('label', { hasText: 'Translation footnotes' })
   await footnotesToggle.scrollIntoViewIfNeeded()
   await footnotesToggle.locator('input[type="checkbox"]').uncheck()

@@ -7,6 +7,7 @@ import {
   SURAH_CACHE_MAX
 } from '../config.js'
 import { parseTranslationText } from '../utils/translationText.js'
+import { htmlToPlainText } from '../utils/html.js'
 
 // Error with a machine-readable kind so the UI can show specific, actionable messages.
 export class ApiError extends Error {
@@ -262,8 +263,10 @@ export async function fetchFootnote(footnoteId, signal) {
     throw new ApiError('invalid', 'Invalid footnote response')
   }
   const id = data.foot_note.id ?? key
-  footnoteCache.set(key, data.foot_note.text)
-  return { id, text: data.foot_note.text }
+  // Normalize occasional HTML/entities into plain text for the sheet.
+  const text = htmlToPlainText(data.foot_note.text)
+  footnoteCache.set(key, text)
+  return { id, text }
 }
 
 export async function fetchSurahTextQuranCom(surahNumber, translationId, signal) {

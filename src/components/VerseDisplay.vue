@@ -315,56 +315,6 @@ const isLastVerse = computed(
   animation-delay: 0.22s;
 }
 
-.fn-marker {
-  /* Equal height/min-width keeps single digits as true circles; multi-digit
-     labels grow into a pill via horizontal padding only. */
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 1.35em;
-  min-width: 1.35em;
-  margin-inline: 0.1em;
-  padding: 0 0.12em;
-  vertical-align: super;
-  font-size: 0.58em;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
-  border-radius: 9999px;
-  cursor: pointer;
-  transition:
-    background 0.15s var(--ease-out),
-    color 0.15s var(--ease-out),
-    border-color 0.15s var(--ease-out),
-    box-shadow 0.15s var(--ease-out),
-    transform 0.15s var(--ease-out);
-}
-.fn-marker::before {
-  content: '';
-  position: absolute;
-  inset: -0.35em -0.4em;
-}
-.fn-marker:hover {
-  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-}
-.fn-marker:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-.fn-marker:active {
-  transform: scale(0.94);
-}
-.fn-marker-active {
-  color: white;
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
-}
 @keyframes translation-rise {
   from {
     opacity: 0;

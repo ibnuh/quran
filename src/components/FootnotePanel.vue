@@ -201,27 +201,35 @@ watch(
 
       <div
         class="fn-sheet-wrap absolute inset-x-0 bottom-0 flex justify-center px-3 pb-3 sm:px-4 sm:pb-4"
-        style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px))"
+        :style="{
+          paddingBottom:
+            'max(0.75rem, calc(var(--controls-height, 8rem) + env(safe-area-inset-bottom, 0px) + 0.5rem))'
+        }"
       >
         <div
           ref="panelRef"
           id="footnote-panel"
-          class="fn-sheet pointer-events-auto w-full sm:max-w-md max-h-[min(42vh,22rem)] flex flex-col outline-none"
+          class="fn-sheet pointer-events-auto w-full sm:max-w-lg max-h-[min(48vh,26rem)] flex flex-col outline-none"
           tabindex="-1"
         >
           <div class="flex justify-center pt-2 pb-0.5" aria-hidden="true">
             <div class="w-8 h-1 rounded-full bg-border"></div>
           </div>
 
-          <header class="shrink-0 flex items-center gap-2.5 px-3.5 pb-2.5 pt-1">
+          <header class="shrink-0 flex items-center gap-2.5 px-3.5 pb-2 pt-1">
             <span class="fn-badge shrink-0" aria-hidden="true">{{ activeLabel }}</span>
 
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-body truncate">{{ verseRef }}</p>
-              <p v-if="hasMultiple" class="text-xs text-muted truncate">
-                {{ $t('panels.footnoteOf', { current: activeIndex + 1, total: noteCount }) }}
+              <p class="text-sm font-medium text-body truncate">
+                {{ $t('verse.footnoteTitle', { n: activeLabel }) }}
               </p>
-              <p v-else class="text-xs text-muted truncate">{{ $t('panels.footnotes') }}</p>
+              <p class="text-xs text-muted truncate">
+                <template v-if="hasMultiple">
+                  {{ verseRef }} ·
+                  {{ $t('panels.footnoteOf', { current: activeIndex + 1, total: noteCount }) }}
+                </template>
+                <template v-else>{{ verseRef }}</template>
+              </p>
             </div>
 
             <div class="flex items-center shrink-0">
@@ -280,6 +288,28 @@ watch(
             </div>
           </header>
 
+          <!-- Jump chips when a verse has several notes -->
+          <div
+            v-if="hasMultiple"
+            class="fn-chips shrink-0 flex flex-wrap gap-1.5 px-3.5 pb-2.5"
+            role="tablist"
+            :aria-label="$t('panels.footnoteList')"
+          >
+            <button
+              v-for="fn in verseFootnotes"
+              :key="fn.id"
+              type="button"
+              role="tab"
+              class="fn-chip"
+              :class="{ 'fn-chip-active': fn.id === activeId }"
+              :aria-selected="fn.id === activeId"
+              :aria-label="$t('verse.selectFootnote', { n: fn.label })"
+              @click="selectNote(fn)"
+            >
+              {{ fn.label }}
+            </button>
+          </div>
+
           <div class="fn-divider mx-3.5" aria-hidden="true"></div>
 
           <div class="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 min-h-0">
@@ -314,6 +344,10 @@ watch(
               {{ activeText }}
             </p>
           </div>
+
+          <p class="fn-hint shrink-0 px-3.5 pb-2.5 text-[0.65rem] text-muted/70 text-center">
+            {{ $t('panels.dismissHint') }}
+          </p>
         </div>
       </div>
     </div>
@@ -374,14 +408,51 @@ watch(
   outline-offset: 2px;
 }
 
+.fn-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.45rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s var(--ease-out, ease),
+    color 0.15s var(--ease-out, ease),
+    border-color 0.15s var(--ease-out, ease);
+}
+.fn-chip:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  color: var(--color-primary);
+}
+.fn-chip-active {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.fn-chip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .fn-divider {
   height: 1px;
   background: var(--color-border);
 }
 
 .fn-body {
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.fn-hint {
+  line-height: 1.35;
 }
 
 .fn-skeleton {
