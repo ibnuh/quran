@@ -15,14 +15,34 @@ export function useAudio() {
   let onTimeUpdateCb = null
   let onEndedCb = null
   let verseSeekUntil = 0
+  // Seek requested before metadata was ready; applied on loadedmetadata.
+  let pendingSeekMs = null
+
+  function syncProgressFromElement() {
+    currentTimeMs.value = audio.currentTime * 1000
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      progress.value = (audio.currentTime / audio.duration) * 100
+      duration.value = audio.duration * 1000
+    }
+  }
+
+  function applyPendingSeek() {
+    if (pendingSeekMs == null) {
+      return
+    }
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+      return
+    }
+    const sec = Math.max(0, Math.min(pendingSeekMs / 1000, Math.max(0, audio.duration - 0.05)))
+    audio.currentTime = sec
+    currentTimeMs.value = sec * 1000
+    verseSeekUntil = Date.now() + 600
+    pendingSeekMs = null
+  }
 
   function bindAudioEvents(el) {
     el.addEventListener('timeupdate', () => {
-      currentTimeMs.value = el.currentTime * 1000
-      if (el.duration) {
-        progress.value = (el.currentTime / el.duration) * 100
-        duration.value = el.duration * 1000
-      }
+      syncProgressFromElement()
       if (onTimeUpdateCb) {
         onTimeUpdateCb(currentTimeMs.value)
       }
@@ -32,6 +52,11 @@ export function useAudio() {
       if (el.buffered.length > 0 && el.duration) {
         buffered.value = (el.buffered.end(el.buffered.length - 1) / el.duration) * 100
       }
+    })
+
+    el.addEventListener('loadedmetadata', () => {
+      syncProgressFromElement()
+      applyPendingSeek()
     })
 
     el.addEventListener('ended', () => {
@@ -101,10 +126,10 @@ export function useAudio() {
     return current === resolveUrl(url)
   }
 
-  function waitForCanPlay(timeoutMs = 6000) {
+  function waitForReady(timeoutMs = 10000) {
     return new Promise(resolve => {
-      // HAVE_CURRENT_DATA or better.
-      if (audio.readyState >= 2) {
+      // HAVE_FUTURE_DATA or better is ideal; HAVE_METADATA is enough to seek.
+      if (audio.readyState >= 1 && Number.isFinite(audio.duration) && audio.duration > 0) {
         resolve(true)
         return
       }
@@ -115,16 +140,22 @@ export function useAudio() {
         }
         settled = true
         clearTimeout(timer)
+        audio.removeEventListener('loadedmetadata', onReady)
         audio.removeEventListener('canplay', onReady)
-        audio.removeEventListener('loadeddata', onReady)
         audio.removeEventListener('error', onError)
         resolve(ok)
       }
-      const onReady = () => finish(true)
+      const onReady = () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          finish(true)
+        }
+      }
       const onError = () => finish(false)
-      const timer = setTimeout(() => finish(audio.readyState >= 1), timeoutMs)
-      audio.addEventListener('canplay', onReady, { once: true })
-      audio.addEventListener('loadeddata', onReady, { once: true })
+      const timer = setTimeout(() => {
+        finish(audio.readyState >= 1 && Number.isFinite(audio.duration) && audio.duration > 0)
+      }, timeoutMs)
+      audio.addEventListener('loadedmetadata', onReady)
+      audio.addEventListener('canplay', onReady)
       audio.addEventListener('error', onError, { once: true })
     })
   }
@@ -137,8 +168,25 @@ export function useAudio() {
     if (hasLoadedUrl(url) && !audio.error && audio.readyState >= 1) {
       return
     }
+    pendingSeekMs = null
     audio.src = url
     audio.load()
+  }
+
+  async function ensureLoaded(url) {
+    if (!url) {
+      return false
+    }
+    load(url)
+    if (await waitForReady()) {
+      return true
+    }
+    // Hard reload once.
+    audio.removeAttribute('src')
+    audio.load()
+    audio.src = url
+    audio.load()
+    return waitForReady()
   }
 
   async function playFromElement() {
@@ -152,41 +200,61 @@ export function useAudio() {
     }
   }
 
-  async function attemptPlay(url) {
+  /**
+   * Load `url`, optionally seek to startMs (after metadata is ready), then play.
+   * startMs is required when resuming from a specific ayah in full-surah mode.
+   */
+  async function playAt(url, startMs = null) {
     if (!url) {
       return false
     }
-    load(url)
-    await waitForCanPlay()
+
+    let ready = await ensureLoaded(url)
+    if (!ready) {
+      recreateAudio()
+      ready = await ensureLoaded(url)
+      if (!ready) {
+        return false
+      }
+    }
+
+    if (startMs != null && Number.isFinite(startMs) && startMs >= 0) {
+      pendingSeekMs = startMs
+      applyPendingSeek()
+      // If metadata still wasn't ready somehow, wait once more.
+      if (pendingSeekMs != null) {
+        await waitForReady(3000)
+        applyPendingSeek()
+      }
+    }
+
     if (await playFromElement()) {
       return true
     }
-    // Same element, hard reload of the source.
-    audio.removeAttribute('src')
-    audio.load()
-    audio.src = url
-    audio.load()
-    await waitForCanPlay()
+
+    // Dead media element after SW update: recreate and try once more.
+    const retrySeek = startMs
+    recreateAudio()
+    ready = await ensureLoaded(url)
+    if (!ready) {
+      return false
+    }
+    if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
+      pendingSeekMs = retrySeek
+      applyPendingSeek()
+    }
     return playFromElement()
   }
 
-  // Ensure the element has `url`, then play. Recreates the media element once if the
-  // existing pipeline is dead (common after a service-worker takeover).
+  // Ensure the element has `url`, then play from the current position.
   async function loadAndPlay(url) {
-    if (!url) {
-      return false
-    }
-    if (await attemptPlay(url)) {
-      return true
-    }
-    recreateAudio()
-    return attemptPlay(url)
+    return playAt(url, null)
   }
 
   // Resume current source, or load `url` first when the element has no usable media.
   async function play(url) {
     if (url) {
-      return loadAndPlay(url)
+      return playAt(url, null)
     }
     const existing = audio.currentSrc || audio.src
     if (!existing) {
@@ -195,7 +263,7 @@ export function useAudio() {
     if (await playFromElement()) {
       return true
     }
-    return loadAndPlay(existing)
+    return playAt(existing, currentTimeMs.value || null)
   }
 
   function pause() {
@@ -208,16 +276,26 @@ export function useAudio() {
     progress.value = 0
     currentTimeMs.value = 0
     buffered.value = 0
+    pendingSeekMs = null
   }
 
-  // Seeks to an exact verse boundary. MP3 seeking snaps to a frame, so the audio
-  // can land a few ms before the target; mark a short window during which the
-  // timing-based verse recompute is suppressed so it does not undo a manual
-  // verse navigation (scrub-bar seeks use seek() and are not marked).
+  // Seeks to an exact verse boundary. If metadata is not ready yet, queues the seek
+  // until loadedmetadata. Never apply a seek past the known duration.
   function seekTo(ms) {
-    audio.currentTime = ms / 1000
-    currentTimeMs.value = ms
+    if (!Number.isFinite(ms) || ms < 0) {
+      return
+    }
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+      pendingSeekMs = ms
+      currentTimeMs.value = ms
+      verseSeekUntil = Date.now() + 600
+      return
+    }
+    const sec = Math.max(0, Math.min(ms / 1000, Math.max(0, audio.duration - 0.05)))
+    audio.currentTime = sec
+    currentTimeMs.value = sec * 1000
     verseSeekUntil = Date.now() + 600
+    pendingSeekMs = null
   }
 
   function isVerseSeekActive() {
@@ -227,6 +305,7 @@ export function useAudio() {
   function seek(ratio) {
     if (audio.duration) {
       audio.currentTime = ratio * audio.duration
+      syncProgressFromElement()
     }
   }
 
@@ -272,6 +351,7 @@ export function useAudio() {
     volume,
     load,
     loadAndPlay,
+    playAt,
     play,
     pause,
     stop,

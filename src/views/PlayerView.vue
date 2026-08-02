@@ -243,9 +243,8 @@ onMounted(async () => {
       store.currentVerseIndex = idx
     }
   }
-  // Attach full-surah audio before seeking so Play works immediately after reload
-  // (including post service-worker update). The playback watch also loads the URL,
-  // but mount can race ahead of the watcher flush.
+  // Attach full-surah audio on mount. Seek is queued until metadata is ready so we
+  // never leave the element at an invalid currentTime (which made Play look dead).
   if (store.playbackMode === 'full' && store.audioUrl) {
     audio.load(store.audioUrl)
     if (store.currentVerseIndex > 0) {

@@ -61,6 +61,27 @@ export function usePlayback(store, audio) {
     return store.audioUrls.length > 0
   }
 
+  // True when the playhead is already inside the current verse window (within 750ms).
+  function isNearCurrentVerse() {
+    const timing = store.verseTimings[store.currentVerseIndex]
+    if (!timing) {
+      return false
+    }
+    const t = audio.currentTimeMs.value
+    const from = timing.timestampFrom
+    const to =
+      timing.timestampTo != null
+        ? timing.timestampTo
+        : store.verseTimings[store.currentVerseIndex + 1]?.timestampFrom
+    if (t + 750 < from) {
+      return false
+    }
+    if (to != null && t > to + 250) {
+      return false
+    }
+    return true
+  }
+
   // -- Controls --
   function togglePlay() {
     if (audio.isPlaying.value) {
@@ -71,10 +92,11 @@ export function usePlayback(store, audio) {
       return
     }
     if (store.playbackMode === 'full' && store.audioUrl) {
-      // Always pass the URL: after a PWA update/reload the <audio> element may have
-      // no source even though the store still has audioUrl (watch may have been skipped
-      // or the old media pipeline is dead). play() reloads if needed.
-      void audio.play(store.audioUrl)
+      // Start at the selected ayah when the playhead is elsewhere (e.g. user jumped
+      // to ayah 6, or we restored position before the file was ready).
+      const timing = store.verseTimings[store.currentVerseIndex]
+      const startMs = !isNearCurrentVerse() && timing ? timing.timestampFrom : null
+      void audio.playAt(store.audioUrl, startMs)
     } else if (store.playbackMode === 'verse' && store.audioUrls.length) {
       void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
       preloadAhead()
@@ -127,16 +149,8 @@ export function usePlayback(store, audio) {
     }
     if (store.playbackMode === 'full' && store.audioUrl) {
       const timing = store.verseTimings[index]
-      // Ensure the surah file is attached before seeking (critical after reload).
-      void (async () => {
-        audio.load(store.audioUrl)
-        if (timing) {
-          audio.seekTo(timing.timestampFrom)
-        }
-        if (!audio.isPlaying.value) {
-          await audio.play(store.audioUrl)
-        }
-      })()
+      const startMs = timing ? timing.timestampFrom : null
+      void audio.playAt(store.audioUrl, startMs)
     } else {
       void audio.loadAndPlay(store.audioUrls[index])
       preloadAhead()
@@ -153,12 +167,12 @@ export function usePlayback(store, audio) {
     const wasPlaying = audio.isPlaying.value
     if (store.playbackMode === 'full' && store.audioUrl) {
       const timing = store.verseTimings[index]
-      audio.load(store.audioUrl)
-      if (timing) {
-        audio.seekTo(timing.timestampFrom)
-      }
+      const startMs = timing ? timing.timestampFrom : 0
       if (wasPlaying) {
-        void audio.play(store.audioUrl)
+        void audio.playAt(store.audioUrl, startMs)
+      } else {
+        audio.load(store.audioUrl)
+        audio.seekTo(startMs)
       }
     } else if (store.audioUrls.length) {
       if (wasPlaying) {
@@ -205,8 +219,7 @@ export function usePlayback(store, audio) {
         if (timing) {
           store.currentVerseIndex = ab.start
           store.currentWordIndex = -1
-          audio.seekTo(timing.timestampFrom)
-          void audio.play(store.audioUrl)
+          void audio.playAt(store.audioUrl, timing.timestampFrom)
         }
         return
       }
@@ -224,10 +237,7 @@ export function usePlayback(store, audio) {
     if (store.repeatMode === 'verse') {
       if (store.playbackMode === 'full' && store.audioUrl) {
         const timing = store.verseTimings[store.currentVerseIndex]
-        if (timing) {
-          audio.seekTo(timing.timestampFrom)
-          void audio.play(store.audioUrl)
-        }
+        void audio.playAt(store.audioUrl, timing ? timing.timestampFrom : null)
       } else {
         void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
       }
@@ -238,8 +248,7 @@ export function usePlayback(store, audio) {
       store.currentVerseIndex = 0
       store.currentWordIndex = -1
       if (store.playbackMode === 'full' && store.audioUrl) {
-        audio.seekTo(0)
-        void audio.play(store.audioUrl)
+        void audio.playAt(store.audioUrl, 0)
       } else if (store.audioUrls.length) {
         void audio.loadAndPlay(store.audioUrls[0])
         preloadAhead()
