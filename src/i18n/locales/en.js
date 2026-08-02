@@ -27,7 +27,12 @@ export default {
     translationSize: 'Translation Size',
     contentWidth: 'Content Width',
     jumpToJuz: 'Jump to juz',
-    selectJuz: 'Select juz'
+    selectJuz: 'Select juz',
+    more: 'More',
+    listenMode: 'Listen',
+    readMode: 'Read',
+    layoutSingle: 'Single',
+    layoutContinuous: 'Continuous'
   },
   controls: {
     play: 'Play',
@@ -111,6 +116,10 @@ export default {
   settings: {
     title: 'Settings',
     close: 'Close settings',
+    tabPlayback: 'Playback',
+    tabDisplay: 'Display',
+    tabReading: 'Reading',
+    tabApp: 'App',
     surah: 'Surah',
     reciter: 'Reciter',
     translationLanguage: 'Translation Language',

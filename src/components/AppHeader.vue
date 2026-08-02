@@ -14,6 +14,7 @@ const emit = defineEmits([
 ])
 const store = usePlayerStore()
 const showThemePicker = ref(false)
+const showMoreMenu = ref(false)
 
 function handleSettingsClick() {
   emit('open-settings')
@@ -21,6 +22,16 @@ function handleSettingsClick() {
 
 function toggleThemePicker() {
   showThemePicker.value = !showThemePicker.value
+  if (showThemePicker.value) {
+    showMoreMenu.value = false
+  }
+}
+
+function toggleMoreMenu() {
+  showMoreMenu.value = !showMoreMenu.value
+  if (showMoreMenu.value) {
+    showThemePicker.value = false
+  }
 }
 
 function selectTheme(id) {
@@ -28,9 +39,23 @@ function selectTheme(id) {
   showThemePicker.value = false
 }
 
+function onMoreAction(action) {
+  showMoreMenu.value = false
+  if (action === 'bookmarks') {
+    emit('toggle-bookmarks')
+  } else if (action === 'shortcuts') {
+    emit('toggle-shortcuts')
+  } else if (action === 'auto-hide') {
+    store.setAutoHideControls(!store.autoHideControls)
+  }
+}
+
 function onClickOutside(e) {
   if (showThemePicker.value && !e.target.closest('.theme-picker-wrapper')) {
     showThemePicker.value = false
+  }
+  if (showMoreMenu.value && !e.target.closest('.more-menu-wrapper')) {
+    showMoreMenu.value = false
   }
 }
 
@@ -56,8 +81,46 @@ function onThemePickerKeydown(e) {
   }
 }
 
-onMounted(() => document.addEventListener('click', onClickOutside))
-onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
+function onMoreMenuKeydown(e) {
+  if (!showMoreMenu.value) {
+    return
+  }
+  const buttons = Array.from(document.querySelectorAll('.more-menu-wrapper [role="menu"] button'))
+  if (!buttons.length) {
+    return
+  }
+  const current = buttons.indexOf(document.activeElement)
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    buttons[Math.min(current + 1, buttons.length - 1)].focus()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    buttons[Math.max(current - 1, 0)].focus()
+  } else if (e.key === 'Escape') {
+    showMoreMenu.value = false
+  }
+}
+
+function onDocumentKeydown(e) {
+  if (e.key !== 'Escape') {
+    return
+  }
+  if (showMoreMenu.value) {
+    showMoreMenu.value = false
+  }
+  if (showThemePicker.value) {
+    showThemePicker.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+  document.addEventListener('keydown', onDocumentKeydown)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+  document.removeEventListener('keydown', onDocumentKeydown)
+})
 </script>
 
 <template>
@@ -129,6 +192,51 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
               : '&nbsp;'
           }}
         </p>
+        <!-- Mode chips under English name on sm+ -->
+        <div
+          class="hidden sm:flex landscape-compact:!hidden items-center justify-center gap-1.5 mt-0.5"
+        >
+          <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
+            <button
+              type="button"
+              class="mode-chip"
+              :class="{ 'mode-chip-active': !store.readMode }"
+              :aria-pressed="!store.readMode"
+              @click="store.setReadMode(false)"
+            >
+              {{ $t('header.listenMode') }}
+            </button>
+            <button
+              type="button"
+              class="mode-chip"
+              :class="{ 'mode-chip-active': store.readMode }"
+              :aria-pressed="store.readMode"
+              @click="store.setReadMode(true)"
+            >
+              {{ $t('header.readMode') }}
+            </button>
+          </div>
+          <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
+            <button
+              type="button"
+              class="mode-chip"
+              :class="{ 'mode-chip-active': !store.readingMode }"
+              :aria-pressed="!store.readingMode"
+              @click="store.setReadingMode(false)"
+            >
+              {{ $t('header.layoutSingle') }}
+            </button>
+            <button
+              type="button"
+              class="mode-chip"
+              :class="{ 'mode-chip-active': store.readingMode }"
+              :aria-pressed="store.readingMode"
+              @click="store.setReadingMode(true)"
+            >
+              {{ $t('header.layoutContinuous') }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center gap-1">
@@ -225,8 +333,9 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
             </div>
           </Transition>
         </div>
+        <!-- Desktop auto-hide (sm+) -->
         <button
-          class="flex header-btn"
+          class="hidden sm:flex header-btn"
           :class="store.autoHideControls ? '' : 'opacity-50'"
           :aria-label="$t('header.toggleAutoHide')"
           @click="store.setAutoHideControls(!store.autoHideControls)"
@@ -249,6 +358,97 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
           </svg>
           <span class="hidden sm:inline">{{ $t('header.autoHide') }}</span>
         </button>
+        <!-- Mobile more menu (< sm) -->
+        <div class="relative more-menu-wrapper sm:hidden">
+          <button
+            class="flex header-btn relative"
+            :aria-label="$t('header.more')"
+            aria-haspopup="menu"
+            :aria-expanded="showMoreMenu"
+            @click.stop="toggleMoreMenu"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
+              />
+            </svg>
+            <span
+              v-if="store.bookmarks.length > 0"
+              class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-accent text-white text-[8px] font-bold rounded-full flex items-center justify-center"
+              >{{ store.bookmarks.length > 9 ? '9+' : store.bookmarks.length }}</span
+            >
+          </button>
+          <Transition name="theme-pop">
+            <div
+              v-if="showMoreMenu"
+              role="menu"
+              class="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-1.5 z-50 min-w-[180px]"
+              @keydown="onMoreMenuKeydown"
+            >
+              <button
+                role="menuitem"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-body transition-colors cursor-pointer hover:bg-surface relative"
+                @click="onMoreAction('bookmarks')"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-primary shrink-0">
+                  <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
+                </svg>
+                <span class="flex-1 text-left">{{ $t('header.showBookmarks') }}</span>
+                <span
+                  v-if="store.bookmarks.length > 0"
+                  class="min-w-[1.125rem] h-[1.125rem] px-1 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                  >{{ store.bookmarks.length > 9 ? '9+' : store.bookmarks.length }}</span
+                >
+              </button>
+              <button
+                role="menuitem"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-body transition-colors cursor-pointer hover:bg-surface"
+                @click="onMoreAction('shortcuts')"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-primary shrink-0">
+                  <path
+                    d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"
+                  />
+                </svg>
+                <span class="flex-1 text-left">{{ $t('header.showShortcuts') }}</span>
+              </button>
+              <button
+                role="menuitem"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-body transition-colors cursor-pointer hover:bg-surface"
+                :aria-pressed="store.autoHideControls"
+                @click="onMoreAction('auto-hide')"
+              >
+                <svg
+                  v-if="store.autoHideControls"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="text-primary shrink-0"
+                >
+                  <path
+                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="text-primary shrink-0 opacity-60"
+                >
+                  <path
+                    d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"
+                  />
+                </svg>
+                <span class="flex-1 text-left" :class="store.autoHideControls ? '' : 'opacity-70'">{{
+                  $t('header.autoHide')
+                }}</span>
+              </button>
+            </div>
+          </Transition>
+        </div>
         <button
           class="flex header-btn"
           :aria-label="$t('header.showVerses')"
@@ -267,7 +467,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
     <!-- Compact surah indicator for small screens: Latin on the left, Arabic on the right -->
     <div
       v-if="store.currentSurah"
-      class="sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1.5"
+      class="sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1"
     >
       <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
         {{ store.currentSurah.englishName
@@ -279,6 +479,52 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         lang="ar"
         >{{ store.currentSurah.name }}</span
       >
+    </div>
+
+    <!-- Mode chips under surah row on mobile -->
+    <div
+      class="sm:hidden landscape-compact:hidden flex items-center justify-center gap-1.5 pb-1.5"
+    >
+      <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
+        <button
+          type="button"
+          class="mode-chip"
+          :class="{ 'mode-chip-active': !store.readMode }"
+          :aria-pressed="!store.readMode"
+          @click="store.setReadMode(false)"
+        >
+          {{ $t('header.listenMode') }}
+        </button>
+        <button
+          type="button"
+          class="mode-chip"
+          :class="{ 'mode-chip-active': store.readMode }"
+          :aria-pressed="store.readMode"
+          @click="store.setReadMode(true)"
+        >
+          {{ $t('header.readMode') }}
+        </button>
+      </div>
+      <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
+        <button
+          type="button"
+          class="mode-chip"
+          :class="{ 'mode-chip-active': !store.readingMode }"
+          :aria-pressed="!store.readingMode"
+          @click="store.setReadingMode(false)"
+        >
+          {{ $t('header.layoutSingle') }}
+        </button>
+        <button
+          type="button"
+          class="mode-chip"
+          :class="{ 'mode-chip-active': store.readingMode }"
+          :aria-pressed="store.readingMode"
+          @click="store.setReadingMode(true)"
+        >
+          {{ $t('header.layoutContinuous') }}
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -316,6 +562,39 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 }
 .header-btn:active {
   transform: scale(0.93);
+}
+
+.mode-chip-group {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.mode-chip {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.3rem 0.55rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s cubic-bezier(0.25, 1, 0.5, 1),
+    color 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.mode-chip:hover {
+  color: #fff;
+}
+.mode-chip-active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.mode-chip:active {
+  transform: scale(0.97);
 }
 
 .theme-pop-enter-active {

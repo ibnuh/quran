@@ -199,6 +199,7 @@ function updateHeaderHeight() {
     }
     if (newControlsH !== controlsHeight.value) {
       controlsHeight.value = newControlsH
+      document.documentElement.style.setProperty('--controls-height', newControlsH + 'px')
     }
   })
 }
@@ -334,7 +335,12 @@ onMounted(async () => {
         @retry="store.loadSurah()"
         @open-tafsir="showTafsir = true"
       />
-      <ReadingView v-else @select="onReadingSelect" @play-from="onPlayFromHere" />
+      <ReadingView
+        v-else
+        @select="onReadingSelect"
+        @play-from="onPlayFromHere"
+        @open-tafsir="showTafsir = true"
+      />
     </main>
 
     <div
@@ -371,6 +377,20 @@ onMounted(async () => {
         @set-sleep="sleepTimer.start"
       />
     </div>
+
+    <!-- Residual progress when chrome is auto-hidden -->
+    <Transition name="residual-progress">
+      <div
+        v-if="!controlsVisible && (audio.progress.value > 0 || audio.isPlaying.value)"
+        class="fixed bottom-0 left-0 right-0 z-30 h-[3px] pointer-events-none"
+        aria-hidden="true"
+      >
+        <div
+          class="h-full bg-primary transition-[width] duration-150 ease-linear"
+          :style="{ width: Math.min(100, Math.max(0, audio.progress.value)) + '%' }"
+        ></div>
+      </div>
+    </Transition>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <VerseList
@@ -461,5 +481,14 @@ onMounted(async () => {
 .tip-leave-to {
   opacity: 0;
   transform: translateY(-1rem);
+}
+
+.residual-progress-enter-active,
+.residual-progress-leave-active {
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.residual-progress-enter-from,
+.residual-progress-leave-to {
+  opacity: 0;
 }
 </style>

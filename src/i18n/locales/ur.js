@@ -27,7 +27,12 @@ export default {
     translationSize: 'ترجمہ سائز',
     contentWidth: 'مواد کی چوڑائی',
     jumpToJuz: 'پارے پر جائیں',
-    selectJuz: 'پارہ منتخب کریں'
+    selectJuz: 'پارہ منتخب کریں',
+    more: 'مزید',
+    listenMode: 'سنیں',
+    readMode: 'پڑھیں',
+    layoutSingle: 'واحد',
+    layoutContinuous: 'مسلسل'
   },
   controls: {
     play: 'چلائیں',
@@ -111,6 +116,10 @@ export default {
   settings: {
     title: 'ترتیبات',
     close: 'ترتیبات بند کریں',
+    tabPlayback: 'پلے بیک',
+    tabDisplay: 'ڈسپلے',
+    tabReading: 'پڑھائی',
+    tabApp: 'ایپ',
     surah: 'سورہ',
     reciter: 'قاری',
     translationLanguage: 'ترجمے کی زبان',

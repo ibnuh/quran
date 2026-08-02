@@ -27,7 +27,12 @@ export default {
     translationSize: 'حجم الترجمة',
     contentWidth: 'عرض المحتوى',
     jumpToJuz: 'الانتقال إلى جزء',
-    selectJuz: 'اختيار جزء'
+    selectJuz: 'اختيار جزء',
+    more: 'المزيد',
+    listenMode: 'استماع',
+    readMode: 'قراءة',
+    layoutSingle: 'مفرد',
+    layoutContinuous: 'متصل'
   },
   controls: {
     play: 'تشغيل',
@@ -111,6 +116,10 @@ export default {
   settings: {
     title: 'الإعدادات',
     close: 'إغلاق الإعدادات',
+    tabPlayback: 'التشغيل',
+    tabDisplay: 'العرض',
+    tabReading: 'القراءة',
+    tabApp: 'التطبيق',
     surah: 'السورة',
     reciter: 'القارئ',
     translationLanguage: 'لغة الترجمة',
