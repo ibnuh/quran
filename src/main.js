@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { registerSW } from 'virtual:pwa-register'
 import router from './router/index.js'
 import App from './App.vue'
 import { i18n, setUiLocale, detectUiLocale } from './i18n/index.js'
@@ -21,7 +22,7 @@ try {
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault()
   window.__pwaInstallPrompt = e
-}
+})
 
 const app = createApp(App)
 app.use(createPinia())
@@ -30,11 +31,9 @@ app.use(i18n)
 app.mount('#app')
 
 // PWA update prompt. registerType: 'prompt' + skipWaiting:false means a new worker
-// stays waiting until the user accepts. Do NOT reload on controllerchange here —
+// stays waiting until the user accepts. Do NOT reload on controllerchange here:
 // that caused silent auto-updates mid-session. Only UpdatePrompt / Settings reload
 // after an explicit user action.
-import { registerSW } from 'virtual:pwa-register'
-
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
