@@ -1,5 +1,16 @@
 import { ref, onBeforeUnmount } from 'vue'
 
+// Enable with localStorage.quran-debug-audio = '1' or ?debugAudio=1
+const DEBUG_AUDIO =
+  typeof window !== 'undefined' &&
+  (window.localStorage?.getItem('quran-debug-audio') === '1' ||
+    /(?:\?|&)debugAudio=1(?:&|$)/.test(window.location.search || ''))
+function dbg(...args) {
+  if (DEBUG_AUDIO) {
+    console.info('[audio]', ...args)
+  }
+}
+
 export function useAudio() {
   let audio = new Audio()
   audio.preload = 'auto'
@@ -18,6 +29,23 @@ export function useAudio() {
   // Seek requested before metadata was ready; applied on loadedmetadata.
   let pendingSeekMs = null
 
+  function snapshot(label) {
+    if (!DEBUG_AUDIO) {
+      return
+    }
+    dbg(label, {
+      src: (audio.currentSrc || audio.src || '').slice(-60),
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      duration: audio.duration,
+      currentTime: audio.currentTime,
+      paused: audio.paused,
+      error: audio.error ? { code: audio.error.code, message: audio.error.message } : null,
+      pendingSeekMs,
+      isPlaying: isPlaying.value
+    })
+  }
+
   function syncProgressFromElement() {
     currentTimeMs.value = audio.currentTime * 1000
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
@@ -28,16 +56,23 @@ export function useAudio() {
 
   function applyPendingSeek() {
     if (pendingSeekMs == null) {
-      return
+      return false
     }
     if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
-      return
+      return false
     }
     const sec = Math.max(0, Math.min(pendingSeekMs / 1000, Math.max(0, audio.duration - 0.05)))
-    audio.currentTime = sec
-    currentTimeMs.value = sec * 1000
-    verseSeekUntil = Date.now() + 600
-    pendingSeekMs = null
+    try {
+      audio.currentTime = sec
+      currentTimeMs.value = sec * 1000
+      verseSeekUntil = Date.now() + 600
+      pendingSeekMs = null
+      dbg('seek applied', { sec })
+      return true
+    } catch (e) {
+      dbg('seek failed', e)
+      return false
+    }
   }
 
   function bindAudioEvents(el) {
@@ -55,7 +90,13 @@ export function useAudio() {
     })
 
     el.addEventListener('loadedmetadata', () => {
+      dbg('loadedmetadata', { duration: el.duration })
       syncProgressFromElement()
+      applyPendingSeek()
+    })
+
+    el.addEventListener('canplay', () => {
+      dbg('canplay', { readyState: el.readyState })
       applyPendingSeek()
     })
 
@@ -70,14 +111,21 @@ export function useAudio() {
 
     el.addEventListener('play', () => {
       isPlaying.value = true
+      dbg('play event')
+    })
+
+    el.addEventListener('playing', () => {
+      dbg('playing event', { currentTime: el.currentTime })
     })
 
     el.addEventListener('pause', () => {
       isPlaying.value = false
+      dbg('pause event')
     })
 
     el.addEventListener('error', () => {
       isPlaying.value = false
+      snapshot('error event')
     })
   }
 
@@ -86,6 +134,7 @@ export function useAudio() {
   // Replace the media element entirely. Needed when a service-worker update leaves
   // the old pipeline in a dead state where play() rejects forever on the same node.
   function recreateAudio() {
+    dbg('recreateAudio')
     try {
       audio.pause()
     } catch {
@@ -126,123 +175,110 @@ export function useAudio() {
     return current === resolveUrl(url)
   }
 
-  function waitForReady(timeoutMs = 10000) {
-    return new Promise(resolve => {
-      // HAVE_FUTURE_DATA or better is ideal; HAVE_METADATA is enough to seek.
-      if (audio.readyState >= 1 && Number.isFinite(audio.duration) && audio.duration > 0) {
-        resolve(true)
-        return
-      }
-      let settled = false
-      const finish = ok => {
-        if (settled) {
-          return
-        }
-        settled = true
-        clearTimeout(timer)
-        audio.removeEventListener('loadedmetadata', onReady)
-        audio.removeEventListener('canplay', onReady)
-        audio.removeEventListener('error', onError)
-        resolve(ok)
-      }
-      const onReady = () => {
-        if (Number.isFinite(audio.duration) && audio.duration > 0) {
-          finish(true)
-        }
-      }
-      const onError = () => finish(false)
-      const timer = setTimeout(() => {
-        finish(audio.readyState >= 1 && Number.isFinite(audio.duration) && audio.duration > 0)
-      }, timeoutMs)
-      audio.addEventListener('loadedmetadata', onReady)
-      audio.addEventListener('canplay', onReady)
-      audio.addEventListener('error', onError, { once: true })
-    })
-  }
-
   function load(url) {
     if (!url) {
       return
     }
     // Avoid resetting a healthy element to the same source (would interrupt playback).
     if (hasLoadedUrl(url) && !audio.error && audio.readyState >= 1) {
+      dbg('load skip (already loaded)', url.slice(-40))
       return
     }
     pendingSeekMs = null
+    dbg('load', url.slice(-60))
     audio.src = url
     audio.load()
-  }
-
-  async function ensureLoaded(url) {
-    if (!url) {
-      return false
-    }
-    load(url)
-    if (await waitForReady()) {
-      return true
-    }
-    // Hard reload once.
-    audio.removeAttribute('src')
-    audio.load()
-    audio.src = url
-    audio.load()
-    return waitForReady()
   }
 
   async function playFromElement() {
     audio.playbackRate = playbackRate.value
     audio.volume = volume.value
+    snapshot('playFromElement before')
     try {
+      // IMPORTANT: call play() without awaiting prior network waits when possible.
+      // Browsers only honor autoplay when play() is invoked inside a user gesture.
       await audio.play()
+      snapshot('playFromElement ok')
       return true
-    } catch {
+    } catch (e) {
+      dbg('playFromElement failed', e && (e.name || e.message || e))
       return false
     }
   }
 
   /**
-   * Load `url`, optionally seek to startMs (after metadata is ready), then play.
-   * startMs is required when resuming from a specific ayah in full-surah mode.
+   * Load `url`, optionally seek to startMs, then play.
+   *
+   * Critical: call HTMLMediaElement.play() as early as possible inside the user
+   * gesture. Awaiting network/metadata first drops the transient activation and
+   * browsers then reject play() with NotAllowedError — which looked like a dead button.
    */
   async function playAt(url, startMs = null) {
+    dbg('playAt', { url: url ? url.slice(-60) : null, startMs })
     if (!url) {
       return false
     }
 
-    let ready = await ensureLoaded(url)
-    if (!ready) {
-      recreateAudio()
-      ready = await ensureLoaded(url)
-      if (!ready) {
-        return false
-      }
-    }
+    load(url)
 
     if (startMs != null && Number.isFinite(startMs) && startMs >= 0) {
       pendingSeekMs = startMs
       applyPendingSeek()
-      // If metadata still wasn't ready somehow, wait once more.
-      if (pendingSeekMs != null) {
-        await waitForReady(3000)
-        applyPendingSeek()
-      }
     }
+
+    // First attempt: play immediately (keeps user-gesture activation).
+    if (await playFromElement()) {
+      // Seek may still be pending if metadata arrived mid-play; apply now.
+      applyPendingSeek()
+      return true
+    }
+
+    // Second attempt: wait briefly for metadata, seek, play again.
+    // (May still fail if the browser already consumed the gesture.)
+    await new Promise(resolve => {
+      if (audio.readyState >= 1 && Number.isFinite(audio.duration) && audio.duration > 0) {
+        resolve()
+        return
+      }
+      const done = () => {
+        audio.removeEventListener('loadedmetadata', done)
+        audio.removeEventListener('canplay', done)
+        audio.removeEventListener('error', done)
+        clearTimeout(timer)
+        resolve()
+      }
+      const timer = setTimeout(done, 4000)
+      audio.addEventListener('loadedmetadata', done, { once: true })
+      audio.addEventListener('canplay', done, { once: true })
+      audio.addEventListener('error', done, { once: true })
+    })
+    applyPendingSeek()
 
     if (await playFromElement()) {
       return true
     }
 
-    // Dead media element after SW update: recreate and try once more.
+    // Last resort: brand-new element (dead pipeline after SW update).
     const retrySeek = startMs
     recreateAudio()
-    ready = await ensureLoaded(url)
-    if (!ready) {
-      return false
-    }
+    load(url)
     if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
       pendingSeekMs = retrySeek
-      applyPendingSeek()
     }
+    await new Promise(resolve => {
+      const done = () => {
+        audio.removeEventListener('loadedmetadata', done)
+        audio.removeEventListener('canplay', done)
+        audio.removeEventListener('error', done)
+        clearTimeout(timer)
+        resolve()
+      }
+      const timer = setTimeout(done, 4000)
+      audio.addEventListener('loadedmetadata', done, { once: true })
+      audio.addEventListener('canplay', done, { once: true })
+      audio.addEventListener('error', done, { once: true })
+    })
+    applyPendingSeek()
     return playFromElement()
   }
 
@@ -258,6 +294,7 @@ export function useAudio() {
     }
     const existing = audio.currentSrc || audio.src
     if (!existing) {
+      dbg('play() no source')
       return false
     }
     if (await playFromElement()) {
@@ -289,6 +326,7 @@ export function useAudio() {
       pendingSeekMs = ms
       currentTimeMs.value = ms
       verseSeekUntil = Date.now() + 600
+      dbg('seekTo queued', ms)
       return
     }
     const sec = Math.max(0, Math.min(ms / 1000, Math.max(0, audio.duration - 0.05)))
@@ -296,6 +334,7 @@ export function useAudio() {
     currentTimeMs.value = sec * 1000
     verseSeekUntil = Date.now() + 600
     pendingSeekMs = null
+    dbg('seekTo immediate', sec)
   }
 
   function isVerseSeekActive() {

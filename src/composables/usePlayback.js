@@ -94,6 +94,8 @@ export function usePlayback(store, audio) {
     if (store.playbackMode === 'full' && store.audioUrl) {
       // Start at the selected ayah when the playhead is elsewhere (e.g. user jumped
       // to ayah 6, or we restored position before the file was ready).
+      // playAt() must call HTMLMediaElement.play() inside this click stack so the
+      // browser keeps user-gesture activation (awaiting network first blocks autoplay).
       const timing = store.verseTimings[store.currentVerseIndex]
       const startMs = !isNearCurrentVerse() && timing ? timing.timestampFrom : null
       void audio.playAt(store.audioUrl, startMs)
