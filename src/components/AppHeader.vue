@@ -128,8 +128,8 @@ onBeforeUnmount(() => {
     class="bg-primary text-white px-3 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]"
     style="padding-top: max(0.5rem, env(safe-area-inset-top, 0px))"
   >
-    <div class="flex items-center justify-between pb-2 landscape-compact:pb-1">
-      <div class="flex items-center gap-1">
+    <div class="flex items-center justify-between pb-1.5 landscape-compact:pb-1">
+      <div class="flex items-center gap-0.5 sm:gap-1">
         <button
           class="flex header-btn shrink-0"
           :aria-label="$t('header.settings')"
@@ -169,9 +169,9 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <div class="hidden sm:block landscape-compact:block text-center flex-1 min-w-0 px-3">
+      <div class="hidden sm:block landscape-compact:block text-center flex-1 min-w-0 px-2">
         <h1
-          class="surah-title font-arabic text-lg landscape-compact:text-sm truncate"
+          class="surah-title font-arabic text-base sm:text-lg landscape-compact:text-sm truncate"
           dir="rtl"
           lang="ar"
           :title="
@@ -182,64 +182,64 @@ onBeforeUnmount(() => {
         >
           {{ store.currentSurah ? store.currentSurah.name : $t('app.name') }}
         </h1>
-        <p
-          class="text-[0.65rem] sm:text-[0.7rem] truncate landscape-compact:hidden"
-          :class="store.currentSurah ? 'opacity-90' : 'opacity-0'"
-        >
-          {{
-            store.currentSurah
-              ? store.currentSurah.englishName + ' - ' + store.currentSurah.englishNameTranslation
-              : '&nbsp;'
-          }}
-        </p>
-        <!-- Mode chips under English name on sm+ -->
+        <!-- English name + mode chips share one row to avoid a third header band -->
         <div
-          class="hidden sm:flex landscape-compact:!hidden items-center justify-center gap-1.5 mt-0.5"
+          class="flex items-center justify-center gap-2 min-w-0 landscape-compact:hidden"
+          :class="store.currentSurah ? '' : 'invisible'"
         >
-          <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
-            <button
-              type="button"
-              class="mode-chip"
-              :class="{ 'mode-chip-active': !store.readMode }"
-              :aria-pressed="!store.readMode"
-              @click="store.setReadMode(false)"
-            >
-              {{ $t('header.listenMode') }}
-            </button>
-            <button
-              type="button"
-              class="mode-chip"
-              :class="{ 'mode-chip-active': store.readMode }"
-              :aria-pressed="store.readMode"
-              @click="store.setReadMode(true)"
-            >
-              {{ $t('header.readMode') }}
-            </button>
-          </div>
-          <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
-            <button
-              type="button"
-              class="mode-chip"
-              :class="{ 'mode-chip-active': !store.readingMode }"
-              :aria-pressed="!store.readingMode"
-              @click="store.setReadingMode(false)"
-            >
-              {{ $t('header.layoutSingle') }}
-            </button>
-            <button
-              type="button"
-              class="mode-chip"
-              :class="{ 'mode-chip-active': store.readingMode }"
-              :aria-pressed="store.readingMode"
-              @click="store.setReadingMode(true)"
-            >
-              {{ $t('header.layoutContinuous') }}
-            </button>
+          <p class="text-[0.65rem] sm:text-[0.7rem] truncate opacity-90 min-w-0 max-w-[40%]">
+            {{
+              store.currentSurah
+                ? store.currentSurah.englishName + ' · ' + store.currentSurah.englishNameTranslation
+                : '&nbsp;'
+            }}
+          </p>
+          <div class="mode-chips shrink-0" aria-label="Reading modes">
+            <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
+              <button
+                type="button"
+                class="mode-chip"
+                :class="{ 'mode-chip-active': !store.readMode }"
+                :aria-pressed="!store.readMode"
+                @click="store.setReadMode(false)"
+              >
+                {{ $t('header.listenMode') }}
+              </button>
+              <button
+                type="button"
+                class="mode-chip"
+                :class="{ 'mode-chip-active': store.readMode }"
+                :aria-pressed="store.readMode"
+                @click="store.setReadMode(true)"
+              >
+                {{ $t('header.readMode') }}
+              </button>
+            </div>
+            <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
+              <button
+                type="button"
+                class="mode-chip"
+                :class="{ 'mode-chip-active': !store.readingMode }"
+                :aria-pressed="!store.readingMode"
+                @click="store.setReadingMode(false)"
+              >
+                {{ $t('header.layoutSingle') }}
+              </button>
+              <button
+                type="button"
+                class="mode-chip"
+                :class="{ 'mode-chip-active': store.readingMode }"
+                :aria-pressed="store.readingMode"
+                @click="store.setReadingMode(true)"
+              >
+                {{ $t('header.layoutContinuous') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-0.5 sm:gap-1">
         <button
           class="hidden sm:flex header-btn opacity-60 hover:opacity-100 relative"
           :aria-label="$t('header.showBookmarks')"
@@ -464,66 +464,64 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Compact surah indicator for small screens: Latin on the left, Arabic on the right -->
+    <!-- Mobile: surah names + mode chips in one compact block (no third band) -->
     <div
       v-if="store.currentSurah"
-      class="sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1"
+      class="sm:hidden landscape-compact:hidden flex flex-col gap-1 pb-1.5"
     >
-      <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
-        {{ store.currentSurah.englishName
-        }}<span class="opacity-60"> · {{ store.currentSurah.englishNameTranslation }}</span>
-      </span>
-      <span
-        class="surah-title-sm min-w-0 flex-1 truncate text-right font-arabic text-[0.95rem]"
-        dir="rtl"
-        lang="ar"
-        >{{ store.currentSurah.name }}</span
-      >
-    </div>
-
-    <!-- Mode chips under surah row on mobile -->
-    <div
-      class="sm:hidden landscape-compact:hidden flex items-center justify-center gap-1.5 pb-1.5"
-    >
-      <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
-        <button
-          type="button"
-          class="mode-chip"
-          :class="{ 'mode-chip-active': !store.readMode }"
-          :aria-pressed="!store.readMode"
-          @click="store.setReadMode(false)"
+      <div class="flex items-center justify-between gap-3">
+        <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
+          {{ store.currentSurah.englishName
+          }}<span class="opacity-60"> · {{ store.currentSurah.englishNameTranslation }}</span>
+        </span>
+        <span
+          class="surah-title-sm min-w-0 flex-1 truncate text-right font-arabic text-[0.95rem]"
+          dir="rtl"
+          lang="ar"
+          >{{ store.currentSurah.name }}</span
         >
-          {{ $t('header.listenMode') }}
-        </button>
-        <button
-          type="button"
-          class="mode-chip"
-          :class="{ 'mode-chip-active': store.readMode }"
-          :aria-pressed="store.readMode"
-          @click="store.setReadMode(true)"
-        >
-          {{ $t('header.readMode') }}
-        </button>
       </div>
-      <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
-        <button
-          type="button"
-          class="mode-chip"
-          :class="{ 'mode-chip-active': !store.readingMode }"
-          :aria-pressed="!store.readingMode"
-          @click="store.setReadingMode(false)"
-        >
-          {{ $t('header.layoutSingle') }}
-        </button>
-        <button
-          type="button"
-          class="mode-chip"
-          :class="{ 'mode-chip-active': store.readingMode }"
-          :aria-pressed="store.readingMode"
-          @click="store.setReadingMode(true)"
-        >
-          {{ $t('header.layoutContinuous') }}
-        </button>
+      <div class="mode-chips justify-center">
+        <div class="mode-chip-group" role="group" :aria-label="$t('header.listenMode')">
+          <button
+            type="button"
+            class="mode-chip"
+            :class="{ 'mode-chip-active': !store.readMode }"
+            :aria-pressed="!store.readMode"
+            @click="store.setReadMode(false)"
+          >
+            {{ $t('header.listenMode') }}
+          </button>
+          <button
+            type="button"
+            class="mode-chip"
+            :class="{ 'mode-chip-active': store.readMode }"
+            :aria-pressed="store.readMode"
+            @click="store.setReadMode(true)"
+          >
+            {{ $t('header.readMode') }}
+          </button>
+        </div>
+        <div class="mode-chip-group" role="group" :aria-label="$t('header.layoutSingle')">
+          <button
+            type="button"
+            class="mode-chip"
+            :class="{ 'mode-chip-active': !store.readingMode }"
+            :aria-pressed="!store.readingMode"
+            @click="store.setReadingMode(false)"
+          >
+            {{ $t('header.layoutSingle') }}
+          </button>
+          <button
+            type="button"
+            class="mode-chip"
+            :class="{ 'mode-chip-active': store.readingMode }"
+            :aria-pressed="store.readingMode"
+            @click="store.setReadingMode(true)"
+          >
+            {{ $t('header.layoutContinuous') }}
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -531,22 +529,22 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .surah-title {
-  line-height: 1.7;
-  padding-block: 2px;
-  margin-block: -2px;
+  line-height: 1.45;
+  padding-block: 1px;
+  margin-block: 0;
 }
 
 /* Small-screen surah line: taller line box so truncate does not clip harakat. */
 .surah-title-sm {
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .header-btn {
   align-items: center;
   gap: 0.375rem;
-  padding: 0.375rem 0.625rem;
-  min-width: 44px;
-  min-height: 44px;
+  padding: 0.3rem 0.5rem;
+  min-width: 40px;
+  min-height: 40px;
   justify-content: center;
   border-radius: 0.5rem;
   font-size: 0.75rem;
@@ -564,10 +562,16 @@ onBeforeUnmount(() => {
   transform: scale(0.93);
 }
 
+.mode-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .mode-chip-group {
   display: inline-flex;
   align-items: center;
-  padding: 2px;
+  padding: 1px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.12);
 }
@@ -575,10 +579,11 @@ onBeforeUnmount(() => {
   border: 0;
   background: transparent;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 0.65rem;
-  font-weight: 500;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   line-height: 1;
-  padding: 0.3rem 0.55rem;
+  padding: 0.22rem 0.45rem;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
