@@ -1,11 +1,16 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
+import { fetchFootnote } from '../services/api.js'
 import VerseArabic from './VerseArabic.vue'
+import VerseActions from './VerseActions.vue'
+import FootnotePanel from './FootnotePanel.vue'
 
 const store = usePlayerStore()
-const emit = defineEmits(['select', 'play-from'])
+const emit = defineEmits(['select', 'play-from', 'open-tafsir'])
 const rowsRef = ref(null)
+// { id, label } while the footnote side panel is open (active verse only).
+const openFootnote = ref(null)
 
 // Reading rows use a slightly smaller Arabic size; alignment follows the justify setting.
 // Justify is ignored with the mushaf (QCF) font (its glyphs are pre-spaced for the page).
@@ -30,6 +35,59 @@ const showSurahBismillah = computed(
   () => store.currentSurahNum !== 1 && store.currentSurahNum !== 9
 )
 
+const showActiveActions = computed(
+  () =>
+    store.verseActions.bookmark ||
+    store.verseActions.share ||
+    store.verseActions.copy ||
+    store.verseActions.tafsir
+)
+
+// Segments + markers only for the active verse when footnotes are enabled.
+const activeTranslationSegments = computed(() => {
+  const verse = store.currentTranslationVerse
+  if (!store.showFootnotes) {
+    const text = verse?.text
+    return text ? [{ type: 'text', value: text }] : []
+  }
+  if (verse?.segments?.length) {
+    return verse.segments
+  }
+  const text = verse?.text
+  return text ? [{ type: 'text', value: text }] : []
+})
+
+function plainTranslation(i) {
+  return store.translationVerses[i]?.text || ''
+}
+
+function prefetchFootnote(segment) {
+  if (!segment?.id || !Number.isFinite(segment.id)) {
+    return
+  }
+  void fetchFootnote(segment.id).catch(() => {})
+}
+
+function openFootnoteAt(segment) {
+  if (openFootnote.value?.id === segment.id) {
+    openFootnote.value = null
+    return
+  }
+  prefetchFootnote(segment)
+  openFootnote.value = {
+    id: segment.id,
+    label: segment.label
+  }
+}
+
+function closeFootnote() {
+  openFootnote.value = null
+}
+
+function selectFootnote(fn) {
+  openFootnote.value = { id: fn.id, label: fn.label }
+}
+
 function scrollToActive(smooth = true) {
   const el = rowsRef.value?.querySelector('.reading-row-active')
   if (el) {
@@ -40,11 +98,21 @@ function scrollToActive(smooth = true) {
 // Follow playback / navigation by keeping the active verse in view.
 watch(
   () => store.currentVerseIndex,
-  () => nextTick(() => scrollToActive(true))
+  () => {
+    closeFootnote()
+    nextTick(() => scrollToActive(true))
+  }
 )
 watch(
   () => store.currentSurahNum,
-  () => nextTick(() => scrollToActive(false))
+  () => {
+    closeFootnote()
+    nextTick(() => scrollToActive(false))
+  }
+)
+watch(
+  () => [store.currentTranslation, store.showFootnotes],
+  closeFootnote
 )
 
 onMounted(() => nextTick(() => scrollToActive(false)))
@@ -69,6 +137,8 @@ onMounted(() => nextTick(() => scrollToActive(false)))
       :class="i === store.currentVerseIndex ? 'reading-row-active bg-primary/10' : 'hover:bg-card'"
       :aria-current="i === store.currentVerseIndex ? 'true' : undefined"
     >
+      <!-- Arabic + plain translation stay in one select control; interactive
+           controls (footnotes, actions, play) sit outside to avoid nested buttons. -->
       <button
         type="button"
         class="w-full text-right cursor-pointer"
@@ -83,12 +153,47 @@ onMounted(() => nextTick(() => scrollToActive(false)))
           </template>
         </VerseArabic>
         <p
+          v-if="i !== store.currentVerseIndex"
           class="text-muted font-light mt-2 text-left leading-relaxed"
           :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
         >
-          {{ store.translationVerses[i]?.text }}
+          {{ plainTranslation(i) }}
         </p>
       </button>
+
+      <!-- Active verse: translation with optional footnote markers -->
+      <p
+        v-if="i === store.currentVerseIndex"
+        class="text-muted font-light mt-2 text-left leading-relaxed"
+        :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
+      >
+        <template v-for="(seg, si) in activeTranslationSegments" :key="si">
+          <span v-if="seg.type === 'text'">{{ seg.value }}</span>
+          <button
+            v-else-if="seg.type === 'footnote'"
+            type="button"
+            class="fn-marker"
+            :class="{ 'fn-marker-active': openFootnote?.id === seg.id }"
+            :aria-label="$t('verse.footnoteN', { n: seg.label })"
+            :aria-expanded="openFootnote?.id === seg.id ? 'true' : 'false'"
+            :aria-controls="openFootnote?.id === seg.id ? 'footnote-panel' : undefined"
+            :title="$t('verse.footnoteN', { n: seg.label })"
+            @mouseenter="prefetchFootnote(seg)"
+            @focus="prefetchFootnote(seg)"
+            @click.stop="openFootnoteAt(seg)"
+          >
+            {{ seg.label }}
+          </button>
+        </template>
+      </p>
+
+      <!-- Active verse only: bookmark / share / copy / tafsir -->
+      <div
+        v-if="i === store.currentVerseIndex && showActiveActions"
+        class="mt-2.5 flex justify-start"
+      >
+        <VerseActions @open-tafsir="emit('open-tafsir')" />
+      </div>
 
       <!-- Read mode: optional play from the focused verse -->
       <div
@@ -108,6 +213,15 @@ onMounted(() => nextTick(() => scrollToActive(false)))
         </button>
       </div>
     </div>
+
+    <!-- Single panel instance for the active verse (not per row). -->
+    <FootnotePanel
+      v-if="openFootnote"
+      :footnote-id="openFootnote.id"
+      :label="openFootnote.label"
+      @close="closeFootnote"
+      @select="selectFootnote"
+    />
   </div>
 </template>
 
@@ -145,5 +259,54 @@ onMounted(() => nextTick(() => scrollToActive(false)))
 .reading-ayah-num-inner {
   display: block;
   line-height: 1;
+}
+
+.fn-marker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 1.35em;
+  min-width: 1.35em;
+  margin-inline: 0.1em;
+  padding: 0 0.12em;
+  vertical-align: super;
+  font-size: 0.58em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition:
+    background 0.15s var(--ease-out, ease),
+    color 0.15s var(--ease-out, ease),
+    border-color 0.15s var(--ease-out, ease),
+    box-shadow 0.15s var(--ease-out, ease),
+    transform 0.15s var(--ease-out, ease);
+}
+.fn-marker::before {
+  content: '';
+  position: absolute;
+  inset: -0.35em -0.4em;
+}
+.fn-marker:hover {
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+.fn-marker:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.fn-marker:active {
+  transform: scale(0.94);
+}
+.fn-marker-active {
+  color: white;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 </style>

@@ -1,15 +1,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
-import { buildVerseUrl } from '../composables/useDeepLink.js'
 import { fetchFootnote } from '../services/api.js'
 import VerseArabic from './VerseArabic.vue'
+import VerseActions from './VerseActions.vue'
 import FootnotePanel from './FootnotePanel.vue'
 
 const emit = defineEmits(['retry', 'open-tafsir'])
 const store = usePlayerStore()
 
-const copied = ref(false)
 // { id, label } while the footnote side panel is open.
 const openFootnote = ref(null)
 
@@ -78,53 +77,6 @@ const arabicStyle = computed(() => ({
 const isLastVerse = computed(
   () => store.totalVerses > 0 && store.currentVerseIndex === store.totalVerses - 1
 )
-
-function verseReference() {
-  const surah = store.currentSurah
-  const verse = store.currentVerse
-  return `${surah.englishName} ${surah.number}:${verse.number}`
-}
-
-function canonicalUrl() {
-  return `${window.location.origin}${buildVerseUrl(store.currentSurahNum, store.currentVerse.number)}`
-}
-
-function shareVerse() {
-  const surah = store.currentSurah
-  const verse = store.currentVerse
-  const translation = store.currentTranslationVerse
-  if (!surah || !verse) {
-    return
-  }
-
-  const text = `${verseReference()}\n\n${verse.text}\n${translation?.text || ''}`
-  const url = canonicalUrl()
-
-  if (navigator.share) {
-    navigator.share({ title: verseReference(), text, url }).catch(() => {})
-  } else {
-    navigator.clipboard.writeText(`${text}\n${url}`).catch(() => {})
-  }
-}
-
-function copyVerse() {
-  const surah = store.currentSurah
-  const verse = store.currentVerse
-  const translation = store.currentTranslationVerse
-  if (!surah || !verse) {
-    return
-  }
-  const text = `${verse.text}\n\n${translation?.text || ''}\n\n${verseReference()}\n${canonicalUrl()}`
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      copied.value = true
-      setTimeout(() => {
-        copied.value = false
-      }, 1500)
-    })
-    .catch(() => {})
-}
 </script>
 
 <template>
@@ -203,118 +155,13 @@ function copyVerse() {
               {{ store.currentVerse.number }}
             </span>
 
-            <div
-              v-if="
-                store.verseActions.bookmark ||
-                store.verseActions.share ||
-                store.verseActions.copy ||
-                store.verseActions.tafsir
-              "
-              class="flex items-center justify-center gap-1"
-            >
-              <button
-                v-if="store.verseActions.tafsir"
-                class="verse-action-btn"
-                :aria-label="$t('verse.openTafsir')"
-                :title="$t('panels.tafsir')"
-                @click="emit('open-tafsir')"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  class="text-muted/50"
-                >
-                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-                </svg>
-              </button>
-
-              <button
-                v-if="store.verseActions.bookmark"
-                class="verse-action-btn"
-                :aria-label="
-                  store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')
-                "
-                :title="
-                  store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')
-                "
-                @click="store.toggleBookmark()"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  :fill="store.isCurrentBookmarked ? 'currentColor' : 'none'"
-                  :class="store.isCurrentBookmarked ? 'text-accent' : 'text-muted/50'"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-                </svg>
-              </button>
-
-              <button
-                v-if="store.verseActions.share"
-                class="verse-action-btn"
-                :aria-label="$t('verse.share')"
-                :title="$t('verse.share')"
-                @click="shareVerse"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  class="text-muted/50"
-                >
-                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
-                </svg>
-              </button>
-
-              <button
-                v-if="store.verseActions.copy"
-                class="verse-action-btn"
-                :aria-label="copied ? $t('verse.copied') : $t('verse.copy')"
-                :title="copied ? $t('verse.copied') : $t('verse.copy')"
-                @click="copyVerse"
-              >
-                <svg
-                  v-if="!copied"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  class="text-muted/50"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" />
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                </svg>
-                <svg
-                  v-else
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  class="text-primary"
-                >
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </button>
+            <div class="flex items-center justify-center">
+              <VerseActions @open-tafsir="emit('open-tafsir')" />
             </div>
           </div>
 
           <p
-            class="verse-translation leading-relaxed text-muted font-light mx-auto"
+            class="verse-translation leading-relaxed text-muted font-normal mx-auto"
             :style="{
               fontSize: store.translationFontSize + 'rem',
               maxWidth: store.contentWidth * 0.75 + 'rem'
@@ -446,22 +293,6 @@ function copyVerse() {
 }
 .verse-fade-leave-to {
   opacity: 0;
-}
-
-.verse-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition:
-    background 0.15s var(--ease-out),
-    color 0.15s var(--ease-out);
-}
-.verse-action-btn:hover {
-  background: color-mix(in srgb, var(--color-muted) 12%, transparent);
 }
 
 .verse-badge {
