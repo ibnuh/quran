@@ -14,6 +14,7 @@ import { useMobileTip } from '../composables/useMobileTip.js'
 import { useDeepLink } from '../composables/useDeepLink.js'
 import { useSleepTimer } from '../composables/useSleepTimer.js'
 import { useSeo } from '../composables/useSeo.js'
+import { BEFORE_SW_UPDATE_EVENT } from '../utils/swAudio.js'
 import THEMES, { resolveThemeId } from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
@@ -211,6 +212,9 @@ function onOnline() {
 function onOffline() {
   isOnline.value = false
 }
+function onBeforeSwUpdate() {
+  audio.stop()
+}
 
 let headerObserver = null
 onBeforeUnmount(() => {
@@ -219,6 +223,7 @@ onBeforeUnmount(() => {
   }
   window.removeEventListener('online', onOnline)
   window.removeEventListener('offline', onOffline)
+  window.removeEventListener(BEFORE_SW_UPDATE_EVENT, onBeforeSwUpdate)
 })
 
 // -- Document title + sharing metadata (per surah/verse) --
@@ -228,9 +233,7 @@ onMounted(async () => {
   // If we just accepted a PWA update, drop stale audio runtime caches again in
   // case the previous SW still served them during activation.
   try {
-    const { consumeSwJustUpdated, clearAudioRuntimeCaches } = await import(
-      '../utils/swAudio.js'
-    )
+    const { consumeSwJustUpdated, clearAudioRuntimeCaches } = await import('../utils/swAudio.js')
     if (consumeSwJustUpdated()) {
       await clearAudioRuntimeCaches()
     }
@@ -265,6 +268,7 @@ onMounted(async () => {
 
   window.addEventListener('online', onOnline)
   window.addEventListener('offline', onOffline)
+  window.addEventListener(BEFORE_SW_UPDATE_EVENT, onBeforeSwUpdate)
   headerObserver = new ResizeObserver(updateHeaderHeight)
   if (headerRef.value) {
     headerObserver.observe(headerRef.value)

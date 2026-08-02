@@ -29,6 +29,20 @@ export function useAudio() {
   let verseSeekUntil = 0
   // Seek requested before enough media is buffered; applied when safe.
   let pendingSeekMs = null
+  let playIntentId = 0
+
+  function nextPlayIntent() {
+    playIntentId += 1
+    return playIntentId
+  }
+
+  function cancelPendingPlay() {
+    playIntentId += 1
+  }
+
+  function isCurrentPlayIntent(intent) {
+    return intent === playIntentId
+  }
 
   function publishDebug(extra = {}) {
     if (typeof window === 'undefined') {
@@ -52,6 +66,7 @@ export function useAudio() {
   if (typeof window !== 'undefined') {
     window.__forceKillAudio = () => {
       dbg('forceKillAudio')
+      cancelPendingPlay()
       try {
         audio.pause()
       } catch {
@@ -321,12 +336,18 @@ export function useAudio() {
     }
   }
 
-  async function playFromElement() {
+  async function playFromElement(intent = playIntentId) {
+    if (!isCurrentPlayIntent(intent)) {
+      return false
+    }
     audio.playbackRate = playbackRate.value
     audio.volume = volume.value
     snapshot('playFromElement before')
     try {
       await audio.play()
+      if (!isCurrentPlayIntent(intent)) {
+        return false
+      }
       // If play "succeeded" but an error is already latched (or arrives immediately),
       // treat it as failure so recovery can run.
       if (audio.error) {
@@ -343,7 +364,11 @@ export function useAudio() {
     }
   }
 
-  function waitFor(predicate, timeoutMs, events = ['loadedmetadata', 'canplay', 'canplaythrough', 'progress', 'error']) {
+  function waitFor(
+    predicate,
+    timeoutMs,
+    events = ['loadedmetadata', 'canplay', 'canplaythrough', 'progress', 'error']
+  ) {
     return new Promise(resolve => {
       if (predicate()) {
         resolve(true)
@@ -387,6 +412,7 @@ export function useAudio() {
    * (PIPELINE_ERROR_READ). Recovery: recreate + blob/network reload of the source.
    */
   async function playAt(url, startMs = null) {
+    const intent = nextPlayIntent()
     dbg('playAt', { url: url ? url.slice(-60) : null, startMs })
     if (!url) {
       return false
@@ -411,10 +437,13 @@ export function useAudio() {
     }
 
     // First attempt: play immediately (keeps user-gesture activation).
-    if (await playFromElement()) {
+    if (await playFromElement(intent)) {
       applyPendingSeek()
       // Brief settle: if demuxer errors right after play, recover below.
       await new Promise(r => setTimeout(r, 120))
+      if (!isCurrentPlayIntent(intent)) {
+        return false
+      }
       if (!audio.error && !audio.paused) {
         return true
       }
@@ -424,14 +453,23 @@ export function useAudio() {
     // Immediate recovery path — do not wait multi-seconds on a dead element.
     const retrySeek = startMs
     recreateAudio()
+    if (!isCurrentPlayIntent(intent)) {
+      return false
+    }
     load(url)
     if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
       pendingSeekMs = retrySeek
     }
     await waitFor(() => audio.readyState >= 1 && !audio.error, 2500)
+    if (!isCurrentPlayIntent(intent)) {
+      return false
+    }
     applyPendingSeek()
-    if (await playFromElement()) {
+    if (await playFromElement(intent)) {
       await new Promise(r => setTimeout(r, 120))
+      if (!isCurrentPlayIntent(intent)) {
+        return false
+      }
       if (!audio.error && !audio.paused) {
         return true
       }
@@ -439,12 +477,18 @@ export function useAudio() {
 
     // Last resort: bypass broken SW audio cache via blob / cache-bust.
     await loadViaBlob(url)
+    if (!isCurrentPlayIntent(intent)) {
+      return false
+    }
     if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
       pendingSeekMs = retrySeek
     }
     await waitFor(() => canSafelySeek() || (audio.readyState >= 1 && !audio.error), 5000)
+    if (!isCurrentPlayIntent(intent)) {
+      return false
+    }
     applyPendingSeek()
-    if (await playFromElement()) {
+    if (await playFromElement(intent)) {
       applyPendingSeek()
       return !audio.error
     }
@@ -459,22 +503,28 @@ export function useAudio() {
     if (url) {
       return playAt(url, null)
     }
+    const intent = nextPlayIntent()
     const existing = audio.currentSrc || audio.src
     if (!existing || existing.startsWith('blob:')) {
       dbg('play() no durable source')
       return false
     }
-    if (!audio.error && (await playFromElement())) {
+    if (!audio.error && (await playFromElement(intent))) {
       return true
+    }
+    if (!isCurrentPlayIntent(intent)) {
+      return false
     }
     return playAt(existing, currentTimeMs.value || null)
   }
 
   function pause() {
+    cancelPendingPlay()
     audio.pause()
   }
 
   function stop() {
+    cancelPendingPlay()
     audio.pause()
     audio.currentTime = 0
     progress.value = 0

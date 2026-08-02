@@ -53,6 +53,28 @@ test('pause stops playback and play resumes', async ({ page }) => {
   await expect(pauseButton(page)).toBeVisible()
 })
 
+test('pause during play startup is not undone by recovery retry', async ({ page }) => {
+  await playButton(page).click()
+  await expect(pauseButton(page)).toBeVisible()
+  await pauseButton(page).click()
+
+  // playAt waits briefly for media errors before retrying. A user pause during
+  // that window must cancel the pending retry instead of restarting playback.
+  await page.waitForTimeout(300)
+  await expect(playButton(page)).toBeVisible()
+})
+
+test('service worker update teardown stops playback', async ({ page }) => {
+  await playButton(page).click()
+  await expect(pauseButton(page)).toBeVisible()
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('quran-before-sw-update'))
+  })
+
+  await expect(playButton(page)).toBeVisible()
+})
+
 test('progress bar is visible and interactive', async ({ page }) => {
   await expect(page.locator('[role="slider"]')).toBeVisible()
 })

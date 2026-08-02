@@ -1,6 +1,10 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { clearAudioRuntimeCaches, markSwJustUpdated } from '../utils/swAudio.js'
+import {
+  clearAudioRuntimeCaches,
+  markSwJustUpdated,
+  notifyBeforeSwUpdate
+} from '../utils/swAudio.js'
 
 const show = ref(false)
 const applying = ref(false)
@@ -42,6 +46,7 @@ async function applyUpdate() {
   try {
     // Drop cached MP3s before the new SW claims clients. Stale CacheFirst range
     // entries are what make mid-surah Play dead until a hard reload.
+    notifyBeforeSwUpdate()
     markSwJustUpdated()
     await clearAudioRuntimeCaches()
 
@@ -92,33 +97,13 @@ onBeforeUnmount(() => window.removeEventListener('sw-update-available', onUpdate
         :class="applying ? 'bg-primary/15 text-primary' : 'bg-primary/10 text-primary'"
         aria-hidden="true"
       >
-        <svg
-          v-if="!applying"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
+        <svg v-if="!applying" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path
             d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79s7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 2.48-.92 4.95-2.76 6.81-3.66 3.72-9.64 3.72-13.3.02s-3.67-9.69 0-13.41 9.64-3.72 13.3 0L21 2.78V10.12z"
           />
         </svg>
-        <svg
-          v-else
-          class="update-spinner"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="9"
-            stroke="currentColor"
-            stroke-width="2.5"
-            opacity="0.25"
-          />
+        <svg v-else class="update-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" opacity="0.25" />
           <path
             d="M21 12a9 9 0 00-9-9"
             stroke="currentColor"

@@ -1,5 +1,15 @@
 import { AUDIO_RUNTIME_CACHE_NAMES, SW_JUST_UPDATED_KEY } from '../config.js'
 
+export const BEFORE_SW_UPDATE_EVENT = 'quran-before-sw-update'
+
+export function notifyBeforeSwUpdate() {
+  try {
+    window.dispatchEvent(new Event(BEFORE_SW_UPDATE_EVENT))
+  } catch {
+    // Non-browser/test environments — ignore.
+  }
+}
+
 /**
  * Drop Workbox runtime caches that hold full-surah / per-verse MP3s.
  * After a service-worker update, CacheFirst + range responses for the same URL

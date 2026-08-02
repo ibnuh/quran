@@ -114,9 +114,9 @@ async function forceUpdate() {
       if (waiting) {
         updateAvailable.value = true
         updateStatus.value = t('settings.updateFound')
-        const { clearAudioRuntimeCaches, markSwJustUpdated } = await import(
-          '../utils/swAudio.js'
-        )
+        const { clearAudioRuntimeCaches, markSwJustUpdated, notifyBeforeSwUpdate } =
+          await import('../utils/swAudio.js')
+        notifyBeforeSwUpdate()
         markSwJustUpdated()
         await clearAudioRuntimeCaches()
         const reloadOnce = () => {
@@ -882,9 +882,7 @@ function onLanguageChange(code) {
                   <p class="font-medium text-body mb-1">{{ $t('settings.iosInstallTitle') }}</p>
                   <ol class="list-decimal list-inside space-y-0.5">
                     <li>Tap the <span class="font-medium">Share</span> button in Safari</li>
-                    <li>
-                      Scroll down and tap <span class="font-medium">Add to Home Screen</span>
-                    </li>
+                    <li>Scroll down and tap <span class="font-medium">Add to Home Screen</span></li>
                     <li>Tap <span class="font-medium">Add</span></li>
                   </ol>
                 </div>
