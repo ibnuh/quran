@@ -65,7 +65,7 @@ export default [
     }
   },
   {
-    files: ['e2e/**/*.js', '**/*.test.js', '**/*.spec.js'],
+    files: ['e2e/**/*.js', 'scripts/**/*.{js,mjs,cjs}', '**/*.test.js', '**/*.spec.js'],
     languageOptions: {
       globals: {
         process: 'readonly',
