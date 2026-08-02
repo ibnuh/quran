@@ -1,11 +1,20 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { AUTO_HIDE_DELAY } from '../config.js'
 
+// Ignore tiny pointer jitter and the mousemove browsers often fire with a click.
+const MOVE_SHOW_THRESHOLD_PX = 6
+// After the user deliberately hides chrome, require either this grace window to
+// elapse or a real mouse move before mousemove can re-show it.
+const HIDE_SUPPRESS_MS = 450
+
 // YouTube-style auto-hiding header/controls. Tap (mobile) or click/idle (desktop)
 // toggles visibility while audio is playing.
 export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, controlsRef }) {
   const controlsVisible = ref(true)
   let hideTimer = null
+  let suppressShowUntil = 0
+  let lastMouseX = null
+  let lastMouseY = null
 
   let touchStartX = 0
   let touchStartY = 0
@@ -14,12 +23,17 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
 
   function showControls() {
     controlsVisible.value = true
+    suppressShowUntil = 0
     resetHideTimer()
   }
 
-  function hideControls() {
+  function hideControls({ intentional = false } = {}) {
     controlsVisible.value = false
     clearTimeout(hideTimer)
+    if (intentional) {
+      // Block the synthetic mousemove that often accompanies the same click.
+      suppressShowUntil = Date.now() + HIDE_SUPPRESS_MS
+    }
   }
 
   function resetHideTimer() {
@@ -41,7 +55,7 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
       return
     }
     if (controlsVisible.value) {
-      hideControls()
+      hideControls({ intentional: true })
     } else {
       showControls()
     }
@@ -62,6 +76,34 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
       return
     }
     onMainTap()
+  }
+
+  // Desktop: only re-show chrome when the pointer actually moves. Clicks often
+  // emit a zero/near-zero mousemove that used to undo hide immediately.
+  function onMouseMove(e) {
+    const x = e.clientX
+    const y = e.clientY
+
+    if (lastMouseX == null || lastMouseY == null) {
+      lastMouseX = x
+      lastMouseY = y
+      return
+    }
+
+    const dx = Math.abs(x - lastMouseX)
+    const dy = Math.abs(y - lastMouseY)
+    lastMouseX = x
+    lastMouseY = y
+
+    if (dx < MOVE_SHOW_THRESHOLD_PX && dy < MOVE_SHOW_THRESHOLD_PX) {
+      return
+    }
+
+    if (Date.now() < suppressShowUntil) {
+      return
+    }
+
+    showControls()
   }
 
   function shouldIgnoreMobileToggle(target) {
@@ -109,6 +151,7 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
     playing => {
       if (!playing) {
         controlsVisible.value = true
+        suppressShowUntil = 0
         clearTimeout(hideTimer)
       } else if (store.autoHideControls) {
         resetHideTimer()
@@ -121,6 +164,7 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
     enabled => {
       if (!enabled) {
         controlsVisible.value = true
+        suppressShowUntil = 0
         clearTimeout(hideTimer)
       } else if (audio.isPlaying.value) {
         resetHideTimer()
@@ -137,6 +181,7 @@ export function useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, c
     toggleControls,
     onMainTap,
     onMainClick,
+    onMouseMove,
     onRootTouchStart,
     onRootTouchEnd
   }

@@ -99,9 +99,9 @@ const mediaSession = useMediaSession(store, {
 // -- Auto-hide controls --
 const {
   controlsVisible,
-  showControls,
   toggleControls,
   onMainClick,
+  onMouseMove,
   onRootTouchStart,
   onRootTouchEnd
 } = useAutoHideControls({ store, audio, isAnyPanelOpen, headerRef, controlsRef })
@@ -268,7 +268,7 @@ onMounted(async () => {
 <template>
   <div
     class="fixed top-0 right-0 bottom-0 left-0 bg-surface overflow-hidden overscroll-x-none max-w-full"
-    @mousemove="showControls"
+    @mousemove="onMouseMove"
     @touchstart.capture.passive="onRootTouchStart"
     @touchend.capture.passive="onRootTouchEnd"
   >
