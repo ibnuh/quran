@@ -26,6 +26,14 @@ const layoutLabel = computed(() =>
   store.readingMode ? t('header.layoutContinuous') : t('header.layoutSingle')
 )
 const modeSummary = computed(() => `${activityLabel.value} · ${layoutLabel.value}`)
+// Compact mobile label keeps both axes visible without overflowing the toolbar.
+const modeSummaryCompact = computed(() => {
+  const activity = store.readMode ? t('header.readModeShort') : t('header.listenModeShort')
+  const layout = store.readingMode
+    ? t('header.layoutContinuousShort')
+    : t('header.layoutSingleShort')
+  return `${activity} · ${layout}`
+})
 
 function handleSettingsClick() {
   emit('open-settings')
@@ -276,7 +284,7 @@ onBeforeUnmount(() => {
               />
             </svg>
             <span class="mode-trigger-label hidden sm:inline">{{ modeSummary }}</span>
-            <span class="mode-trigger-label sm:hidden">{{ activityLabel }}</span>
+            <span class="mode-trigger-label sm:hidden">{{ modeSummaryCompact }}</span>
             <svg
               width="12"
               height="12"
@@ -658,7 +666,7 @@ onBeforeUnmount(() => {
 .mode-trigger {
   gap: 0.3rem;
   padding-inline: 0.45rem;
-  max-width: 11.5rem;
+  max-width: 12.5rem;
   background: rgba(255, 255, 255, 0.12);
 }
 .mode-trigger:hover {
@@ -671,7 +679,16 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 8.5rem;
+  max-width: 9.25rem;
+}
+@media (max-width: 639px) {
+  .mode-trigger {
+    max-width: 9.5rem;
+  }
+  .mode-trigger-label {
+    max-width: 6.5rem;
+    font-size: 0.64rem;
+  }
 }
 .mode-trigger-caret {
   transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);

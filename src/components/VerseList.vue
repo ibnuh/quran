@@ -56,14 +56,20 @@ watch(
       <div ref="panelRef" class="relative w-full sm:max-w-md lg:max-w-lg h-full shadow-2xl">
         <div class="bg-card h-full overflow-y-auto">
           <div
-            class="sticky top-0 bg-card z-10 flex items-center justify-between px-4 pb-3 border-b border-border"
+            class="sticky top-0 bg-card z-10 flex items-center justify-between gap-3 px-4 pb-3 border-b border-border"
             style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px))"
           >
-            <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">
-              {{ $t('panels.allVerses') }}
-            </h3>
+            <div class="min-w-0">
+              <h3 class="text-sm font-semibold text-muted uppercase tracking-wider">
+                {{ $t('panels.allVerses') }}
+              </h3>
+              <p v-if="store.currentSurah" class="text-xs text-body truncate mt-0.5">
+                {{ store.currentSurah.englishName }}
+                <span class="text-muted">· {{ store.totalVerses }}</span>
+              </p>
+            </div>
             <button
-              class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"
+              class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer shrink-0"
               :aria-label="$t('panels.closeVerses')"
               @click="emit('close')"
             >

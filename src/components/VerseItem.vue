@@ -15,11 +15,11 @@ defineEmits(['select'])
 <template>
   <button
     type="button"
-    class="verse-item flex gap-3 p-4 rounded-lg cursor-pointer bg-card border border-l-[3px] items-start w-full text-left"
+    class="verse-item flex gap-3 p-4 rounded-xl cursor-pointer bg-card border items-start w-full text-left"
     :class="
       isActive
-        ? 'border-primary bg-primary-light'
-        : 'border-transparent hover:border-border hover:shadow-sm'
+        ? 'is-active border-primary/30 bg-primary/10'
+        : 'border-transparent hover:border-border hover:bg-surface/70'
     "
     @click="$emit('select')"
   >
@@ -56,8 +56,12 @@ defineEmits(['select'])
     border-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
     box-shadow 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   -webkit-tap-highlight-color: transparent;
+  box-shadow: none;
 }
-.verse-item:active:not(.border-primary) {
+.verse-item.is-active {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+.verse-item:active:not(.is-active) {
   background: var(--color-surface);
 }
 .verse-badge {

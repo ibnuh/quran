@@ -495,30 +495,8 @@ onMounted(async () => {
 
 .residual-progress-fill {
   background: var(--color-primary);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 45%, transparent);
 }
 .residual-progress-playing .residual-progress-fill {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--color-primary) 80%, #000),
-    var(--color-primary),
-    color-mix(in srgb, var(--color-primary) 75%, #fff)
-  );
-  background-size: 200% 100%;
-  animation: residual-shimmer 2.4s linear infinite;
-}
-@keyframes residual-shimmer {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -100% 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .residual-progress-playing .residual-progress-fill {
-    animation: none;
-    background: var(--color-primary);
-  }
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 </style>

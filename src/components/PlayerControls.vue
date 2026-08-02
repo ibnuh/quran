@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { SPEEDS, SLEEP_TIMER_OPTIONS } from '../config.js'
 import ProgressBar from './ProgressBar.vue'
@@ -24,6 +24,42 @@ function onJumpKeydown(e) {
   if (e.key === 'Escape') {
     showJumpInput.value = false
     jumpVerseNum.value = ''
+  }
+}
+
+function closePopovers(except = null) {
+  if (except !== 'speed') {
+    showSpeedMenu.value = false
+  }
+  if (except !== 'tools') {
+    showToolsMenu.value = false
+  }
+  if (except !== 'jump') {
+    showJumpInput.value = false
+    jumpVerseNum.value = ''
+  }
+}
+
+function toggleSpeedMenu() {
+  const next = !showSpeedMenu.value
+  closePopovers('speed')
+  showSpeedMenu.value = next
+}
+
+function toggleToolsMenu() {
+  const next = !showToolsMenu.value
+  closePopovers('tools')
+  showToolsMenu.value = next
+}
+
+async function toggleJumpInput() {
+  const next = !showJumpInput.value
+  closePopovers('jump')
+  showJumpInput.value = next
+  if (next) {
+    await nextTick()
+    jumpInputRef.value?.focus?.()
+    jumpInputRef.value?.select?.()
   }
 }
 
@@ -150,7 +186,7 @@ function clearRepeat() {
   >
     <p
       v-if="!canPlay && !isPlaying"
-      class="text-center text-[0.7rem] sm:text-xs text-accent mb-1.5 landscape-compact:mb-1 leading-snug px-2"
+      class="audio-unavailable text-center text-[0.7rem] sm:text-xs mb-2 landscape-compact:mb-1 leading-snug px-3 py-1.5 rounded-lg"
       role="status"
     >
       {{ $t('controls.audioUnavailable') }}
@@ -316,7 +352,7 @@ function clearRepeat() {
               "
               :aria-label="$t('controls.playbackSpeed')"
               :aria-expanded="showSpeedMenu"
-              @click.stop="showSpeedMenu = !showSpeedMenu"
+              @click.stop="toggleSpeedMenu"
             >
               <span
                 class="text-[0.7rem] font-semibold tabular-nums min-w-[1.75rem] text-center rounded-md px-1 py-0.5"
@@ -355,11 +391,11 @@ function clearRepeat() {
               :class="toolsActive ? 'text-primary! bg-primary/10' : ''"
               :aria-label="$t('controls.audioTools')"
               :aria-expanded="showToolsMenu"
-              @click.stop="showToolsMenu = !showToolsMenu"
+              @click.stop="toggleToolsMenu"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path
-                  d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"
+                  d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
                 />
               </svg>
               <span v-if="sleepLabel" class="text-[0.7rem] font-semibold tabular-nums">{{
@@ -473,7 +509,7 @@ function clearRepeat() {
           class="verse-chip text-xs text-muted hover:text-primary transition-colors cursor-pointer px-3 py-1.5 min-h-10 rounded-full border border-border bg-surface/80 hover:border-primary/40 hover:bg-primary/5 inline-flex items-center gap-1.5"
           :aria-label="$t('controls.jumpToVerse')"
           :aria-expanded="showJumpInput"
-          @click.stop="showJumpInput = !showJumpInput"
+          @click.stop="toggleJumpInput"
         >
           <span class="font-semibold text-body tabular-nums">{{
             store.currentVerse?.number || 0
@@ -545,39 +581,17 @@ function clearRepeat() {
   transform: scale(0.95);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
+/* Quiet "live" affordance: soft outer ring, no pulsing glow. */
 .play-btn-playing {
   box-shadow:
-    0 0 0 4px color-mix(in srgb, var(--color-primary) 18%, transparent),
-    0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent);
+    0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent),
+    0 3px 10px color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
-.play-btn-playing::after {
-  content: '';
-  position: absolute;
-  inset: -5px;
-  border-radius: 9999px;
-  border: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
-  animation: play-pulse 1.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-  pointer-events: none;
-}
-@keyframes play-pulse {
-  0% {
-    transform: scale(0.92);
-    opacity: 0.7;
-  }
-  70% {
-    transform: scale(1.12);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.12);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .play-btn-playing::after {
-    animation: none;
-    display: none;
-  }
+
+.audio-unavailable {
+  color: color-mix(in srgb, var(--color-accent) 90%, var(--color-body));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
 }
 
 .play-icon-enter-active,
