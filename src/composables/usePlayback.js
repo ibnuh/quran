@@ -67,6 +67,12 @@ export function usePlayback(store, audio) {
     if (!timing) {
       return false
     }
+    // If the media element is poisoned (post-SW-update demuxer error), never treat
+    // the playhead as trustworthy — always pass an explicit startMs on the next play.
+    const snap = typeof window !== 'undefined' ? window.__getAudioSnapshot?.() : null
+    if (snap?.error) {
+      return false
+    }
     const t = audio.currentTimeMs.value
     const from = timing.timestampFrom
     const to =
@@ -84,11 +90,36 @@ export function usePlayback(store, audio) {
 
   // -- Controls --
   function togglePlay() {
+    const debugOn =
+      typeof window !== 'undefined' &&
+      (window.localStorage?.getItem('quran-debug-audio') === '1' ||
+        /(?:\?|&)debugAudio=1(?:&|$)/.test(window.location?.search || ''))
+    if (debugOn) {
+      console.info('[playback] togglePlay', {
+        isPlaying: audio.isPlaying.value,
+        hasPlayable: hasPlayableAudio(),
+        mode: store.playbackMode,
+        audioUrl: store.audioUrl ? String(store.audioUrl).slice(-50) : null,
+        verseIndex: store.currentVerseIndex,
+        timings: store.verseTimings?.length || 0,
+        near: isNearCurrentVerse(),
+        currentTimeMs: audio.currentTimeMs.value,
+        audioUnavailable: store.audioUnavailable
+      })
+    }
     if (audio.isPlaying.value) {
       audio.pause()
       return
     }
     if (!hasPlayableAudio()) {
+      if (debugOn) {
+        console.warn('[playback] blocked: no playable audio', {
+          audioUnavailable: store.audioUnavailable,
+          mode: store.playbackMode,
+          audioUrl: store.audioUrl,
+          audioUrls: store.audioUrls?.length
+        })
+      }
       return
     }
     if (store.playbackMode === 'full' && store.audioUrl) {
@@ -98,9 +129,20 @@ export function usePlayback(store, audio) {
       // browser keeps user-gesture activation (awaiting network first blocks autoplay).
       const timing = store.verseTimings[store.currentVerseIndex]
       const startMs = !isNearCurrentVerse() && timing ? timing.timestampFrom : null
-      void audio.playAt(store.audioUrl, startMs)
+      if (debugOn) {
+        console.info('[playback] full playAt', { startMs, timingFrom: timing?.timestampFrom })
+      }
+      void audio.playAt(store.audioUrl, startMs).then(ok => {
+        if (debugOn) {
+          console.info('[playback] playAt result', ok, window.__getAudioSnapshot?.())
+        }
+      })
     } else if (store.playbackMode === 'verse' && store.audioUrls.length) {
-      void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+      void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex]).then(ok => {
+        if (debugOn) {
+          console.info('[playback] verse loadAndPlay result', ok)
+        }
+      })
       preloadAhead()
     }
   }

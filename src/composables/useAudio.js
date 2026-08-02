@@ -14,6 +14,7 @@ function dbg(...args) {
 export function useAudio() {
   let audio = new Audio()
   audio.preload = 'auto'
+  let blobUrl = null
 
   const isPlaying = ref(false)
   const progress = ref(0)
@@ -26,10 +27,65 @@ export function useAudio() {
   let onTimeUpdateCb = null
   let onEndedCb = null
   let verseSeekUntil = 0
-  // Seek requested before metadata was ready; applied on loadedmetadata.
+  // Seek requested before enough media is buffered; applied when safe.
   let pendingSeekMs = null
 
+  function publishDebug(extra = {}) {
+    if (typeof window === 'undefined') {
+      return
+    }
+    window.__audioDebug = {
+      src: (audio.currentSrc || audio.src || '').slice(-80),
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      duration: audio.duration,
+      currentTime: audio.currentTime,
+      paused: audio.paused,
+      error: audio.error ? { code: audio.error.code, message: audio.error.message } : null,
+      pendingSeekMs,
+      isPlaying: isPlaying.value,
+      ...extra,
+      at: Date.now()
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.__forceKillAudio = () => {
+      dbg('forceKillAudio')
+      try {
+        audio.pause()
+      } catch {
+        // ignore
+      }
+      audio.removeAttribute('src')
+      try {
+        audio.load()
+      } catch {
+        // ignore
+      }
+      audio.src = ''
+      isPlaying.value = false
+      progress.value = 0
+      currentTimeMs.value = 0
+      duration.value = 0
+      pendingSeekMs = null
+      publishDebug({ forceKilled: true })
+    }
+    window.__getAudioSnapshot = () => ({
+      src: audio.currentSrc || audio.src,
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      duration: audio.duration,
+      currentTime: audio.currentTime,
+      paused: audio.paused,
+      error: audio.error ? { code: audio.error.code, message: audio.error.message } : null,
+      pendingSeekMs,
+      isPlaying: isPlaying.value
+    })
+  }
+
   function snapshot(label) {
+    publishDebug({ label })
     if (!DEBUG_AUDIO) {
       return
     }
@@ -54,11 +110,24 @@ export function useAudio() {
     }
   }
 
+  // Mid-file seeks need more than bare metadata. Seeking immediately after a SW
+  // takeover often throws PIPELINE_ERROR_READ / demuxer errors (reproduced locally).
+  function canSafelySeek() {
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+      return false
+    }
+    if (audio.error) {
+      return false
+    }
+    // HAVE_FUTURE_DATA (3) or HAVE_ENOUGH_DATA (4).
+    return audio.readyState >= 3
+  }
+
   function applyPendingSeek() {
     if (pendingSeekMs == null) {
       return false
     }
-    if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+    if (!canSafelySeek()) {
       return false
     }
     const sec = Math.max(0, Math.min(pendingSeekMs / 1000, Math.max(0, audio.duration - 0.05)))
@@ -75,6 +144,17 @@ export function useAudio() {
     }
   }
 
+  function revokeBlobUrl() {
+    if (blobUrl) {
+      try {
+        URL.revokeObjectURL(blobUrl)
+      } catch {
+        // ignore
+      }
+      blobUrl = null
+    }
+  }
+
   function bindAudioEvents(el) {
     el.addEventListener('timeupdate', () => {
       syncProgressFromElement()
@@ -87,16 +167,22 @@ export function useAudio() {
       if (el.buffered.length > 0 && el.duration) {
         buffered.value = (el.buffered.end(el.buffered.length - 1) / el.duration) * 100
       }
+      // Buffer growth can make a pending mid-file seek safe.
+      applyPendingSeek()
     })
 
     el.addEventListener('loadedmetadata', () => {
       dbg('loadedmetadata', { duration: el.duration })
       syncProgressFromElement()
-      applyPendingSeek()
+      // Do NOT seek here for mid-file positions — wait for canplay/progress.
     })
 
     el.addEventListener('canplay', () => {
       dbg('canplay', { readyState: el.readyState })
+      applyPendingSeek()
+    })
+
+    el.addEventListener('canplaythrough', () => {
       applyPendingSeek()
     })
 
@@ -116,6 +202,7 @@ export function useAudio() {
 
     el.addEventListener('playing', () => {
       dbg('playing event', { currentTime: el.currentTime })
+      applyPendingSeek()
     })
 
     el.addEventListener('pause', () => {
@@ -131,8 +218,6 @@ export function useAudio() {
 
   bindAudioEvents(audio)
 
-  // Replace the media element entirely. Needed when a service-worker update leaves
-  // the old pipeline in a dead state where play() rejects forever on the same node.
   function recreateAudio() {
     dbg('recreateAudio')
     try {
@@ -146,6 +231,7 @@ export function useAudio() {
     } catch {
       // ignore
     }
+    revokeBlobUrl()
     audio = new Audio()
     audio.preload = 'auto'
     audio.playbackRate = playbackRate.value
@@ -172,22 +258,67 @@ export function useAudio() {
     if (!current) {
       return false
     }
+    // Blob recovery URLs are not equal to the original CDN url.
+    if (current.startsWith('blob:')) {
+      return false
+    }
     return current === resolveUrl(url)
+  }
+
+  function isElementHealthy() {
+    return !audio.error && audio.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE
   }
 
   function load(url) {
     if (!url) {
       return
     }
-    // Avoid resetting a healthy element to the same source (would interrupt playback).
-    if (hasLoadedUrl(url) && !audio.error && audio.readyState >= 1) {
+    if (hasLoadedUrl(url) && isElementHealthy() && audio.readyState >= 1) {
       dbg('load skip (already loaded)', url.slice(-40))
       return
     }
-    pendingSeekMs = null
+    // Preserve a pending seek across reloads of the same logical source only when
+    // the caller has already set pendingSeekMs for this play.
     dbg('load', url.slice(-60))
+    revokeBlobUrl()
     audio.src = url
     audio.load()
+  }
+
+  /**
+   * After a service-worker update, CacheFirst audio can leave the media pipeline
+   * unable to demux the same URL. Fetch a fresh copy (network-first via no-store
+   * where possible) and play from a blob: URL that the SW does not intercept as
+   * a range-request audio route.
+   */
+  async function loadViaBlob(url) {
+    dbg('loadViaBlob', url.slice(-60))
+    recreateAudio()
+    try {
+      const res = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit',
+        // Prefer a real network response; SW may still intercept, but many
+        // implementations revalidate on reload/no-store.
+        cache: 'reload'
+      })
+      if (!res.ok) {
+        throw new Error(`blob fetch ${res.status}`)
+      }
+      const blob = await res.blob()
+      revokeBlobUrl()
+      blobUrl = URL.createObjectURL(blob)
+      audio.src = blobUrl
+      audio.load()
+      return true
+    } catch (e) {
+      dbg('loadViaBlob failed, fallback to direct', e && (e.message || e))
+      // Cache-bust query to miss a stale SW runtime cache entry.
+      const bust = url.includes('?') ? `&_swb=${Date.now()}` : `?_swb=${Date.now()}`
+      audio.src = url + bust
+      audio.load()
+      return false
+    }
   }
 
   async function playFromElement() {
@@ -195,28 +326,81 @@ export function useAudio() {
     audio.volume = volume.value
     snapshot('playFromElement before')
     try {
-      // IMPORTANT: call play() without awaiting prior network waits when possible.
-      // Browsers only honor autoplay when play() is invoked inside a user gesture.
       await audio.play()
+      // If play "succeeded" but an error is already latched (or arrives immediately),
+      // treat it as failure so recovery can run.
+      if (audio.error) {
+        dbg('playFromElement ok but error present')
+        isPlaying.value = false
+        return false
+      }
       snapshot('playFromElement ok')
       return true
     } catch (e) {
       dbg('playFromElement failed', e && (e.name || e.message || e))
+      isPlaying.value = false
       return false
     }
+  }
+
+  function waitFor(predicate, timeoutMs, events = ['loadedmetadata', 'canplay', 'canplaythrough', 'progress', 'error']) {
+    return new Promise(resolve => {
+      if (predicate()) {
+        resolve(true)
+        return
+      }
+      let settled = false
+      const done = ok => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        for (const ev of events) {
+          audio.removeEventListener(ev, onEv)
+        }
+        resolve(ok)
+      }
+      const onEv = () => {
+        if (audio.error) {
+          done(false)
+          return
+        }
+        if (predicate()) {
+          done(true)
+        }
+      }
+      const timer = setTimeout(() => done(predicate()), timeoutMs)
+      for (const ev of events) {
+        audio.addEventListener(ev, onEv)
+      }
+    })
   }
 
   /**
    * Load `url`, optionally seek to startMs, then play.
    *
    * Critical: call HTMLMediaElement.play() as early as possible inside the user
-   * gesture. Awaiting network/metadata first drops the transient activation and
-   * browsers then reject play() with NotAllowedError — which looked like a dead button.
+   * gesture. Awaiting network first drops transient activation (NotAllowedError).
+   *
+   * After PWA Update, mid-file seeks on a just-claimed SW can poison the element
+   * (PIPELINE_ERROR_READ). Recovery: recreate + blob/network reload of the source.
    */
   async function playAt(url, startMs = null) {
     dbg('playAt', { url: url ? url.slice(-60) : null, startMs })
     if (!url) {
       return false
+    }
+
+    // If the current element is already poisoned (common right after SW update
+    // + restore seek), start from a clean element before touching play().
+    if (audio.error || !isElementHealthy()) {
+      dbg('playAt: unhealthy element, recreating first')
+      const seek = startMs
+      recreateAudio()
+      if (seek != null && Number.isFinite(seek) && seek >= 0) {
+        pendingSeekMs = seek
+      }
     }
 
     load(url)
@@ -228,76 +412,59 @@ export function useAudio() {
 
     // First attempt: play immediately (keeps user-gesture activation).
     if (await playFromElement()) {
-      // Seek may still be pending if metadata arrived mid-play; apply now.
       applyPendingSeek()
-      return true
+      // Brief settle: if demuxer errors right after play, recover below.
+      await new Promise(r => setTimeout(r, 120))
+      if (!audio.error && !audio.paused) {
+        return true
+      }
+      dbg('playAt: died right after first play', audio.error)
     }
 
-    // Second attempt: wait briefly for metadata, seek, play again.
-    // (May still fail if the browser already consumed the gesture.)
-    await new Promise(resolve => {
-      if (audio.readyState >= 1 && Number.isFinite(audio.duration) && audio.duration > 0) {
-        resolve()
-        return
-      }
-      const done = () => {
-        audio.removeEventListener('loadedmetadata', done)
-        audio.removeEventListener('canplay', done)
-        audio.removeEventListener('error', done)
-        clearTimeout(timer)
-        resolve()
-      }
-      const timer = setTimeout(done, 4000)
-      audio.addEventListener('loadedmetadata', done, { once: true })
-      audio.addEventListener('canplay', done, { once: true })
-      audio.addEventListener('error', done, { once: true })
-    })
-    applyPendingSeek()
-
-    if (await playFromElement()) {
-      return true
-    }
-
-    // Last resort: brand-new element (dead pipeline after SW update).
+    // Immediate recovery path — do not wait multi-seconds on a dead element.
     const retrySeek = startMs
     recreateAudio()
     load(url)
     if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
       pendingSeekMs = retrySeek
     }
-    await new Promise(resolve => {
-      const done = () => {
-        audio.removeEventListener('loadedmetadata', done)
-        audio.removeEventListener('canplay', done)
-        audio.removeEventListener('error', done)
-        clearTimeout(timer)
-        resolve()
-      }
-      const timer = setTimeout(done, 4000)
-      audio.addEventListener('loadedmetadata', done, { once: true })
-      audio.addEventListener('canplay', done, { once: true })
-      audio.addEventListener('error', done, { once: true })
-    })
+    await waitFor(() => audio.readyState >= 1 && !audio.error, 2500)
     applyPendingSeek()
-    return playFromElement()
+    if (await playFromElement()) {
+      await new Promise(r => setTimeout(r, 120))
+      if (!audio.error && !audio.paused) {
+        return true
+      }
+    }
+
+    // Last resort: bypass broken SW audio cache via blob / cache-bust.
+    await loadViaBlob(url)
+    if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
+      pendingSeekMs = retrySeek
+    }
+    await waitFor(() => canSafelySeek() || (audio.readyState >= 1 && !audio.error), 5000)
+    applyPendingSeek()
+    if (await playFromElement()) {
+      applyPendingSeek()
+      return !audio.error
+    }
+    return false
   }
 
-  // Ensure the element has `url`, then play from the current position.
   async function loadAndPlay(url) {
     return playAt(url, null)
   }
 
-  // Resume current source, or load `url` first when the element has no usable media.
   async function play(url) {
     if (url) {
       return playAt(url, null)
     }
     const existing = audio.currentSrc || audio.src
-    if (!existing) {
-      dbg('play() no source')
+    if (!existing || existing.startsWith('blob:')) {
+      dbg('play() no durable source')
       return false
     }
-    if (await playFromElement()) {
+    if (!audio.error && (await playFromElement())) {
       return true
     }
     return playAt(existing, currentTimeMs.value || null)
@@ -316,25 +483,19 @@ export function useAudio() {
     pendingSeekMs = null
   }
 
-  // Seeks to an exact verse boundary. If metadata is not ready yet, queues the seek
-  // until loadedmetadata. Never apply a seek past the known duration.
+  // Queue mid-file seeks until the element can safely demux at that offset.
   function seekTo(ms) {
     if (!Number.isFinite(ms) || ms < 0) {
       return
     }
-    if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
-      pendingSeekMs = ms
-      currentTimeMs.value = ms
-      verseSeekUntil = Date.now() + 600
-      dbg('seekTo queued', ms)
-      return
-    }
-    const sec = Math.max(0, Math.min(ms / 1000, Math.max(0, audio.duration - 0.05)))
-    audio.currentTime = sec
-    currentTimeMs.value = sec * 1000
+    pendingSeekMs = ms
+    currentTimeMs.value = ms
     verseSeekUntil = Date.now() + 600
-    pendingSeekMs = null
-    dbg('seekTo immediate', sec)
+    if (canSafelySeek()) {
+      applyPendingSeek()
+    } else {
+      dbg('seekTo queued until buffered', ms)
+    }
   }
 
   function isVerseSeekActive() {
@@ -359,7 +520,6 @@ export function useAudio() {
     audio.volume = v
   }
 
-  // Direct read of audio.currentTime for RAF polling (no event delay)
   function getLiveTimeMs() {
     return audio.currentTime * 1000
   }
@@ -378,6 +538,7 @@ export function useAudio() {
       // ignore
     }
     audio.src = ''
+    revokeBlobUrl()
   })
 
   return {

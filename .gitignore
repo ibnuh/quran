@@ -7,3 +7,6 @@ coverage
 obscura
 test-results/
 playwright-report/
+
+# Local PWA update repro harness output
+dist-repro-*/
