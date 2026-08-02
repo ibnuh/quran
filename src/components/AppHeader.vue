@@ -272,7 +272,7 @@ onBeforeUnmount(() => {
         <div class="relative mode-menu-wrapper">
           <button
             type="button"
-            class="mode-trigger header-btn"
+            class="mode-trigger"
             :aria-label="$t('header.modeMenu', { summary: modeSummary })"
             aria-haspopup="menu"
             :aria-expanded="showModeMenu"
@@ -281,14 +281,14 @@ onBeforeUnmount(() => {
             <span class="mode-trigger-icon" aria-hidden="true">
               <svg
                 v-if="!store.readMode"
-                width="13"
-                height="13"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
                 <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
               </svg>
-              <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
                 />
@@ -297,11 +297,11 @@ onBeforeUnmount(() => {
             <span class="mode-trigger-label hidden sm:inline">{{ modeSummary }}</span>
             <span class="mode-trigger-label sm:hidden">{{ modeSummaryCompact }}</span>
             <svg
-              width="12"
-              height="12"
+              width="10"
+              height="10"
               viewBox="0 0 24 24"
               fill="currentColor"
-              class="mode-trigger-caret shrink-0"
+              class="mode-trigger-caret"
               aria-hidden="true"
             >
               <path d="M7 10l5 5 5-5H7z" />
@@ -737,52 +737,98 @@ onBeforeUnmount(() => {
   transform: scale(0.93);
 }
 
+/* Own layout (not header-btn): keeps icon · label · caret on one baseline. */
 .mode-trigger {
-  gap: 0.35rem;
-  padding-inline: 0.5rem 0.4rem;
-  max-width: 12.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  min-height: 2rem;
+  max-width: 13rem;
+  padding: 0.28rem 0.55rem 0.28rem 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 0.15s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.1s ease;
 }
 .mode-trigger:hover {
   background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.mode-trigger:active {
+  transform: scale(0.97);
 }
 .mode-trigger[aria-expanded='true'] {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.mode-trigger:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 .mode-trigger-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.16);
+}
+.mode-trigger-icon svg {
+  display: block;
 }
 .mode-trigger-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 9.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 9.25rem;
-}
-@media (max-width: 639px) {
-  .mode-trigger {
-    max-width: 9.75rem;
-  }
-  .mode-trigger-label {
-    max-width: 6.75rem;
-    font-size: 0.65rem;
-  }
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
 }
 .mode-trigger-caret {
-  opacity: 0.75;
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.8;
+  margin-inline-start: -0.05rem;
   transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .mode-trigger[aria-expanded='true'] .mode-trigger-caret {
   transform: rotate(180deg);
+}
+@media (max-width: 639px) {
+  .mode-trigger {
+    gap: 0.3rem;
+    max-width: 10rem;
+    min-height: 1.9rem;
+    padding: 0.24rem 0.45rem 0.24rem 0.32rem;
+  }
+  .mode-trigger-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .mode-trigger-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+  .mode-trigger-label {
+    max-width: 6.75rem;
+    font-size: 0.66rem;
+  }
 }
 
 .mode-menu {
