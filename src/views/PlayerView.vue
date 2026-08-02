@@ -374,6 +374,8 @@ onMounted(async () => {
     >
       <PlayerControls
         :is-playing="audio.isPlaying.value"
+        :is-loading="audio.isLoading.value"
+        :is-seeking="audio.isSeeking.value"
         :progress="audio.progress.value"
         :buffered="audio.buffered.value"
         :current-time-ms="audio.currentTimeMs.value"

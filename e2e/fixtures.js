@@ -14,7 +14,7 @@ export async function installMockAudio(page) {
         super()
         this.src = ''
         this.currentSrc = ''
-        this.currentTime = 0
+        this._currentTime = 0
         this.duration = 70
         this.paused = true
         this.playbackRate = 1
@@ -25,6 +25,7 @@ export async function installMockAudio(page) {
         this.networkState = 0
         this.error = null
         this._timer = null
+        this._loadTimer = null
         this.buffered = {
           length: 1,
           start: () => 0,
@@ -32,50 +33,109 @@ export async function installMockAudio(page) {
         }
       }
 
+      get currentTime() {
+        return this._currentTime
+      }
+
+      set currentTime(value) {
+        if (!Number.isFinite(value)) {
+          return
+        }
+        this.dispatchEvent(new Event('seeking'))
+        this._currentTime = Math.max(0, Math.min(this.duration || value, value))
+        queueMicrotask(() => this.dispatchEvent(new Event('seeked')))
+      }
+
       load() {
         if (!this.src) {
+          clearTimeout(this._loadTimer)
+          this._loadTimer = null
           this.readyState = 0
           this.networkState = 0
           return
         }
+        clearTimeout(this._loadTimer)
         this.currentSrc = this.src
-        this.networkState = 1
-        this.readyState = 4
-        this.duration = 70
+        this.networkState = 2
         this.error = null
-        queueMicrotask(() => {
+        this.dispatchEvent(new Event('loadstart'))
+
+        const finish = () => {
+          this._loadTimer = null
+          this.networkState = 1
+          this.readyState = 4
+          this.duration = 70
           this.dispatchEvent(new Event('loadedmetadata'))
           this.dispatchEvent(new Event('canplay'))
           this.dispatchEvent(new Event('progress'))
-        })
+        }
+        const delay = Number(window.__mockAudioLoadDelayMs) || 0
+        if (delay > 0) {
+          this.readyState = 0
+          this._loadTimer = setTimeout(finish, delay)
+        } else {
+          this.readyState = 4
+          queueMicrotask(finish)
+        }
       }
 
       play() {
         if (!this.src && !this.currentSrc) {
           return Promise.reject(new DOMException('No src', 'NotSupportedError'))
         }
-        if (this.readyState < 1) {
+        if (this.readyState < 1 && this.networkState !== 2) {
           this.load()
         }
         this.paused = false
         this.dispatchEvent(new Event('play'))
-        this.dispatchEvent(new Event('playing'))
-        if (this._timer) {
-          clearInterval(this._timer)
-        }
-        this._timer = setInterval(() => {
+        const shouldFail = Boolean(window.__mockAudioFailNextPlay)
+        window.__mockAudioFailNextPlay = false
+        const startPlayback = () => {
           if (this.paused) {
             return
           }
-          this.currentTime = Math.min(this.duration, this.currentTime + 0.25)
-          this.dispatchEvent(new Event('timeupdate'))
-          if (this.currentTime >= this.duration) {
-            this.paused = true
+          this.dispatchEvent(new Event('playing'))
+          if (this._timer) {
             clearInterval(this._timer)
-            this._timer = null
-            this.dispatchEvent(new Event('ended'))
           }
-        }, 250)
+          this._timer = setInterval(() => {
+            if (this.paused) {
+              return
+            }
+            this._currentTime = Math.min(this.duration, this._currentTime + 0.25)
+            this.dispatchEvent(new Event('timeupdate'))
+            if (this._currentTime >= this.duration) {
+              this.paused = true
+              clearInterval(this._timer)
+              this._timer = null
+              this.dispatchEvent(new Event('ended'))
+            }
+          }, 250)
+        }
+        if (this.readyState < 3) {
+          return new Promise((resolve, reject) => {
+            this.addEventListener(
+              'canplay',
+              () => {
+                if (shouldFail) {
+                  this.paused = true
+                  this.dispatchEvent(new Event('pause'))
+                  reject(new DOMException('Mock startup failure', 'AbortError'))
+                  return
+                }
+                startPlayback()
+                resolve()
+              },
+              { once: true }
+            )
+          })
+        }
+        if (shouldFail) {
+          this.paused = true
+          this.dispatchEvent(new Event('pause'))
+          return Promise.reject(new DOMException('Mock startup failure', 'AbortError'))
+        }
+        startPlayback()
         return Promise.resolve()
       }
 
@@ -178,12 +238,15 @@ export function mockApi(page) {
 }
 
 export async function waitForSurahLoad(page) {
-  await page.waitForFunction(() => {
-    const loading = document.querySelector('.skeleton-container')
-    const verse = document.querySelector('.verse-arabic')
-    const error = document.querySelector('.error-state')
-    return (!loading && verse) || error
-  }, { timeout: 30000 })
+  await page.waitForFunction(
+    () => {
+      const loading = document.querySelector('.skeleton-container')
+      const verse = document.querySelector('.verse-arabic')
+      const error = document.querySelector('.error-state')
+      return (!loading && verse) || error
+    },
+    { timeout: 30000 }
+  )
 }
 
 // Navigate, clear any stale prefs, reload, wait for surah

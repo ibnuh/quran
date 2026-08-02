@@ -1,16 +1,30 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   progress: { type: Number, default: 0 },
   buffered: { type: Number, default: 0 },
   currentTimeMs: { type: Number, default: 0 },
-  durationMs: { type: Number, default: 0 }
+  durationMs: { type: Number, default: 0 },
+  isLoading: Boolean,
+  isSeeking: Boolean
 })
 const emit = defineEmits(['seek'])
 
 const isDragging = ref(false)
 const barRef = ref(null)
+const previewRatio = ref(null)
+
+const displayRatio = computed(() =>
+  previewRatio.value == null ? props.progress / 100 : previewRatio.value
+)
+const displayProgress = computed(() => Math.max(0, Math.min(100, displayRatio.value * 100)))
+const displayTimeMs = computed(() =>
+  previewRatio.value == null || props.durationMs <= 0
+    ? props.currentTimeMs
+    : previewRatio.value * props.durationMs
+)
+const isBusy = computed(() => props.isLoading || props.isSeeking)
 
 function formatTime(ms) {
   const totalSec = Math.floor(ms / 1000)
@@ -24,59 +38,50 @@ function onKeydown(e) {
     e.preventDefault()
     e.stopPropagation()
     const step = e.shiftKey ? 0.1 : 0.02
-    emit('seek', Math.min(1, props.progress / 100 + step))
+    emit('seek', Math.min(1, displayRatio.value + step))
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
     e.preventDefault()
     e.stopPropagation()
     const step = e.shiftKey ? 0.1 : 0.02
-    emit('seek', Math.max(0, props.progress / 100 - step))
+    emit('seek', Math.max(0, displayRatio.value - step))
   }
 }
 
 function getSeekRatio(e) {
   const rect = barRef.value.getBoundingClientRect()
+  if (rect.width <= 0) {
+    return 0
+  }
   return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
 }
 
-function onClick(e) {
-  emit('seek', getSeekRatio(e))
-}
-
-function onMouseDown(e) {
+function onPointerDown(e) {
   isDragging.value = true
-  document.addEventListener('mousemove', onMouseMove, { passive: true })
-  document.addEventListener('mouseup', onMouseUp)
+  previewRatio.value = getSeekRatio(e)
+  barRef.value?.setPointerCapture?.(e.pointerId)
 }
 
-function onMouseMove(e) {
+function onPointerMove(e) {
   if (isDragging.value) {
-    emit('seek', getSeekRatio(e))
+    previewRatio.value = getSeekRatio(e)
   }
 }
 
-function onMouseUp(e) {
-  if (isDragging.value) {
-    isDragging.value = false
-    emit('seek', getSeekRatio(e))
+function onPointerUp(e) {
+  if (!isDragging.value) {
+    return
   }
-  document.removeEventListener('mousemove', onMouseMove)
-  document.removeEventListener('mouseup', onMouseUp)
-}
-
-function onTouchStart() {
-  isDragging.value = true
-}
-
-function onTouchMove(e) {
-  if (isDragging.value && e.touches[0]) {
-    const rect = barRef.value.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width))
-    emit('seek', ratio)
-  }
-}
-
-function onTouchEnd() {
+  const ratio = getSeekRatio(e)
   isDragging.value = false
+  previewRatio.value = null
+  barRef.value?.releasePointerCapture?.(e.pointerId)
+  emit('seek', ratio)
+}
+
+function onPointerCancel(e) {
+  isDragging.value = false
+  previewRatio.value = null
+  barRef.value?.releasePointerCapture?.(e.pointerId)
 }
 </script>
 
@@ -85,36 +90,38 @@ function onTouchEnd() {
     <div
       ref="barRef"
       class="progress-wrapper group"
+      :class="{ 'progress-wrapper-busy': isBusy }"
       role="slider"
       :aria-label="$t('controls.seek')"
-      :aria-valuenow="Math.round(progress)"
+      :aria-valuenow="Math.round(displayProgress)"
       aria-valuemin="0"
       aria-valuemax="100"
+      :aria-busy="isBusy"
       :aria-valuetext="
         durationMs > 0
-          ? formatTime(currentTimeMs) + ' of ' + formatTime(durationMs)
+          ? formatTime(displayTimeMs) + ' of ' + formatTime(durationMs)
           : 'No audio loaded'
       "
       tabindex="0"
-      @click="onClick"
-      @mousedown.prevent="onMouseDown"
-      @touchstart.passive="onTouchStart"
-      @touchmove.passive="onTouchMove"
-      @touchend.passive="onTouchEnd"
+      @pointerdown.prevent="onPointerDown"
+      @pointermove.prevent="onPointerMove"
+      @pointerup.prevent="onPointerUp"
+      @pointercancel="onPointerCancel"
       @keydown="onKeydown"
     >
       <div class="progress-track">
         <div class="progress-buffered" :style="{ width: buffered + '%' }"></div>
-        <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+        <div class="progress-fill" :style="{ width: displayProgress + '%' }"></div>
+        <div v-if="isBusy" class="progress-pending" aria-hidden="true"></div>
       </div>
       <div
         class="progress-thumb"
         :class="{ 'progress-thumb-active': isDragging }"
-        :style="{ left: progress + '%' }"
+        :style="{ left: displayProgress + '%' }"
       ></div>
     </div>
     <div class="flex justify-between mt-1.5" :class="durationMs > 0 ? '' : 'invisible'">
-      <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(currentTimeMs) }}</span>
+      <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(displayTimeMs) }}</span>
       <span class="text-[0.65rem] text-muted tabular-nums">{{ formatTime(durationMs) }}</span>
     </div>
   </div>
@@ -128,6 +135,7 @@ function onTouchEnd() {
   position: relative;
   display: flex;
   align-items: center;
+  touch-action: none;
 }
 .progress-track {
   width: 100%;
@@ -165,6 +173,24 @@ function onTouchEnd() {
   );
   pointer-events: none;
 }
+.progress-pending {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22%;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  animation: progress-pending 1s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes progress-pending {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(560%);
+  }
+}
 .progress-thumb {
   position: absolute;
   top: 50%;
@@ -201,6 +227,13 @@ function onTouchEnd() {
     width: 18px;
     height: 18px;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-pending {
+    left: 39%;
+    animation: none;
   }
 }
 </style>

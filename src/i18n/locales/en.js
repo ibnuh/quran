@@ -50,6 +50,8 @@ export default {
   controls: {
     play: 'Play',
     pause: 'Pause',
+    loadingAudio: 'Loading audio',
+    seekingAudio: 'Seeking audio',
     repeat: 'Repeat',
     repeatVerse: 'Verse',
     repeatSurah: 'Surah',

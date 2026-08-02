@@ -101,6 +101,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 
 const props = defineProps({
   isPlaying: Boolean,
+  isLoading: Boolean,
+  isSeeking: Boolean,
   progress: { type: Number, default: 0 },
   buffered: { type: Number, default: 0 },
   currentTimeMs: { type: Number, default: 0 },
@@ -123,11 +125,7 @@ const canPlay = computed(
 // used to flash this message for a frame.
 const showAudioUnavailable = computed(
   () =>
-    !canPlay.value &&
-    !props.isPlaying &&
-    !store.isLoading &&
-    store.totalVerses > 0 &&
-    !store.error
+    !canPlay.value && !props.isPlaying && !store.isLoading && store.totalVerses > 0 && !store.error
 )
 
 const emit = defineEmits([
@@ -210,6 +208,8 @@ function clearRepeat() {
       :buffered="buffered"
       :current-time-ms="currentTimeMs"
       :duration-ms="durationMs"
+      :is-loading="isLoading"
+      :is-seeking="isSeeking"
       @seek="emit('seek', $event)"
     />
 
@@ -246,7 +246,14 @@ function clearRepeat() {
               >∞</span
             >
           </span>
-          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <svg
+            v-else
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
             <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
           </svg>
           <span class="hidden sm:inline text-[0.7rem]">{{
@@ -291,16 +298,42 @@ function clearRepeat() {
         class="play-btn w-14 h-14 landscape-compact:w-10 landscape-compact:h-10 rounded-full bg-primary text-white flex items-center justify-center mx-3 shrink-0"
         :class="[
           canPlay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed',
-          isPlaying ? 'play-btn-playing' : ''
+          isPlaying && !isLoading && !isSeeking ? 'play-btn-playing' : ''
         ]"
         :disabled="!canPlay && !isPlaying"
-        :aria-label="isPlaying ? $t('controls.pause') : $t('controls.play')"
+        :aria-label="
+          isSeeking
+            ? $t('controls.seekingAudio')
+            : isLoading
+              ? $t('controls.loadingAudio')
+              : isPlaying
+                ? $t('controls.pause')
+                : $t('controls.play')
+        "
         :title="!canPlay && !isPlaying ? $t('controls.audioUnavailable') : undefined"
         @click="emit('toggle-play')"
       >
         <Transition name="play-icon" mode="out-in">
           <svg
-            v-if="!isPlaying"
+            v-if="isLoading || isSeeking"
+            key="loading"
+            class="animate-spin"
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" opacity="0.3" />
+            <path
+              d="M21 12a9 9 0 00-9-9"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <svg
+            v-else-if="!isPlaying"
             key="play"
             width="26"
             height="26"
@@ -405,7 +438,13 @@ function clearRepeat() {
               :aria-expanded="showToolsMenu"
               @click.stop="toggleToolsMenu"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
                 <path
                   d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
                 />

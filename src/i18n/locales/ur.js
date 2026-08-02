@@ -50,6 +50,8 @@ export default {
   controls: {
     play: 'چلائیں',
     pause: 'وقفہ',
+    loadingAudio: 'آڈیو لوڈ ہو رہی ہے',
+    seekingAudio: 'آڈیو میں منتقل ہو رہا ہے',
     repeat: 'دہرائیں',
     repeatVerse: 'آیت',
     repeatSurah: 'سورہ',

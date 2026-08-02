@@ -44,6 +44,31 @@ test('play from a mid-surah verse seeks then starts', async ({ page }) => {
     .toBeTruthy()
 })
 
+test('seek during audio loading keeps the requested ayah and shows progress', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__mockAudioLoadDelayMs = 800
+    window.__mockAudioFailNextPlay = true
+  })
+
+  await playButton(page).click()
+  await expect(page.getByRole('button', { name: 'Loading audio' })).toBeVisible()
+
+  const slider = page.getByRole('slider', { name: 'Seek audio' })
+  const box = await slider.boundingBox()
+  expect(box).not.toBeNull()
+  await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2)
+
+  // 75% of the mocked 70s duration is 52.5s, inside ayah 6 (50-60s).
+  await expectVerseChip(page, 6)
+  await expect(slider).toHaveAttribute('aria-busy', 'true')
+  await expect(page.getByRole('button', { name: 'Seeking audio' })).toBeVisible()
+
+  await expect(pauseButton(page)).toBeVisible()
+  await expect(slider).toHaveAttribute('aria-busy', 'false')
+  await expectVerseChip(page, 6)
+  await expect(slider).toHaveAttribute('aria-valuetext', /0:5[2-9] of 1:10/)
+})
+
 test('pause stops playback and play resumes', async ({ page }) => {
   await playButton(page).click()
   await expect(pauseButton(page)).toBeVisible()

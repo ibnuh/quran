@@ -50,6 +50,8 @@ export default {
   controls: {
     play: 'تشغيل',
     pause: 'إيقاف مؤقت',
+    loadingAudio: 'جارٍ تحميل الصوت',
+    seekingAudio: 'جارٍ الانتقال في الصوت',
     repeat: 'تكرار',
     repeatVerse: 'آية',
     repeatSurah: 'سورة',

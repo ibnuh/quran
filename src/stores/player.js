@@ -144,6 +144,7 @@ export const usePlayerStore = defineStore('player', {
     // Full surah audio (qurancdn.com)
     playbackMode: null, // 'full' | 'verse'
     audioUrl: null,
+    audioDurationMs: 0,
     verseTimings: [],
     // Per-verse audio (alquran.cloud fallback)
     audioUrls: [],
@@ -247,6 +248,7 @@ export const usePlayerStore = defineStore('player', {
       this.error = null
       this.errorKind = null
       this.audioUnavailable = false
+      this.audioDurationMs = 0
       // Tajweed text, QCF glyphs, and extra translations are surah-specific; reload.
       this.tajweedVerses = []
       this.qcfVerses = []
@@ -265,6 +267,10 @@ export const usePlayerStore = defineStore('player', {
         this.translationVerses = cached.translationVerses
         this.playbackMode = cached.playbackMode
         this.audioUrl = cached.audioUrl
+        this.audioDurationMs =
+          Number(cached.audioDurationMs) ||
+          Number(cached.verseTimings?.[cached.verseTimings.length - 1]?.timestampTo) ||
+          0
         this.verseTimings = cached.verseTimings
         this.audioUrls = cached.audioUrls
         this.audioUnavailable = !cached.playbackMode
@@ -309,6 +315,7 @@ export const usePlayerStore = defineStore('player', {
             audioResult = {
               mode: 'full',
               audioUrl: data.audioUrl,
+              audioDurationMs: data.duration,
               verseTimings: data.verseTimings,
               audioUrls: []
             }
@@ -327,6 +334,7 @@ export const usePlayerStore = defineStore('player', {
             audioResult = {
               mode: 'verse',
               audioUrl: null,
+              audioDurationMs: 0,
               verseTimings: [],
               audioUrls: data.audioUrls
             }
@@ -364,12 +372,14 @@ export const usePlayerStore = defineStore('player', {
         if (audioResult) {
           this.playbackMode = audioResult.mode
           this.audioUrl = audioResult.audioUrl
+          this.audioDurationMs = Number(audioResult.audioDurationMs) || 0
           this.verseTimings = audioResult.verseTimings
           this.audioUrls = audioResult.audioUrls
           this.audioUnavailable = false
         } else {
           this.playbackMode = null
           this.audioUrl = null
+          this.audioDurationMs = 0
           this.verseTimings = []
           this.audioUrls = []
           this.audioUnavailable = true
@@ -390,6 +400,7 @@ export const usePlayerStore = defineStore('player', {
           translationVerses: textData.translationVerses,
           playbackMode: this.playbackMode,
           audioUrl: this.audioUrl,
+          audioDurationMs: this.audioDurationMs,
           verseTimings: this.verseTimings,
           audioUrls: this.audioUrls
         })
@@ -448,6 +459,7 @@ export const usePlayerStore = defineStore('player', {
           audioResult = {
             playbackMode: 'full',
             audioUrl: audioData.audioUrl,
+            audioDurationMs: audioData.duration,
             verseTimings: audioData.verseTimings,
             audioUrls: []
           }
@@ -456,6 +468,7 @@ export const usePlayerStore = defineStore('player', {
           audioResult = {
             playbackMode: 'verse',
             audioUrl: null,
+            audioDurationMs: 0,
             verseTimings: [],
             audioUrls: verseData.audioUrls
           }

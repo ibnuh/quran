@@ -245,7 +245,21 @@ export function usePlayback(store, audio) {
   }
 
   function handleSeek(ratio) {
-    audio.seek(ratio)
+    if (store.playbackMode === 'full' && store.audioUrl) {
+      // A scrub is an explicit user action, so it is safe to attach the source here.
+      // The target can then be queued against API duration while media bytes load.
+      audio.load(store.audioUrl)
+    }
+    const targetMs = audio.seek(ratio)
+    if (targetMs == null || store.playbackMode !== 'full') {
+      return
+    }
+    const index = store.getVerseIndexAtTime(targetMs)
+    if (index !== store.currentVerseIndex) {
+      store.currentVerseIndex = index
+      store.currentWordIndex = -1
+      store.savePreferences()
+    }
   }
 
   function handleSetSpeed(speed) {
@@ -347,6 +361,15 @@ export function usePlayback(store, audio) {
     () => {
       audio.stop()
     }
+  )
+
+  // The timing API knows the full duration before the media element has metadata.
+  watch(
+    () => store.audioDurationMs,
+    ms => {
+      audio.setExpectedDuration(ms)
+    },
+    { immediate: true }
   )
 
   // Keep the audio element's rate in sync with the stored speed.
