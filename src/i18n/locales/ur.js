@@ -247,7 +247,11 @@ export default {
     available: 'اپ ڈیٹ دستیاب',
     ready: 'نیا ورژن انسٹال کے لیے تیار ہے۔',
     update: 'اپ ڈیٹ',
-    dismiss: 'برخاست'
+    later: 'بعد میں',
+    dismiss: 'برخاست',
+    applyingTitle: 'اپ ڈیٹ ہو رہا ہے…',
+    applyingBody: 'نیا ورژن انسٹال ہو رہا ہے۔ صفحہ جلد دوبارہ لوڈ ہوگا۔',
+    applyingProgress: 'براہ کرم انتظار کریں…'
   },
   install: {
     title: 'ایپ انسٹال کریں',

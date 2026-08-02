@@ -246,7 +246,11 @@ export default {
     available: 'Update available',
     ready: 'A new version is ready to install.',
     update: 'Update',
-    dismiss: 'Dismiss'
+    later: 'Later',
+    dismiss: 'Dismiss',
+    applyingTitle: 'Updating…',
+    applyingBody: 'Installing the new version. The page will reload in a moment.',
+    applyingProgress: 'Please wait…'
   },
   install: {
     title: 'Install App',

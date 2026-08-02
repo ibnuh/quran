@@ -246,7 +246,11 @@ export default {
     available: 'يتوفر تحديث',
     ready: 'إصدار جديد جاهز للتثبيت.',
     update: 'تحديث',
-    dismiss: 'تجاهل'
+    later: 'لاحقاً',
+    dismiss: 'تجاهل',
+    applyingTitle: 'جارٍ التحديث…',
+    applyingBody: 'يتم تثبيت الإصدار الجديد. ستُعاد تحميل الصفحة بعد لحظات.',
+    applyingProgress: 'يرجى الانتظار…'
   },
   install: {
     title: 'تثبيت التطبيق',
