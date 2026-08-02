@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
 
 <template>
   <header
-    class="bg-primary text-white px-3 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]"
+    class="bg-primary text-white px-3 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:pl-[max(0.75rem,env(safe-area-inset-left))] sm:pr-[max(0.75rem,env(safe-area-inset-right))]"
     style="padding-top: max(0.5rem, env(safe-area-inset-top, 0px))"
   >
     <div class="flex items-center justify-between pb-1.5 landscape-compact:pb-1">
@@ -669,7 +669,7 @@ onBeforeUnmount(() => {
           </Transition>
         </div>
         <button
-          class="flex header-btn"
+          class="flex header-btn header-btn-end"
           :aria-label="$t('header.showVerses')"
           @click="$emit('toggle-verses')"
         >
@@ -735,6 +735,12 @@ onBeforeUnmount(() => {
 }
 .header-btn:active {
   transform: scale(0.93);
+}
+/* Keep the trailing control off the phone bezel / browser chrome edge. */
+@media (max-width: 639px) {
+  .header-btn-end {
+    margin-inline-end: 0.15rem;
+  }
 }
 
 /* Own layout (not header-btn): keeps icon · label · caret on one baseline. */
