@@ -48,7 +48,7 @@ onMounted(() => {
     <div
       v-if="show"
       class="fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 bg-card border border-border rounded-xl shadow-2xl px-4 py-3.5 flex items-start gap-3"
-      style="top: calc(var(--header-height, 4.5rem) + 0.5rem)"
+      style="top: calc(var(--header-height, 4.5rem) + 4.75rem)"
       role="status"
       :aria-label="$t('feature.footnotesTitle')"
     >

@@ -60,7 +60,7 @@ onBeforeUnmount(() => {
     <div
       v-if="show"
       class="fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-80 z-30 bg-card border border-border rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3"
-      style="top: calc(var(--header-height, 4.5rem) + 0.5rem)"
+      style="bottom: calc(var(--controls-height, 8rem) + 0.75rem)"
     >
       <svg
         class="shrink-0 text-primary"
@@ -108,6 +108,6 @@ onBeforeUnmount(() => {
 .install-toast-enter-from,
 .install-toast-leave-to {
   opacity: 0;
-  transform: translateY(-1rem);
+  transform: translateY(1rem);
 }
 </style>

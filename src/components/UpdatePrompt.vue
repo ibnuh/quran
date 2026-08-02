@@ -88,7 +88,7 @@ onBeforeUnmount(() => window.removeEventListener('sw-update-available', onUpdate
       </svg>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-medium text-body">{{ $t('update.available') }}</p>
-        <p class="text-xs text-muted">A new version is ready to install.</p>
+        <p class="text-xs text-muted">{{ $t('update.ready') }}</p>
       </div>
       <button
         class="shrink-0 bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer hover:bg-primary-dark transition-colors"
