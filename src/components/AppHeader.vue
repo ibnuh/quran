@@ -311,7 +311,7 @@ onBeforeUnmount(() => {
             <div
               v-if="showModeMenu"
               role="menu"
-              class="mode-menu absolute right-0 top-full mt-2 bg-card rounded-2xl shadow-2xl border border-border z-50 w-[min(18.5rem,calc(100vw-1.5rem))]"
+              class="mode-menu bg-card rounded-2xl shadow-2xl border border-border z-50"
               @keydown="onModeMenuKeydown"
               @click.stop
             >
@@ -833,6 +833,25 @@ onBeforeUnmount(() => {
 
 .mode-menu {
   overflow: hidden;
+  /* Desktop / tablet: anchor to the trigger's right edge. */
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(18.5rem, calc(100vw - 1.5rem));
+}
+/* Mobile: center in the viewport so a wide panel is not pinned to the right cluster. */
+@media (max-width: 639px) {
+  .mode-menu {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 3.35rem);
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-width: 22rem;
+    margin-inline: auto;
+    max-height: min(70vh, 28rem);
+    overflow-y: auto;
+  }
 }
 
 .mode-menu-head {
