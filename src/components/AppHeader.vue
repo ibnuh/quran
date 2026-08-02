@@ -666,7 +666,7 @@ onBeforeUnmount(() => {
           </Transition>
         </div>
         <button
-          class="flex header-btn header-btn-end"
+          class="flex header-btn shrink-0"
           :aria-label="$t('header.showVerses')"
           @click="$emit('toggle-verses')"
         >
@@ -701,11 +701,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .app-header {
-  /* Mobile needs generous side inset so edge icons (settings / verses) are not
-     flush with the bezel or browser chrome. Safe-area is added on top of that. */
+  /* Mobile: keep edge icons off the bezel. Safe-area is added on top. */
   padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
-  padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
-  padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+  padding-left: calc(1rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1rem + env(safe-area-inset-right, 0px));
 }
 @media (min-width: 640px) {
   .app-header {
@@ -725,8 +724,12 @@ onBeforeUnmount(() => {
   line-height: 1.55;
 }
 
+/*
+  Do NOT set display here. Buttons use Tailwind display utilities
+  (flex / hidden / sm:flex / lg:flex). A scoped display rule would
+  override `hidden` and force desktop-only controls onto mobile.
+*/
 .header-btn {
-  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   padding: 0.3rem 0.5rem;
@@ -748,16 +751,9 @@ onBeforeUnmount(() => {
 .header-btn:active {
   transform: scale(0.93);
 }
-@media (max-width: 639px) {
-  /* Bias the first/last glyphs inward from the bezel while keeping 40px taps. */
-  .header-actions-start > .header-btn:first-child {
-    padding-inline-start: 0.7rem;
-    padding-inline-end: 0.35rem;
-  }
-  .header-btn-end {
-    padding-inline-start: 0.35rem;
-    padding-inline-end: 0.7rem;
-  }
+
+.header-actions-end {
+  flex-shrink: 0;
 }
 
 /* Own layout (not header-btn): keeps icon · label · caret on one baseline. */
