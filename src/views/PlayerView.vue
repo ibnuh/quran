@@ -243,10 +243,16 @@ onMounted(async () => {
       store.currentVerseIndex = idx
     }
   }
-  if (store.currentVerseIndex > 0 && store.playbackMode === 'full') {
-    const timing = store.verseTimings[store.currentVerseIndex]
-    if (timing) {
-      audio.seekTo(timing.timestampFrom)
+  // Attach full-surah audio before seeking so Play works immediately after reload
+  // (including post service-worker update). The playback watch also loads the URL,
+  // but mount can race ahead of the watcher flush.
+  if (store.playbackMode === 'full' && store.audioUrl) {
+    audio.load(store.audioUrl)
+    if (store.currentVerseIndex > 0) {
+      const timing = store.verseTimings[store.currentVerseIndex]
+      if (timing) {
+        audio.seekTo(timing.timestampFrom)
+      }
     }
   }
   mediaSession.update()

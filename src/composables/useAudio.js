@@ -57,20 +57,86 @@ export function useAudio() {
     return audio.currentTime * 1000
   }
 
+  function resolveUrl(url) {
+    if (!url) {
+      return ''
+    }
+    try {
+      return new URL(url, window.location.href).href
+    } catch {
+      return url
+    }
+  }
+
+  function hasLoadedUrl(url) {
+    if (!url) {
+      return false
+    }
+    const current = audio.currentSrc || audio.src || ''
+    if (!current) {
+      return false
+    }
+    return current === resolveUrl(url)
+  }
+
   function load(url) {
+    if (!url) {
+      return
+    }
+    // Avoid resetting a healthy element to the same source (would interrupt playback).
+    if (hasLoadedUrl(url) && !audio.error) {
+      return
+    }
     audio.src = url
     audio.load()
   }
 
-  function loadAndPlay(url) {
-    audio.src = url
+  async function playFromElement() {
     audio.playbackRate = playbackRate.value
-    audio.play().catch(() => {})
+    try {
+      await audio.play()
+      return true
+    } catch {
+      return false
+    }
   }
 
-  function play() {
-    audio.playbackRate = playbackRate.value
-    audio.play().catch(() => {})
+  // Ensure the element has `url`, then play. Retries once after a hard reload of the
+  // source: after a service-worker update the previous media pipeline can be dead
+  // (play() resolves to nothing / rejects), even when store.audioUrl is still set.
+  async function loadAndPlay(url) {
+    if (!url) {
+      return false
+    }
+    load(url)
+    if (await playFromElement()) {
+      return true
+    }
+    // Hard retry: clear + reload the same URL (common after SW controllerchange).
+    audio.removeAttribute('src')
+    audio.load()
+    audio.src = url
+    audio.load()
+    return playFromElement()
+  }
+
+  // Resume current source, or load `url` first when the element has no usable media.
+  async function play(url) {
+    if (url) {
+      return loadAndPlay(url)
+    }
+    if (!audio.src && !audio.currentSrc) {
+      return false
+    }
+    if (await playFromElement()) {
+      return true
+    }
+    // Element has a source but play failed: force a reload of the same source.
+    const retryUrl = audio.currentSrc || audio.src
+    if (!retryUrl) {
+      return false
+    }
+    return loadAndPlay(retryUrl)
   }
 
   function pause() {

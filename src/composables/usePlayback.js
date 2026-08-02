@@ -71,9 +71,12 @@ export function usePlayback(store, audio) {
       return
     }
     if (store.playbackMode === 'full' && store.audioUrl) {
-      audio.play()
+      // Always pass the URL: after a PWA update/reload the <audio> element may have
+      // no source even though the store still has audioUrl (watch may have been skipped
+      // or the old media pipeline is dead). play() reloads if needed.
+      void audio.play(store.audioUrl)
     } else if (store.playbackMode === 'verse' && store.audioUrls.length) {
-      audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+      void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
       preloadAhead()
     }
   }
@@ -122,16 +125,20 @@ export function usePlayback(store, audio) {
     if (!play || !hasPlayableAudio()) {
       return
     }
-    if (store.playbackMode === 'full') {
+    if (store.playbackMode === 'full' && store.audioUrl) {
       const timing = store.verseTimings[index]
-      if (timing) {
-        audio.seekTo(timing.timestampFrom)
-        if (!audio.isPlaying.value) {
-          audio.play()
+      // Ensure the surah file is attached before seeking (critical after reload).
+      void (async () => {
+        audio.load(store.audioUrl)
+        if (timing) {
+          audio.seekTo(timing.timestampFrom)
         }
-      }
+        if (!audio.isPlaying.value) {
+          await audio.play(store.audioUrl)
+        }
+      })()
     } else {
-      audio.loadAndPlay(store.audioUrls[index])
+      void audio.loadAndPlay(store.audioUrls[index])
       preloadAhead()
     }
   }
@@ -144,17 +151,18 @@ export function usePlayback(store, audio) {
   function handleJumpToVerse(index) {
     store.setVerse(index)
     const wasPlaying = audio.isPlaying.value
-    if (store.playbackMode === 'full') {
+    if (store.playbackMode === 'full' && store.audioUrl) {
       const timing = store.verseTimings[index]
+      audio.load(store.audioUrl)
       if (timing) {
         audio.seekTo(timing.timestampFrom)
-        if (wasPlaying) {
-          audio.play()
-        }
+      }
+      if (wasPlaying) {
+        void audio.play(store.audioUrl)
       }
     } else if (store.audioUrls.length) {
       if (wasPlaying) {
-        audio.loadAndPlay(store.audioUrls[index])
+        void audio.loadAndPlay(store.audioUrls[index])
         preloadAhead()
       }
     }
@@ -192,13 +200,13 @@ export function usePlayback(store, audio) {
     // A-B repeat (memorization) takes precedence over other repeat modes.
     const ab = store.abRepeat
     if (ab) {
-      if (store.playbackMode === 'full') {
+      if (store.playbackMode === 'full' && store.audioUrl) {
         const timing = store.verseTimings[ab.start]
         if (timing) {
           store.currentVerseIndex = ab.start
           store.currentWordIndex = -1
           audio.seekTo(timing.timestampFrom)
-          audio.play()
+          void audio.play(store.audioUrl)
         }
         return
       }
@@ -208,20 +216,20 @@ export function usePlayback(store, audio) {
       } else {
         store.nextVerse()
       }
-      audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+      void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
       preloadAhead()
       return
     }
 
     if (store.repeatMode === 'verse') {
-      if (store.playbackMode === 'full') {
+      if (store.playbackMode === 'full' && store.audioUrl) {
         const timing = store.verseTimings[store.currentVerseIndex]
         if (timing) {
           audio.seekTo(timing.timestampFrom)
-          audio.play()
+          void audio.play(store.audioUrl)
         }
       } else {
-        audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+        void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
       }
       return
     }
@@ -229,11 +237,11 @@ export function usePlayback(store, audio) {
     if (store.repeatMode === 'surah') {
       store.currentVerseIndex = 0
       store.currentWordIndex = -1
-      if (store.playbackMode === 'full') {
+      if (store.playbackMode === 'full' && store.audioUrl) {
         audio.seekTo(0)
-        audio.play()
+        void audio.play(store.audioUrl)
       } else if (store.audioUrls.length) {
-        audio.loadAndPlay(store.audioUrls[0])
+        void audio.loadAndPlay(store.audioUrls[0])
         preloadAhead()
       }
       return
@@ -241,7 +249,7 @@ export function usePlayback(store, audio) {
 
     if (store.playbackMode === 'verse' && store.canNextVerse) {
       store.nextVerse()
-      audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
+      void audio.loadAndPlay(store.audioUrls[store.currentVerseIndex])
       preloadAhead()
       return
     }
@@ -265,12 +273,15 @@ export function usePlayback(store, audio) {
         audio.stop()
         continuingPlayback.value = false
         if (wasPlaying) {
-          audio.loadAndPlay(url)
+          void audio.loadAndPlay(url)
         } else {
           audio.load(url)
         }
       }
-    }
+    },
+    // Immediate: attach the current surah file as soon as the composable mounts so
+    // the first Play after a reload/update does not hit an empty <audio> element.
+    { immediate: true }
   )
 
   // Stop audio when the surah or reciter changes.
