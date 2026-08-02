@@ -2,20 +2,60 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const show = ref(false)
+const applying = ref(false)
 let updateFn = null
 
 function onUpdateAvailable(e) {
   updateFn = e.detail.updateSW
-  show.value = true
+  // Don't re-show the toast while a reload is already in progress.
+  if (!applying.value) {
+    show.value = true
+  }
 }
 
-function applyUpdate() {
-  show.value = false
-  if (updateFn) {
-    updateFn(true)
+/**
+ * Activate the waiting service worker, then reload once it controls the page.
+ * Posts SKIP_WAITING directly to registration.waiting (more reliable than only
+ * going through workbox-window's internal handle) and waits for controllerchange.
+ */
+async function applyUpdate() {
+  if (applying.value) {
+    return
   }
-  // Fallback reload in case SW controllerchange doesn't fire
-  setTimeout(() => window.location.reload(), 1500)
+  applying.value = true
+  show.value = false
+
+  const waitForController = () =>
+    new Promise(resolve => {
+      // Already controlled by a newly activated worker (rare but possible).
+      let settled = false
+      const finish = () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        resolve()
+      }
+      navigator.serviceWorker?.addEventListener('controllerchange', finish, { once: true })
+      // Fallback if clientsClaim is missing on an older waiting worker.
+      setTimeout(finish, 2000)
+    })
+
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration()
+    if (reg?.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+    }
+    // Also invoke vite-plugin-pwa helper (messageSkipWaiting via workbox-window).
+    if (updateFn) {
+      await Promise.resolve(updateFn(true))
+    }
+    await waitForController()
+  } catch {
+    // Still attempt a reload; a full navigation is the recovery path.
+  }
+
+  window.location.reload()
 }
 
 function dismiss() {

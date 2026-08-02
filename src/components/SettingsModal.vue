@@ -52,11 +52,44 @@ async function forceUpdate() {
     const registration = await navigator.serviceWorker?.getRegistration()
     if (registration) {
       await registration.update()
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+      // update() may leave the new worker in installing; wait briefly for waiting.
+      let waiting = registration.waiting
+      if (!waiting && registration.installing) {
+        waiting = await new Promise(resolve => {
+          const worker = registration.installing
+          if (!worker) {
+            resolve(null)
+            return
+          }
+          const onState = () => {
+            if (worker.state === 'installed') {
+              worker.removeEventListener('statechange', onState)
+              resolve(registration.waiting || worker)
+            } else if (worker.state === 'redundant') {
+              worker.removeEventListener('statechange', onState)
+              resolve(null)
+            }
+          }
+          worker.addEventListener('statechange', onState)
+          setTimeout(() => {
+            worker.removeEventListener('statechange', onState)
+            resolve(registration.waiting)
+          }, 5000)
+        })
+      }
+
+      if (waiting) {
         updateAvailable.value = true
         updateStatus.value = t('settings.updateFound')
-        setTimeout(() => window.location.reload(), 500)
+        const reloadOnce = () => {
+          window.location.reload()
+        }
+        navigator.serviceWorker?.addEventListener('controllerchange', reloadOnce, {
+          once: true
+        })
+        waiting.postMessage({ type: 'SKIP_WAITING' })
+        // Fallback reload if an older SW without clientsClaim never fires controllerchange.
+        setTimeout(reloadOnce, 2000)
         return
       }
     }

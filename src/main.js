@@ -32,13 +32,39 @@ app.mount('#app')
 // PWA update prompt
 import { registerSW } from 'virtual:pwa-register'
 
+// If a new service worker takes control (update), reload once so the page
+// actually loads the new assets. Skip the first-ever controller (hadController
+// false) to avoid an extra reload on the initial install.
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller
+  let reloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) {
+      return
+    }
+    reloading = true
+    window.location.reload()
+  })
+}
+
 const updateSW = registerSW({
+  immediate: true,
   onNeedRefresh() {
     window.dispatchEvent(new CustomEvent('sw-update-available', { detail: { updateSW } }))
   },
   onRegisteredSW(_, registration) {
-    if (registration) {
-      setInterval(() => registration.update(), 30 * 60 * 1000)
+    if (!registration) {
+      return
     }
+    // Periodic update check while the tab stays open.
+    setInterval(() => {
+      registration.update()
+    }, 30 * 60 * 1000)
+    // Re-check when the user returns to the tab (covers long backgrounded sessions).
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        registration.update()
+      }
+    })
   }
 })

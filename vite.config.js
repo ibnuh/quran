@@ -32,6 +32,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       workbox: {
+        // Auto-activate new workers so stuck clients (old update toast) can recover
+        // on the next SW check without needing the previous build's apply path.
+        // The client still shows a prompt via registerType: 'prompt', and reloads
+        // on controllerchange in main.js / UpdatePrompt.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
         runtimeCaching: [
           {

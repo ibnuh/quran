@@ -10,5 +10,17 @@
 /icons/*
   Cache-Control: public, max-age=604800
 
+# Service worker must never be cached by the browser or Cloudflare edge.
+# Without this, clients get stuck on old builds and the update toast loops.
 /sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  CDN-Cache-Control: no-store
+  Cloudflare-CDN-Cache-Control: no-store
+
+/workbox-*.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  CDN-Cache-Control: no-store
+  Cloudflare-CDN-Cache-Control: no-store
+
+/manifest.webmanifest
   Cache-Control: no-cache
