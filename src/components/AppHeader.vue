@@ -683,7 +683,7 @@ onBeforeUnmount(() => {
     <!-- Mobile: compact surah names only (mode lives in the toolbar pill) -->
     <div
       v-if="store.currentSurah"
-      class="sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1.5"
+      class="mobile-surah-line sm:hidden landscape-compact:hidden flex items-center justify-between gap-3 pb-1.5"
     >
       <span class="min-w-0 flex-1 truncate text-[0.72rem] opacity-85">
         {{ store.currentSurah.englishName
@@ -763,7 +763,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   flex-wrap: nowrap;
   gap: 0.4rem;
-  min-height: 2rem;
+  /* Keep a 40px touch target on all viewports (mobile a11y / e2e). */
+  min-width: 40px;
+  min-height: 40px;
   max-width: 13rem;
   padding: 0.28rem 0.55rem 0.28rem 0.4rem;
   border-radius: 9999px;
@@ -833,7 +835,8 @@ onBeforeUnmount(() => {
   .mode-trigger {
     gap: 0.3rem;
     max-width: 10rem;
-    min-height: 1.9rem;
+    min-width: 40px;
+    min-height: 40px;
     padding: 0.24rem 0.45rem 0.24rem 0.32rem;
   }
   .mode-trigger-icon {

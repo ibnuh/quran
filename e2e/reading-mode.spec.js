@@ -1,9 +1,17 @@
-import { test, expect, mockApi, waitForSurahLoad } from './fixtures.js'
+import {
+  test,
+  expect,
+  mockApi,
+  waitForSurahLoad,
+  installMockAudio,
+  expectVerseChip
+} from './fixtures.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
-test.beforeEach(({ page }) => {
+test.beforeEach(async ({ page }) => {
   mockApi(page)
+  await installMockAudio(page)
 })
 
 async function enableReading(page) {
@@ -27,5 +35,5 @@ test('continuous reading mode lists all verses', async ({ page }) => {
 test('tapping a verse in reading mode selects it', async ({ page }) => {
   await enableReading(page)
   await page.getByRole('button', { name: 'Select verse 3' }).click()
-  await expect(page.getByText('Verse 3 of 7')).toBeVisible()
+  await expectVerseChip(page, 3)
 })

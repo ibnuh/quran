@@ -22,7 +22,7 @@ test('small screens move the surah indicator to a line below the navbar', async 
   await startFresh(page)
   // Centered title is hidden; the compact line is shown with the surah name.
   await expect(page.locator('h1.surah-title')).toBeHidden()
-  const compact = page.locator('header .sm\\:hidden')
+  const compact = page.locator('header .mobile-surah-line')
   await expect(compact).toBeVisible()
   await expect(compact).toContainText('Al-Faatiha')
 })
@@ -31,7 +31,7 @@ test('wide screens keep the centered surah title', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 800 })
   await startFresh(page)
   await expect(page.locator('h1.surah-title')).toBeVisible()
-  await expect(page.locator('header .sm\\:hidden')).toBeHidden()
+  await expect(page.locator('header .mobile-surah-line')).toBeHidden()
 })
 
 test('a long verse is not clipped at the top on small screens', async ({ page }) => {

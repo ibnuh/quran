@@ -1,7 +1,16 @@
-import { test, expect, mockApi, waitForSurahLoad, verseBadge } from './fixtures.js'
+import {
+  test,
+  expect,
+  mockApi,
+  waitForSurahLoad,
+  verseBadge,
+  installMockAudio,
+  expectVerseChip
+} from './fixtures.js'
 
 test.beforeEach(async ({ page }) => {
   mockApi(page)
+  await installMockAudio(page)
 })
 
 test('deep link /surah loads that surah at verse 1', async ({ page }) => {
@@ -24,6 +33,7 @@ test('deep link /surah/ayah loads the requested verse', async ({ page }) => {
   await waitForSurahLoad(page)
   await expect(page.locator('header p')).toContainText('Baqara')
   await expect(verseBadge(page)).toHaveText('5')
+  await expectVerseChip(page, 5)
 })
 
 test('legacy ?surah= query still works', async ({ page }) => {

@@ -1,9 +1,10 @@
-import { test, expect, mockApi, waitForSurahLoad } from './fixtures.js'
+import { test, expect, mockApi, waitForSurahLoad, installMockAudio, expectVerseChip } from './fixtures.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
-test.beforeEach(({ page }) => {
+test.beforeEach(async ({ page }) => {
   mockApi(page)
+  await installMockAudio(page)
 })
 
 async function enableReadMode(page, { continuous = false } = {}) {
@@ -41,7 +42,7 @@ test('tapping a verse in continuous read mode selects without auto-play chrome c
 }) => {
   await enableReadMode(page, { continuous: true })
   await page.getByRole('button', { name: 'Select verse 3' }).click()
-  await expect(page.getByText('Verse 3 of 7')).toBeVisible()
+  await expectVerseChip(page, 3)
 })
 
 test('play from here appears on the selected continuous verse in read mode', async ({ page }) => {
@@ -59,6 +60,9 @@ test('settings offer read mode and independent layout options', async ({ page })
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal = page.getByRole('dialog', { name: 'Settings' })
 
+  // Read/layout controls live under the Reading tab after the settings IA split.
+  await modal.getByRole('tab', { name: 'Reading' }).click()
+
   const readToggle = modal.locator('label', { hasText: 'Read mode' })
   await readToggle.scrollIntoViewIfNeeded()
   await readToggle.locator('input[type="checkbox"]').check()
@@ -71,6 +75,7 @@ test('settings offer read mode and independent layout options', async ({ page })
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal2 = page.getByRole('dialog', { name: 'Settings' })
+  await modal2.getByRole('tab', { name: 'Reading' }).click()
   await modal2.getByRole('button', { name: 'Single verse' }).click()
   await modal2.getByLabel('Close settings').click()
 

@@ -35,7 +35,11 @@ test('tafsir source can be switched', async ({ page }) => {
 test('tafsir button can be hidden via settings', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal = page.getByRole('dialog', { name: 'Settings' })
-  await modal.locator('label', { hasText: /^Tafsir$/ }).locator('input[type="checkbox"]').uncheck()
+  // Verse action toggles (including Tafsir) live under Display.
+  await modal.getByRole('tab', { name: 'Display' }).click()
+  const tafsirRow = modal.locator('label', { hasText: /^Tafsir$/ })
+  await tafsirRow.scrollIntoViewIfNeeded()
+  await tafsirRow.click()
   await modal.getByLabel('Close settings').click()
   await expect(page.getByLabel('Open tafsir')).toHaveCount(0)
 })

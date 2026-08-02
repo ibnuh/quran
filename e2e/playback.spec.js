@@ -1,13 +1,56 @@
-import { test, expect, mockApi, startFresh, playButton, pauseButton } from './fixtures.js'
+import {
+  test,
+  expect,
+  mockApi,
+  startFresh,
+  playButton,
+  pauseButton,
+  jumpVerseButton,
+  expectVerseChip
+} from './fixtures.js'
 
 test.beforeEach(async ({ page }) => {
   mockApi(page)
   await startFresh(page)
 })
 
-test('play button is visible and clickable', async ({ page }) => {
+test('play button is visible and starts playback', async ({ page }) => {
   await expect(playButton(page)).toBeVisible()
-  // Play click may not change state since audio is mocked/aborted
+  await expect(playButton(page)).toBeEnabled()
+  await playButton(page).click()
+  await expect(pauseButton(page)).toBeVisible()
+})
+
+test('play from a mid-surah verse seeks then starts', async ({ page }) => {
+  await jumpVerseButton(page).click()
+  await page.locator('input[type="number"]').fill('6')
+  await page.locator('button:has-text("Go")').click()
+  await expectVerseChip(page, 6)
+
+  await playButton(page).click()
+  await expect(pauseButton(page)).toBeVisible()
+
+  // Mock audio duration is 70s; verse 6 starts at 50s.
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        // Progress label left time near 0:50 when seek worked.
+        const labels = Array.from(document.querySelectorAll('.tabular-nums')).map(el =>
+          (el.textContent || '').trim()
+        )
+        return labels.some(t => t.startsWith('0:5'))
+      })
+    })
+    .toBeTruthy()
+})
+
+test('pause stops playback and play resumes', async ({ page }) => {
+  await playButton(page).click()
+  await expect(pauseButton(page)).toBeVisible()
+  await pauseButton(page).click()
+  await expect(playButton(page)).toBeVisible()
+  await playButton(page).click()
+  await expect(pauseButton(page)).toBeVisible()
 })
 
 test('progress bar is visible and interactive', async ({ page }) => {
@@ -23,8 +66,7 @@ test('prev verse button is disabled on first verse', async ({ page }) => {
 })
 
 test('verse counter shows correct verse number', async ({ page }) => {
-  const counter = page.getByLabel('Jump to verse')
-  await expect(counter).toContainText('Verse 1 of 7')
+  await expectVerseChip(page, 1)
 })
 
 test('repeat mode cycles through options', async ({ page }) => {

@@ -2,13 +2,110 @@ import { test as base, expect } from '@playwright/test'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
+/**
+ * Install a deterministic HTMLAudioElement mock before any app code runs.
+ * Real MP3 fetches are aborted in mockApi; without this, play() never becomes Pause.
+ * Duration is 70s so verse timings at 0..60s stay in range.
+ */
+export async function installMockAudio(page) {
+  await page.addInitScript(() => {
+    class MockAudio extends EventTarget {
+      constructor() {
+        super()
+        this.src = ''
+        this.currentSrc = ''
+        this.currentTime = 0
+        this.duration = 70
+        this.paused = true
+        this.playbackRate = 1
+        this.volume = 1
+        this.muted = false
+        this.preload = 'auto'
+        this.readyState = 0
+        this.networkState = 0
+        this.error = null
+        this._timer = null
+        this.buffered = {
+          length: 1,
+          start: () => 0,
+          end: () => 70
+        }
+      }
+
+      load() {
+        if (!this.src) {
+          this.readyState = 0
+          this.networkState = 0
+          return
+        }
+        this.currentSrc = this.src
+        this.networkState = 1
+        this.readyState = 4
+        this.duration = 70
+        this.error = null
+        queueMicrotask(() => {
+          this.dispatchEvent(new Event('loadedmetadata'))
+          this.dispatchEvent(new Event('canplay'))
+          this.dispatchEvent(new Event('progress'))
+        })
+      }
+
+      play() {
+        if (!this.src && !this.currentSrc) {
+          return Promise.reject(new DOMException('No src', 'NotSupportedError'))
+        }
+        if (this.readyState < 1) {
+          this.load()
+        }
+        this.paused = false
+        this.dispatchEvent(new Event('play'))
+        this.dispatchEvent(new Event('playing'))
+        if (this._timer) {
+          clearInterval(this._timer)
+        }
+        this._timer = setInterval(() => {
+          if (this.paused) {
+            return
+          }
+          this.currentTime = Math.min(this.duration, this.currentTime + 0.25)
+          this.dispatchEvent(new Event('timeupdate'))
+          if (this.currentTime >= this.duration) {
+            this.paused = true
+            clearInterval(this._timer)
+            this._timer = null
+            this.dispatchEvent(new Event('ended'))
+          }
+        }, 250)
+        return Promise.resolve()
+      }
+
+      pause() {
+        this.paused = true
+        if (this._timer) {
+          clearInterval(this._timer)
+          this._timer = null
+        }
+        this.dispatchEvent(new Event('pause'))
+      }
+
+      removeAttribute(name) {
+        if (name === 'src') {
+          this.src = ''
+          this.currentSrc = ''
+        }
+      }
+    }
+
+    window.Audio = MockAudio
+  })
+}
+
 export function mockApi(page) {
   // Mock alquran.cloud: /v1/surah/{num}/editions/{editions}
-  // Returns { code, data: [{ edition, ayahs: [{ numberInSurah, text }] }, ...] }
-  page.route(/api\.alquran\.cloud\/v1\/surah/, (route) => {
+  page.route(/api\.alquran\.cloud\/v1\/surah/, route => {
     const ayahs = Array.from({ length: 7 }, (_, i) => ({
       numberInSurah: i + 1,
-      text: `\u0622\u064A\u064E\u0629\u064F \u0627\u0644\u0652\u0622\u064A\u064E\u0629\u0650 ${i + 1}`
+      text: `آيَةُ الْآيَةِ ${i + 1}`
     }))
     const translationAyahs = Array.from({ length: 7 }, (_, i) => ({
       numberInSurah: i + 1,
@@ -27,23 +124,22 @@ export function mockApi(page) {
     })
   })
 
-  // Mock quran.com (default English is en.sahih, which routes here). Keep text stable
-  // so tests do not depend on the live network.
-  page.route(/api\.quran\.com\/api\/v4\/verses\/by_chapter\//, (route) => {
+  // Mock quran.com (default English is en.sahih, which routes here).
+  page.route(/api\.quran\.com\/api\/v4\/verses\/by_chapter\//, route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         verses: Array.from({ length: 7 }, (_, i) => ({
           verse_number: i + 1,
-          text_uthmani: `\u0622\u064A\u064E\u0629\u064F \u0627\u0644\u0652\u0622\u064A\u064E\u0629\u0650 ${i + 1}`,
+          text_uthmani: `آيَةُ الْآيَةِ ${i + 1}`,
           translations: [{ text: `This is verse ${i + 1}` }]
         }))
       })
     })
   })
 
-  page.route(/api\.quran\.com\/api\/v4\/foot_notes\//, (route) => {
+  page.route(/api\.quran\.com\/api\/v4\/foot_notes\//, route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -53,28 +149,32 @@ export function mockApi(page) {
     })
   })
 
-  // Mock qurancdn.com: /api/qdc/audio/reciters/{id}/audio_files?chapter={n}&segments=true
-  page.route(/api\.qurancdn\.com/, (route) => {
+  // Mock qurancdn.com full-surah audio metadata.
+  // duration is milliseconds (matches live API); verse timestamps are also ms.
+  page.route(/api\.qurancdn\.com/, route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        audio_files: [{
-          audio_url: 'https://example.com/audio.mp3',
-          duration: 70,
-          verse_timings: Array.from({ length: 7 }, (_, i) => ({
-            verse_key: `1:${i + 1}`,
-            timestamp_from: i * 10000,
-            timestamp_to: (i + 1) * 10000,
-            segments: []
-          }))
-        }]
+        audio_files: [
+          {
+            audio_url: 'https://example.com/audio.mp3',
+            duration: 70000,
+            verse_timings: Array.from({ length: 7 }, (_, i) => ({
+              verse_key: `1:${i + 1}`,
+              timestamp_from: i * 10000,
+              timestamp_to: (i + 1) * 10000,
+              segments: []
+            }))
+          }
+        ]
       })
     })
   })
 
-  page.route(/\.mp3/, (route) => route.abort())
-  page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort())
+  // MP3 bytes are unused when installMockAudio is active; abort keeps network quiet.
+  page.route(/\.mp3/, route => route.abort())
+  page.route(/fonts\.(googleapis|gstatic)\.com/, route => route.abort())
 }
 
 export async function waitForSurahLoad(page) {
@@ -88,8 +188,9 @@ export async function waitForSurahLoad(page) {
 
 // Navigate, clear any stale prefs, reload, wait for surah
 export async function startFresh(page) {
+  await installMockAudio(page)
   await page.goto('/')
-  await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY)
+  await page.evaluate(key => localStorage.removeItem(key), STORAGE_KEY)
   await page.reload()
   await waitForSurahLoad(page)
 }
@@ -104,6 +205,15 @@ export function pauseButton(page) {
 
 export function verseBadge(page) {
   return page.locator('.verse-badge').first()
+}
+
+/** Verse chip text is now "1 / 7" (not "Verse 1 of 7"). */
+export function jumpVerseButton(page) {
+  return page.getByLabel('Jump to verse')
+}
+
+export function expectVerseChip(page, current, total = 7) {
+  return expect(jumpVerseButton(page)).toContainText(new RegExp(`${current}\\s*/\\s*${total}`))
 }
 
 export const test = base

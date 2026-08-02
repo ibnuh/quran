@@ -27,6 +27,7 @@ test.beforeEach(async ({ page }) => {
 async function enableTajweed(page) {
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal = page.getByRole('dialog', { name: 'Settings' })
+  await modal.getByRole('tab', { name: 'Reading' }).click()
   await modal
     .locator('label', { hasText: 'Tajweed colors' })
     .locator('input[type="checkbox"]')

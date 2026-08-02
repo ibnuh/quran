@@ -12,13 +12,14 @@ test.beforeEach(async ({ page }) => {
 test('a surah can be downloaded for offline and the state persists', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   const modal = page.getByRole('dialog', { name: 'Settings' })
+  await modal.getByRole('tab', { name: 'App' }).click()
   await modal.getByRole('button', { name: /Download this surah/ }).click()
   await expect(modal.getByRole('button', { name: /Saved offline/ })).toBeVisible()
 
   // Persists across reload.
   await page.reload()
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
-  await expect(
-    page.getByRole('dialog', { name: 'Settings' }).getByRole('button', { name: /Saved offline/ })
-  ).toBeVisible()
+  const modal2 = page.getByRole('dialog', { name: 'Settings' })
+  await modal2.getByRole('tab', { name: 'App' }).click()
+  await expect(modal2.getByRole('button', { name: /Saved offline/ })).toBeVisible()
 })

@@ -1,4 +1,4 @@
-import { test, expect, mockApi, startFresh, verseBadge } from './fixtures.js'
+import { test, expect, mockApi, startFresh, verseBadge, expectVerseChip } from './fixtures.js'
 
 test.beforeEach(async ({ page }) => {
   mockApi(page)
@@ -12,7 +12,7 @@ test('share button is visible next to verse number', async ({ page }) => {
 test('jump to verse button shows current verse', async ({ page }) => {
   const jumpBtn = page.getByLabel('Jump to verse')
   await expect(jumpBtn).toBeVisible()
-  await expect(jumpBtn).toContainText('Verse 1 of 7')
+  await expectVerseChip(page, 1)
 })
 
 test('jump to verse popover opens on click', async ({ page }) => {
@@ -27,6 +27,7 @@ test('jump to verse navigates to typed number', async ({ page }) => {
   await input.fill('3')
   await page.locator('button:has-text("Go")').click()
   await expect(verseBadge(page)).toHaveText('3')
+  await expectVerseChip(page, 3)
 })
 
 test('jump to verse closes on outside click', async ({ page }) => {

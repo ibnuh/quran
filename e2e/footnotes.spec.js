@@ -1,4 +1,4 @@
-import { test, expect, mockApi, waitForSurahLoad } from './fixtures.js'
+import { test, expect, mockApi, waitForSurahLoad, installMockAudio } from './fixtures.js'
 
 const STORAGE_KEY = 'quran-player-prefs'
 
@@ -85,6 +85,7 @@ function mockQuranComWithFootnotes(page) {
 
 async function startWithSahih(page) {
   mockApi(page)
+  await installMockAudio(page)
   mockQuranComWithFootnotes(page)
   await page.goto('/')
   await page.evaluate(

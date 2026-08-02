@@ -45,7 +45,7 @@ test('bookmarks panel shows bookmarked verse after adding', async ({ page }) => 
   await page.getByLabel('Bookmark this verse').click()
   await page.getByLabel('Show bookmarks').click()
   const panel = page.getByRole('dialog', { name: 'Bookmarks' })
-  await expect(panel.getByText('Al-Faatiha 1')).toBeVisible()
+  await expect(panel.getByText(/Al-Faatiha\s*·\s*1/)).toBeVisible()
 })
 
 test('bookmark header badge shows count', async ({ page }) => {
