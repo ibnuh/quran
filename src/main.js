@@ -21,7 +21,7 @@ try {
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault()
   window.__pwaInstallPrompt = e
-})
+}
 
 const app = createApp(App)
 app.use(createPinia())
@@ -29,23 +29,11 @@ app.use(router)
 app.use(i18n)
 app.mount('#app')
 
-// PWA update prompt
+// PWA update prompt. registerType: 'prompt' + skipWaiting:false means a new worker
+// stays waiting until the user accepts. Do NOT reload on controllerchange here —
+// that caused silent auto-updates mid-session. Only UpdatePrompt / Settings reload
+// after an explicit user action.
 import { registerSW } from 'virtual:pwa-register'
-
-// If a new service worker takes control (update), reload once so the page
-// actually loads the new assets. Skip the first-ever controller (hadController
-// false) to avoid an extra reload on the initial install.
-if ('serviceWorker' in navigator) {
-  const hadController = !!navigator.serviceWorker.controller
-  let reloading = false
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || reloading) {
-      return
-    }
-    reloading = true
-    window.location.reload()
-  })
-}
 
 const updateSW = registerSW({
   immediate: true,

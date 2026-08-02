@@ -32,11 +32,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       workbox: {
-        // Auto-activate new workers so stuck clients (old update toast) can recover
-        // on the next SW check without needing the previous build's apply path.
-        // The client still shows a prompt via registerType: 'prompt', and reloads
-        // on controllerchange in main.js / UpdatePrompt.
-        skipWaiting: true,
+        // Stay on the old worker until the user accepts the update toast.
+        // skipWaiting:true + clientsClaim caused silent mid-session takeovers that
+        // reloaded the page (controllerchange) and broke in-progress audio.
+        skipWaiting: false,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
