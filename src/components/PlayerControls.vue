@@ -118,6 +118,18 @@ const canPlay = computed(
     (store.playbackMode === 'full' ? !!store.audioUrl : store.audioUrls.length > 0)
 )
 
+// Only show the unavailable banner after a surah has finished loading without
+// audio. On refresh/first paint, canPlay is false while data is still empty, which
+// used to flash this message for a frame.
+const showAudioUnavailable = computed(
+  () =>
+    !canPlay.value &&
+    !props.isPlaying &&
+    !store.isLoading &&
+    store.totalVerses > 0 &&
+    !store.error
+)
+
 const emit = defineEmits([
   'toggle-play',
   'prev-verse',
@@ -185,7 +197,7 @@ function clearRepeat() {
     :class="{ 'pt-2 pb-2': compact }"
   >
     <p
-      v-if="!canPlay && !isPlaying"
+      v-if="showAudioUnavailable"
       class="audio-unavailable text-center text-[0.7rem] sm:text-xs mb-2 landscape-compact:mb-1 leading-snug px-3 py-1.5 rounded-lg"
       role="status"
     >
