@@ -355,20 +355,31 @@ watch(
 </template>
 
 <style scoped>
-/* Black scrim (same idea as tafsir/settings overlays). Using --color-body washed
-   the screen pale in dark themes because body text is light there. */
+/* Black scrim only. Never tint with --color-body: in dark themes body is light and
+   washes the screen pale. Skip backdrop-filter blur on dark themes (frosted glass
+   reads milky/white over dark surfaces). */
 .fn-backdrop {
-  background: color-mix(in srgb, #000 40%, transparent);
+  background: color-mix(in srgb, #000 45%, transparent);
   backdrop-filter: blur(2px);
+}
+
+:global([data-theme='dark'] .fn-backdrop),
+:global([data-theme='black'] .fn-backdrop),
+:global([data-theme='midnight'] .fn-backdrop),
+:global([data-theme='nature'] .fn-backdrop),
+:global([data-theme='sunset'] .fn-backdrop) {
+  background: color-mix(in srgb, #000 62%, transparent);
+  backdrop-filter: none;
 }
 
 .fn-sheet {
   background: var(--color-card);
   border-radius: 1rem;
   border: 1px solid var(--color-border);
+  /* Always shadow with black. Body-colored shadows glow white on dark themes. */
   box-shadow:
-    0 -2px 16px color-mix(in srgb, var(--color-body) 6%, transparent),
-    0 8px 28px color-mix(in srgb, var(--color-body) 10%, transparent);
+    0 -2px 16px color-mix(in srgb, #000 12%, transparent),
+    0 10px 32px color-mix(in srgb, #000 22%, transparent);
 }
 
 .fn-badge {
