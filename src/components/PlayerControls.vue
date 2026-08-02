@@ -148,6 +148,14 @@ function clearRepeat() {
     class="px-4 sm:px-12 pb-1 pt-3 landscape-compact:pb-2 landscape-compact:pt-1 landscape-compact:px-4 max-w-5xl mx-auto w-full pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]"
     :class="{ 'pt-2 pb-2': compact }"
   >
+    <p
+      v-if="!canPlay && !isPlaying"
+      class="text-center text-[0.7rem] sm:text-xs text-accent mb-1.5 landscape-compact:mb-1 leading-snug px-2"
+      role="status"
+    >
+      {{ $t('controls.audioUnavailable') }}
+    </p>
+
     <ProgressBar
       v-if="!compact"
       :progress="progress"
@@ -166,19 +174,31 @@ function clearRepeat() {
         <button
           v-if="!compact"
           class="flex ctrl-btn"
-          :class="store.repeatMode !== 'none' ? 'text-primary!' : ''"
+          :class="store.repeatMode !== 'none' ? 'text-primary! bg-primary/10' : ''"
           :aria-label="$t('controls.cycleRepeat')"
+          :aria-pressed="store.repeatMode !== 'none'"
           @click="cycleRepeat"
         >
           <span v-if="store.repeatMode === 'verse'" class="relative inline-flex">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
             </svg>
-            <span class="absolute inset-0 flex items-center justify-center text-[7px] font-bold"
+            <span
+              class="absolute inset-0 flex items-center justify-center text-[7px] font-bold leading-none"
               >1</span
             >
           </span>
-          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <span v-else-if="store.repeatMode === 'surah'" class="relative inline-flex">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+            </svg>
+            <span
+              class="absolute -bottom-0.5 -right-0.5 text-[8px] font-bold leading-none text-primary"
+              aria-hidden="true"
+              >∞</span
+            >
+          </span>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
           </svg>
           <span class="hidden sm:inline text-[0.7rem]">{{
@@ -198,7 +218,7 @@ function clearRepeat() {
             :aria-label="$t('controls.previousSurah')"
             @click="emit('prev-surah')"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
             </svg>
             <span class="hidden sm:inline">{{ $t('controls.prevSurah') }}</span>
@@ -210,7 +230,7 @@ function clearRepeat() {
             :aria-label="$t('controls.previousVerse')"
             @click="emit('prev-verse')"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
             </svg>
             <span class="hidden sm:inline">{{ $t('controls.prev') }}</span>
@@ -235,10 +255,19 @@ function clearRepeat() {
             height="26"
             viewBox="0 0 24 24"
             fill="currentColor"
+            aria-hidden="true"
           >
             <path d="M8 5v14l11-7z" />
           </svg>
-          <svg v-else key="pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+          <svg
+            v-else
+            key="pause"
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
           </svg>
         </Transition>
@@ -254,7 +283,7 @@ function clearRepeat() {
             @click="emit('next-verse')"
           >
             <span class="hidden sm:inline">{{ $t('controls.next') }}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
             </svg>
           </button>
@@ -266,7 +295,7 @@ function clearRepeat() {
             @click="emit('next-surah')"
           >
             <span class="hidden sm:inline">{{ $t('controls.nextSurah') }}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
             </svg>
           </button>
@@ -277,11 +306,18 @@ function clearRepeat() {
           <div v-if="!compact" class="relative speed-wrapper">
             <button
               class="flex ctrl-btn"
-              :class="store.playbackSpeed !== 1 ? 'text-primary!' : ''"
+              :class="
+                store.playbackSpeed !== 1
+                  ? 'text-primary! bg-primary/10 ring-1 ring-primary/25'
+                  : ''
+              "
               :aria-label="$t('controls.playbackSpeed')"
+              :aria-expanded="showSpeedMenu"
               @click.stop="showSpeedMenu = !showSpeedMenu"
             >
-              <span class="text-[0.7rem] font-semibold tabular-nums"
+              <span
+                class="text-[0.7rem] font-semibold tabular-nums min-w-[1.75rem] text-center rounded-md px-1 py-0.5"
+                :class="store.playbackSpeed !== 1 ? 'bg-primary/15' : ''"
                 >{{ store.playbackSpeed }}x</span
               >
             </button>
@@ -312,12 +348,13 @@ function clearRepeat() {
           <!-- Tools: volume, sleep timer, A-B repeat -->
           <div v-if="!compact" class="relative tools-wrapper">
             <button
-              class="flex ctrl-btn"
-              :class="toolsActive ? 'text-primary!' : ''"
+              class="relative flex ctrl-btn"
+              :class="toolsActive ? 'text-primary! bg-primary/10' : ''"
               :aria-label="$t('controls.audioTools')"
+              :aria-expanded="showToolsMenu"
               @click.stop="showToolsMenu = !showToolsMenu"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path
                   d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"
                 />
@@ -325,6 +362,11 @@ function clearRepeat() {
               <span v-if="sleepLabel" class="text-[0.7rem] font-semibold tabular-nums">{{
                 sleepLabel
               }}</span>
+              <span
+                v-if="toolsActive"
+                class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary"
+                aria-hidden="true"
+              ></span>
             </button>
             <Transition name="speed-pop">
               <div
@@ -421,14 +463,11 @@ function clearRepeat() {
 
     <div
       class="text-center landscape-compact:hidden"
-      :class="[
-        compact ? 'mt-1 mb-1' : 'mt-2 mb-3',
-        store.currentVerse ? '' : 'invisible'
-      ]"
+      :class="[compact ? 'mt-1 mb-1' : 'mt-2 mb-3', store.currentVerse ? '' : 'invisible']"
     >
       <div class="relative inline-flex items-center gap-1 jump-verse-input-wrapper">
         <button
-          class="text-xs text-muted hover:text-primary transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-surface"
+          class="text-xs text-muted hover:text-primary transition-colors cursor-pointer px-2.5 py-1 min-h-11 rounded-full border border-border bg-surface/80 hover:border-primary/40 hover:bg-primary/5"
           :aria-label="$t('controls.jumpToVerse')"
           @click.stop="showJumpInput = !showJumpInput"
         >
