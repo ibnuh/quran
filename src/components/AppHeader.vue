@@ -147,6 +147,27 @@ function onModeMenuKeydown(e) {
   }
   if (e.key === 'Escape') {
     showModeMenu.value = false
+    return
+  }
+  const buttons = Array.from(
+    document.querySelectorAll('.mode-menu-wrapper [role="menuitemradio"]')
+  )
+  if (!buttons.length) {
+    return
+  }
+  const current = buttons.indexOf(document.activeElement)
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    buttons[Math.min(current + 1, buttons.length - 1)].focus()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    buttons[Math.max(current - 1, 0)].focus()
+  } else if (e.key === 'Home') {
+    e.preventDefault()
+    buttons[0].focus()
+  } else if (e.key === 'End') {
+    e.preventDefault()
+    buttons[buttons.length - 1].focus()
   }
 }
 
@@ -257,32 +278,22 @@ onBeforeUnmount(() => {
             :aria-expanded="showModeMenu"
             @click.stop="toggleModeMenu"
           >
-            <svg
-              v-if="!store.readMode"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="shrink-0"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"
-              />
-            </svg>
-            <svg
-              v-else
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="shrink-0"
-              aria-hidden="true"
-            >
-              <path
-                d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
-              />
-            </svg>
+            <span class="mode-trigger-icon" aria-hidden="true">
+              <svg
+                v-if="!store.readMode"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
+              </svg>
+              <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
+                />
+              </svg>
+            </span>
             <span class="mode-trigger-label hidden sm:inline">{{ modeSummary }}</span>
             <span class="mode-trigger-label sm:hidden">{{ modeSummaryCompact }}</span>
             <svg
@@ -290,7 +301,7 @@ onBeforeUnmount(() => {
               height="12"
               viewBox="0 0 24 24"
               fill="currentColor"
-              class="mode-trigger-caret shrink-0 opacity-80"
+              class="mode-trigger-caret shrink-0"
               aria-hidden="true"
             >
               <path d="M7 10l5 5 5-5H7z" />
@@ -300,87 +311,150 @@ onBeforeUnmount(() => {
             <div
               v-if="showModeMenu"
               role="menu"
-              class="mode-menu absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[220px]"
+              class="mode-menu absolute right-0 top-full mt-2 bg-card rounded-2xl shadow-2xl border border-border z-50 w-[min(18.5rem,calc(100vw-1.5rem))]"
               @keydown="onModeMenuKeydown"
               @click.stop
             >
-              <p class="mode-menu-label px-2 pt-1 pb-1.5">{{ $t('header.activityMode') }}</p>
-              <div
-                class="mode-seg"
-                role="group"
-                :aria-label="$t('header.activityMode')"
-              >
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  class="mode-seg-btn"
-                  :class="{ 'mode-seg-active': !store.readMode }"
-                  :aria-checked="!store.readMode"
-                  @click="setActivity(false)"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
-                  </svg>
-                  {{ $t('header.listenMode') }}
-                </button>
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  class="mode-seg-btn"
-                  :class="{ 'mode-seg-active': store.readMode }"
-                  :aria-checked="store.readMode"
-                  @click="setActivity(true)"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path
-                      d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
-                    />
-                  </svg>
-                  {{ $t('header.readMode') }}
-                </button>
+              <div class="mode-menu-head">
+                <p class="mode-menu-title">{{ $t('header.modeMenuTitle') }}</p>
+                <p class="mode-menu-subtitle">{{ modeSummary }}</p>
               </div>
 
-              <p class="mode-menu-label px-2 pt-3 pb-1.5">{{ $t('header.layoutMode') }}</p>
-              <div
-                class="mode-seg"
-                role="group"
-                :aria-label="$t('header.layoutMode')"
-              >
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  class="mode-seg-btn"
-                  :class="{ 'mode-seg-active': !store.readingMode }"
-                  :aria-checked="!store.readingMode"
-                  @click="setLayout(false)"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path
-                      d="M4 6h16v2H4V6zm0 5h10v2H4v-2zm0 5h16v2H4v-2z"
-                    />
-                  </svg>
-                  {{ $t('header.layoutSingle') }}
-                </button>
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  class="mode-seg-btn"
-                  :class="{ 'mode-seg-active': store.readingMode }"
-                  :aria-checked="store.readingMode"
-                  @click="setLayout(true)"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path
-                      d="M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"
-                    />
-                  </svg>
-                  {{ $t('header.layoutContinuous') }}
-                </button>
-              </div>
+              <div class="mode-menu-body">
+                <section class="mode-section" :aria-label="$t('header.activityMode')">
+                  <p class="mode-section-label">{{ $t('header.activityMode') }}</p>
+                  <div class="mode-options" role="group">
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      class="mode-option"
+                      :class="{ 'mode-option-active': !store.readMode }"
+                      :aria-checked="!store.readMode"
+                      @click="setActivity(false)"
+                    >
+                      <span class="mode-option-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
+                        </svg>
+                      </span>
+                      <span class="mode-option-copy">
+                        <span class="mode-option-name">{{ $t('header.listenMode') }}</span>
+                        <span class="mode-option-desc">{{ $t('header.listenModeDesc') }}</span>
+                      </span>
+                      <svg
+                        v-if="!store.readMode"
+                        class="mode-option-check"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      class="mode-option"
+                      :class="{ 'mode-option-active': store.readMode }"
+                      :aria-checked="store.readMode"
+                      @click="setActivity(true)"
+                    >
+                      <span class="mode-option-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path
+                            d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"
+                          />
+                        </svg>
+                      </span>
+                      <span class="mode-option-copy">
+                        <span class="mode-option-name">{{ $t('header.readMode') }}</span>
+                        <span class="mode-option-desc">{{ $t('header.readModeDesc') }}</span>
+                      </span>
+                      <svg
+                        v-if="store.readMode"
+                        class="mode-option-check"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                      </svg>
+                    </button>
+                  </div>
+                </section>
 
-              <p class="mode-menu-hint px-2 pt-2.5 pb-1">
-                {{ $t('header.modeMenuHint') }}
-              </p>
+                <div class="mode-divider" aria-hidden="true"></div>
+
+                <section class="mode-section" :aria-label="$t('header.layoutMode')">
+                  <p class="mode-section-label">{{ $t('header.layoutMode') }}</p>
+                  <div class="mode-options" role="group">
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      class="mode-option"
+                      :class="{ 'mode-option-active': !store.readingMode }"
+                      :aria-checked="!store.readingMode"
+                      @click="setLayout(false)"
+                    >
+                      <span class="mode-option-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M4 6h16v2H4V6zm0 5h10v2H4v-2zm0 5h16v2H4v-2z" />
+                        </svg>
+                      </span>
+                      <span class="mode-option-copy">
+                        <span class="mode-option-name">{{ $t('header.layoutSingle') }}</span>
+                        <span class="mode-option-desc">{{ $t('header.layoutSingleDesc') }}</span>
+                      </span>
+                      <svg
+                        v-if="!store.readingMode"
+                        class="mode-option-check"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      class="mode-option"
+                      :class="{ 'mode-option-active': store.readingMode }"
+                      :aria-checked="store.readingMode"
+                      @click="setLayout(true)"
+                    >
+                      <span class="mode-option-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h16v2H4v-2zm0 4h16v2H4v-2z" />
+                        </svg>
+                      </span>
+                      <span class="mode-option-copy">
+                        <span class="mode-option-name">{{ $t('header.layoutContinuous') }}</span>
+                        <span class="mode-option-desc">{{
+                          $t('header.layoutContinuousDesc')
+                        }}</span>
+                      </span>
+                      <svg
+                        v-if="store.readingMode"
+                        class="mode-option-check"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                      </svg>
+                    </button>
+                  </div>
+                </section>
+              </div>
             </div>
           </Transition>
         </div>
@@ -664,16 +738,29 @@ onBeforeUnmount(() => {
 }
 
 .mode-trigger {
-  gap: 0.3rem;
-  padding-inline: 0.45rem;
+  gap: 0.35rem;
+  padding-inline: 0.5rem 0.4rem;
   max-width: 12.5rem;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .mode-trigger:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.2);
+}
+.mode-trigger[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.22);
+}
+.mode-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
 }
 .mode-trigger-label {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   overflow: hidden;
@@ -683,73 +770,142 @@ onBeforeUnmount(() => {
 }
 @media (max-width: 639px) {
   .mode-trigger {
-    max-width: 9.5rem;
+    max-width: 9.75rem;
   }
   .mode-trigger-label {
-    max-width: 6.5rem;
-    font-size: 0.64rem;
+    max-width: 6.75rem;
+    font-size: 0.65rem;
   }
 }
 .mode-trigger-caret {
+  opacity: 0.75;
   transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .mode-trigger[aria-expanded='true'] .mode-trigger-caret {
   transform: rotate(180deg);
 }
 
-.mode-menu-label {
-  font-size: 0.65rem;
-  font-weight: 600;
+.mode-menu {
+  overflow: hidden;
+}
+
+.mode-menu-head {
+  padding: 0.85rem 0.95rem 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 70%, var(--color-card));
+}
+.mode-menu-title {
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
-
-.mode-seg {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
-  padding: 0.2rem;
-  border-radius: 0.7rem;
-  background: var(--color-surface);
+.mode-menu-subtitle {
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-body);
 }
 
-.mode-seg-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  min-height: 2.25rem;
-  padding: 0.4rem 0.5rem;
-  border: 0;
-  border-radius: 0.55rem;
-  background: transparent;
-  color: var(--color-muted);
-  font-size: 0.75rem;
+.mode-menu-body {
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.mode-section-label {
+  font-size: 0.68rem;
   font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding: 0 0.25rem 0.4rem;
+}
+
+.mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mode-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.8rem;
+  background: transparent;
+  color: var(--color-body);
   cursor: pointer;
   transition:
     background 0.15s cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 0.15s cubic-bezier(0.25, 1, 0.5, 1),
     color 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.mode-seg-btn:hover {
-  color: var(--color-body);
-  background: color-mix(in srgb, var(--color-card) 70%, transparent);
+.mode-option:hover {
+  background: var(--color-surface);
 }
-.mode-seg-active {
-  background: var(--color-card);
-  color: var(--color-primary);
-  box-shadow: 0 1px 2px color-mix(in srgb, #000 10%, transparent);
+.mode-option-active {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
-.mode-seg-btn:focus-visible {
+.mode-option:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
 }
 
-.mode-menu-hint {
-  font-size: 0.65rem;
-  line-height: 1.35;
+.mode-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  background: var(--color-surface);
   color: var(--color-muted);
+  flex-shrink: 0;
+}
+.mode-option-active .mode-option-icon {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+}
+
+.mode-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.mode-option-name {
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.2;
+  color: var(--color-body);
+}
+.mode-option-active .mode-option-name {
+  color: var(--color-primary);
+}
+.mode-option-desc {
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--color-muted);
+}
+
+.mode-option-check {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.mode-divider {
+  height: 1px;
+  margin: 0.1rem 0.2rem;
+  background: var(--color-border);
 }
 
 .theme-pop-enter-active {
