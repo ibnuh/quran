@@ -14,15 +14,57 @@ import { parseTajweed } from '../utils/arabicText.js'
 import { resolveTranslationSource } from '../utils/translationText.js'
 import { ensureQcfPageFont } from '../utils/qcfFonts.js'
 import { setUiLocale, t } from '../i18n/index.js'
-import { STORAGE_KEY, PREFS_VERSION, TOTAL_SURAHS, getResponsiveDefaults } from '../config.js'
+import {
+  STORAGE_KEY,
+  PREFS_VERSION,
+  TOTAL_SURAHS,
+  SAVE_PREFS_DEBOUNCE,
+  AUDIO_RUNTIME_CACHE_NAMES,
+  getResponsiveDefaults,
+  isAllowedAudioUrl,
+  filterAllowedAudioUrls
+} from '../config.js'
 import SURAHS from '../data/surahs.js'
 import RECITERS from '../data/reciters.js'
 import ARABIC_FONTS, { getFontMetrics } from '../data/fonts.js'
 import TRANSLATIONS from '../data/translations.js'
 import THEMES, { applyThemeToDocument } from '../data/themes.js'
 import JUZS, { getJuzForVerse } from '../data/juzs.js'
+import TAFSIRS from '../data/tafsirs.js'
 
 let autoThemeListenerBound = false
+let savePrefsTimer = null
+let prefsFlushStore = null
+let prefsFlushListenersBound = false
+
+const HIGHLIGHT_STYLES = new Set(['glow', 'background', 'underline', 'minimal', 'sweep', 'flow'])
+const REPEAT_MODES = new Set(['none', 'verse', 'surah'])
+const TRANSLATION_IDS = new Set(TRANSLATIONS.map(t => t.identifier))
+const TAFSIR_IDS = new Set(TAFSIRS.map(t => t.id))
+
+function flushPendingPreferences() {
+  if (savePrefsTimer) {
+    clearTimeout(savePrefsTimer)
+    savePrefsTimer = null
+  }
+  if (prefsFlushStore) {
+    prefsFlushStore.writePreferencesNow()
+  }
+}
+
+function ensurePrefsFlushListeners(store) {
+  prefsFlushStore = store
+  if (prefsFlushListenersBound || typeof window === 'undefined') {
+    return
+  }
+  prefsFlushListenersBound = true
+  window.addEventListener('pagehide', flushPendingPreferences)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushPendingPreferences()
+    }
+  })
+}
 
 function detectTranslationFromLocale() {
   const locales = navigator.languages || [navigator.language || 'en']
@@ -51,12 +93,52 @@ function errorMessageFor(err, { isAudio = false } = {}) {
   return t('errors.generic')
 }
 
-// Migrate and validate persisted preferences across schema versions, dropping
-// values that no longer reference valid reciters/themes/fonts/surahs so the store
-// can fall back to its defaults instead of breaking.
+// Versioned migrators run in order from the stored version up to PREFS_VERSION.
+// Key is the version being migrated *from*.
+const PREFS_MIGRATORS = {
+  // v1 -> v2: reciter was stored as a numeric cdnId (also handled in normalize).
+  1: prefs => {
+    const out = { ...prefs }
+    if (typeof out.reciter === 'number') {
+      const found = RECITERS.find(r => r.cdnId === out.reciter)
+      out.reciter = found ? found.id : undefined
+    }
+    return out
+  }
+}
+
+function migratePrefs(raw) {
+  let version = typeof raw?.version === 'number' && raw.version > 0 ? raw.version : 1
+  let prefs = { ...raw }
+  while (version < PREFS_VERSION) {
+    const migrate = PREFS_MIGRATORS[version]
+    if (typeof migrate === 'function') {
+      prefs = migrate(prefs) || prefs
+    }
+    version += 1
+  }
+  prefs.version = PREFS_VERSION
+  return prefs
+}
+
+function isValidBookmark(entry) {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    typeof entry.surahNum === 'number' &&
+    entry.surahNum >= 1 &&
+    entry.surahNum <= TOTAL_SURAHS &&
+    typeof entry.verseIndex === 'number' &&
+    entry.verseIndex >= 0 &&
+    Number.isFinite(entry.verseIndex)
+  )
+}
+
+// Validate persisted preferences, dropping values that no longer reference valid
+// reciters/themes/fonts/surahs so the store can fall back to defaults.
 function normalizePrefs(prefs) {
   const out = { ...prefs }
-  // v1 -> v2: reciter was stored as a numeric cdnId.
+  // Legacy safety: numeric reciter may still appear on unversioned payloads.
   if (typeof out.reciter === 'number') {
     const found = RECITERS.find(r => r.cdnId === out.reciter)
     out.reciter = found ? found.id : undefined
@@ -76,7 +158,81 @@ function normalizePrefs(prefs) {
   if (typeof out.playbackSpeed !== 'number' || out.playbackSpeed <= 0) {
     out.playbackSpeed = undefined
   }
+  if (typeof out.volume === 'number') {
+    if (!Number.isFinite(out.volume)) {
+      out.volume = undefined
+    } else {
+      out.volume = Math.max(0, Math.min(1, out.volume))
+    }
+  } else if (out.volume !== undefined) {
+    out.volume = undefined
+  }
+  if (out.repeatMode && !REPEAT_MODES.has(out.repeatMode)) {
+    out.repeatMode = undefined
+  }
+  if (out.highlightStyle && !HIGHLIGHT_STYLES.has(out.highlightStyle)) {
+    out.highlightStyle = undefined
+  }
+  if (Array.isArray(out.extraTranslations)) {
+    out.extraTranslations = out.extraTranslations.filter(
+      id => typeof id === 'string' && TRANSLATION_IDS.has(id)
+    )
+  } else if (out.extraTranslations !== undefined) {
+    out.extraTranslations = []
+  }
+  if (Array.isArray(out.bookmarks)) {
+    out.bookmarks = out.bookmarks.filter(isValidBookmark)
+  } else if (out.bookmarks !== undefined) {
+    out.bookmarks = []
+  }
+  if (typeof out.tafsirSource === 'number') {
+    if (!TAFSIR_IDS.has(out.tafsirSource)) {
+      out.tafsirSource = undefined
+    }
+  } else if (out.tafsirSource !== undefined) {
+    out.tafsirSource = undefined
+  }
+  if (out.translation && !TRANSLATION_IDS.has(out.translation)) {
+    // Allow Quran.com numeric ids encoded as strings/numbers via resolve path;
+    // only drop clearly invalid non-string/non-number values.
+    if (typeof out.translation !== 'string' && typeof out.translation !== 'number') {
+      out.translation = undefined
+    }
+  }
+  if (Array.isArray(out.downloadedSurahs)) {
+    out.downloadedSurahs = out.downloadedSurahs.filter(
+      n => typeof n === 'number' && n >= 1 && n <= TOTAL_SURAHS
+    )
+  }
+  if (Array.isArray(out.recentSurahs)) {
+    out.recentSurahs = out.recentSurahs.filter(
+      n => typeof n === 'number' && n >= 1 && n <= TOTAL_SURAHS
+    )
+  }
   return out
+}
+
+function sanitizeAudioUrl(url) {
+  return isAllowedAudioUrl(url) ? url : null
+}
+
+function sanitizeAudioUrls(urls) {
+  return filterAllowedAudioUrls(urls)
+}
+
+async function putResponseInAudioCaches(url, response) {
+  if (typeof caches === 'undefined') {
+    return
+  }
+  const body = response.clone()
+  for (const cacheName of AUDIO_RUNTIME_CACHE_NAMES) {
+    try {
+      const cache = await caches.open(cacheName)
+      await cache.put(url, body.clone())
+    } catch {
+      // Cache put is best-effort (private mode, quota, opaque mismatch).
+    }
+  }
 }
 
 let loadAbortController = null
@@ -232,7 +388,12 @@ export const usePlayerStore = defineStore('player', {
       state.bookmarks.some(
         b => b.surahNum === state.currentSurahNum && b.verseIndex === state.currentVerseIndex
       ),
-    isCurrentDownloaded: state => state.downloadedSurahs.includes(state.currentSurahNum)
+    isCurrentDownloaded: state => state.downloadedSurahs.includes(state.currentSurahNum),
+    // True when the current surah has a playable, allowlisted audio source.
+    canPlayAudio: state =>
+      !state.audioUnavailable &&
+      !!state.playbackMode &&
+      (state.playbackMode === 'full' ? !!state.audioUrl : state.audioUrls.length > 0)
   },
 
   actions: {
@@ -266,14 +427,19 @@ export const usePlayerStore = defineStore('player', {
         this.verses = cached.verses
         this.translationVerses = cached.translationVerses
         this.playbackMode = cached.playbackMode
-        this.audioUrl = cached.audioUrl
+        this.audioUrl = sanitizeAudioUrl(cached.audioUrl)
         this.audioDurationMs =
           Number(cached.audioDurationMs) ||
           Number(cached.verseTimings?.[cached.verseTimings.length - 1]?.timestampTo) ||
           0
         this.verseTimings = cached.verseTimings
-        this.audioUrls = cached.audioUrls
-        this.audioUnavailable = !cached.playbackMode
+        this.audioUrls = sanitizeAudioUrls(cached.audioUrls)
+        if (cached.playbackMode === 'full' && !this.audioUrl) {
+          this.playbackMode = null
+        } else if (cached.playbackMode === 'verse' && !this.audioUrls.length) {
+          this.playbackMode = null
+        }
+        this.audioUnavailable = !this.playbackMode
         if (this.currentVerseIndex >= this.verses.length) {
           this.currentVerseIndex = 0
         }
@@ -370,12 +536,30 @@ export const usePlayerStore = defineStore('player', {
         this.translationVerses = textData.translationVerses
 
         if (audioResult) {
-          this.playbackMode = audioResult.mode
-          this.audioUrl = audioResult.audioUrl
-          this.audioDurationMs = Number(audioResult.audioDurationMs) || 0
-          this.verseTimings = audioResult.verseTimings
-          this.audioUrls = audioResult.audioUrls
-          this.audioUnavailable = false
+          const safeUrl = sanitizeAudioUrl(audioResult.audioUrl)
+          const safeUrls = sanitizeAudioUrls(audioResult.audioUrls)
+          if (audioResult.mode === 'full' && !safeUrl) {
+            this.playbackMode = null
+            this.audioUrl = null
+            this.audioDurationMs = 0
+            this.verseTimings = []
+            this.audioUrls = []
+            this.audioUnavailable = true
+          } else if (audioResult.mode === 'verse' && !safeUrls.length) {
+            this.playbackMode = null
+            this.audioUrl = null
+            this.audioDurationMs = 0
+            this.verseTimings = []
+            this.audioUrls = []
+            this.audioUnavailable = true
+          } else {
+            this.playbackMode = audioResult.mode
+            this.audioUrl = safeUrl
+            this.audioDurationMs = Number(audioResult.audioDurationMs) || 0
+            this.verseTimings = audioResult.verseTimings
+            this.audioUrls = safeUrls
+            this.audioUnavailable = false
+          }
         } else {
           this.playbackMode = null
           this.audioUrl = null
@@ -456,21 +640,29 @@ export const usePlayerStore = defineStore('player', {
 
         let audioResult
         if (audioData) {
+          const safeUrl = sanitizeAudioUrl(audioData.audioUrl)
+          if (!safeUrl) {
+            return
+          }
           audioResult = {
             playbackMode: 'full',
-            audioUrl: audioData.audioUrl,
+            audioUrl: safeUrl,
             audioDurationMs: audioData.duration,
             verseTimings: audioData.verseTimings,
             audioUrls: []
           }
         } else if (reciter.cloudId) {
           const verseData = await fetchVerseAudio(reciter.cloudId, nextNum)
+          const safeUrls = sanitizeAudioUrls(verseData.audioUrls)
+          if (!safeUrls.length) {
+            return
+          }
           audioResult = {
             playbackMode: 'verse',
             audioUrl: null,
             audioDurationMs: 0,
             verseTimings: [],
-            audioUrls: verseData.audioUrls
+            audioUrls: safeUrls
           }
         } else {
           return
@@ -488,7 +680,7 @@ export const usePlayerStore = defineStore('player', {
 
     // Pre-fetch the current surah's audio so it is available offline. Text and timing
     // responses are already cached by the service worker after loadSurah; fetching the
-    // audio files populates the CacheFirst audio cache.
+    // audio files populates the CacheFirst audio cache. Uses CORS so failures are real.
     async downloadCurrentSurah() {
       const num = this.currentSurahNum
       if (this.downloadingSurah !== null) {
@@ -497,10 +689,21 @@ export const usePlayerStore = defineStore('player', {
       this.downloadingSurah = num
       this.downloadError = false
       try {
-        const urls =
+        const rawUrls =
           this.playbackMode === 'full' ? (this.audioUrl ? [this.audioUrl] : []) : this.audioUrls
+        const urls = sanitizeAudioUrls(rawUrls)
+        if (!urls.length) {
+          throw new Error('No downloadable audio URLs')
+        }
         for (const url of urls) {
-          await fetch(url, { mode: 'no-cors' }).catch(() => {})
+          const res = await fetch(url)
+          if (!res.ok) {
+            throw new Error(`Download failed (HTTP ${res.status})`)
+          }
+          // Best-effort: seed the same runtime caches the service worker uses.
+          await putResponseInAudioCaches(url, res.clone())
+          // Fully consume the body so the download is complete even without Cache API.
+          await res.arrayBuffer()
         }
         if (!this.downloadedSurahs.includes(num)) {
           this.downloadedSurahs.push(num)
@@ -554,13 +757,23 @@ export const usePlayerStore = defineStore('player', {
       if (maxWordIndex < 0) {
         return -1
       }
-      for (let i = timing.segments.length - 1; i >= 0; i--) {
-        const seg = timing.segments[i]
-        if (timeMs >= seg.from) {
-          return Math.min(seg.wordIndex, maxWordIndex)
+      const segs = timing.segments
+      let lo = 0
+      let hi = segs.length - 1
+      let best = -1
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (segs[mid].from <= timeMs) {
+          best = mid
+          lo = mid + 1
+        } else {
+          hi = mid - 1
         }
       }
-      return -1
+      if (best < 0) {
+        return -1
+      }
+      return Math.min(segs[best].wordIndex, maxWordIndex)
     },
 
     setVerse(index) {
@@ -920,7 +1133,19 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
+    // Debounced write so rapid UI changes do not thrash localStorage.
     savePreferences() {
+      ensurePrefsFlushListeners(this)
+      if (savePrefsTimer) {
+        clearTimeout(savePrefsTimer)
+      }
+      savePrefsTimer = setTimeout(() => {
+        savePrefsTimer = null
+        this.writePreferencesNow()
+      }, SAVE_PREFS_DEBOUNCE)
+    },
+
+    writePreferencesNow() {
       try {
         localStorage.setItem(
           STORAGE_KEY,
@@ -972,6 +1197,7 @@ export const usePlayerStore = defineStore('player', {
 
     loadPreferences() {
       this.bindAutoTheme()
+      ensurePrefsFlushListeners(this)
       try {
         const saved = localStorage.getItem(STORAGE_KEY)
         if (!saved) {
@@ -981,7 +1207,13 @@ export const usePlayerStore = defineStore('player', {
           return
         }
 
-        const prefs = normalizePrefs(JSON.parse(saved))
+        const raw = JSON.parse(saved)
+        const prefs = normalizePrefs(migratePrefs(raw))
+        // Always persist the current schema version after a successful load/migrate.
+        if (raw?.version !== PREFS_VERSION) {
+          // Defer so field assignment below is reflected in the write.
+          queueMicrotask(() => this.writePreferencesNow())
+        }
         const savedArabicFont = prefs.arabicFont
         if (prefs.surah) {
           this.currentSurahNum = prefs.surah
@@ -996,7 +1228,7 @@ export const usePlayerStore = defineStore('player', {
           this.currentTranslation = prefs.translation
         }
         if (Array.isArray(prefs.extraTranslations)) {
-          this.extraTranslations = prefs.extraTranslations.filter(id => typeof id === 'string')
+          this.extraTranslations = prefs.extraTranslations
         }
         if (prefs.arabicFontSize) {
           this.arabicFontSize = prefs.arabicFontSize
@@ -1020,7 +1252,7 @@ export const usePlayerStore = defineStore('player', {
         if (prefs.wordHighlight !== undefined) {
           this.wordHighlight = prefs.wordHighlight
         }
-        if (prefs.highlightStyle) {
+        if (prefs.highlightStyle && HIGHLIGHT_STYLES.has(prefs.highlightStyle)) {
           this.highlightStyle = prefs.highlightStyle
         }
         if (prefs.verseActions && typeof prefs.verseActions === 'object') {
@@ -1031,7 +1263,7 @@ export const usePlayerStore = defineStore('player', {
             tafsir: prefs.verseActions.tafsir !== false
           }
         }
-        if (typeof prefs.tafsirSource === 'number') {
+        if (typeof prefs.tafsirSource === 'number' && TAFSIR_IDS.has(prefs.tafsirSource)) {
           this.tafsirSource = prefs.tafsirSource
         }
         if (prefs.showFootnotes !== undefined) {
@@ -1055,7 +1287,7 @@ export const usePlayerStore = defineStore('player', {
         if (prefs.mushafMode !== undefined) {
           this.mushafMode = !!prefs.mushafMode
         }
-        if (prefs.repeatMode) {
+        if (prefs.repeatMode && REPEAT_MODES.has(prefs.repeatMode)) {
           this.repeatMode = prefs.repeatMode
         }
         if (prefs.playbackSpeed) {
@@ -1080,7 +1312,7 @@ export const usePlayerStore = defineStore('player', {
           this.recentSurahs = prefs.recentSurahs
         }
         if (Array.isArray(prefs.downloadedSurahs)) {
-          this.downloadedSurahs = prefs.downloadedSurahs.filter(n => typeof n === 'number')
+          this.downloadedSurahs = prefs.downloadedSurahs
         }
       } catch {
         // Ignore storage errors (private mode, quota, corrupt JSON).

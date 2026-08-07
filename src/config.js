@@ -4,6 +4,7 @@
 // -- Persistence --
 export const STORAGE_KEY = 'quran-player-prefs'
 export const TIP_DISMISSED_KEY = 'quran-tip-dismissed'
+export const PWA_INSTALL_DISMISSED_KEY = 'quran-pwa-install-dismissed'
 // One-time “what's new” banners for returning users (key includes feature id).
 export const FOOTNOTES_ANNOUNCED_KEY = 'quran-footnotes-announced'
 // Set just before a user-accepted SW update reloads the page; cleared after boot recovery.
@@ -18,9 +19,42 @@ export const TEXT_API = 'https://api.alquran.cloud/v1'
 export const AUDIO_API = 'https://api.qurancdn.com/api/qdc/audio/reciters'
 export const QURANCOM_API = 'https://api.quran.com/api/v4'
 
+// Hosts allowed for playable audio URLs (full-surah + per-verse CDNs).
+export const ALLOWED_AUDIO_HOSTS = [
+  'download.quranicaudio.com',
+  'verses.quran.com',
+  'cdn.islamic.network'
+]
+
 // -- Networking --
 export const MAX_RETRIES = 2
 export const RETRY_DELAY = 1000
+
+// Reject audio src values that are not HTTPS URLs on an allowlisted host.
+export function isAllowedAudioUrl(url) {
+  if (!url || typeof url !== 'string') {
+    return false
+  }
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') {
+      return false
+    }
+    return ALLOWED_AUDIO_HOSTS.some(
+      host => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`)
+    )
+  } catch {
+    return false
+  }
+}
+
+// Keep only allowlisted HTTPS audio URLs; drop the rest.
+export function filterAllowedAudioUrls(urls) {
+  if (!Array.isArray(urls)) {
+    return []
+  }
+  return urls.filter(isAllowedAudioUrl)
+}
 
 // -- In-memory surah cache (LRU) --
 export const SURAH_CACHE_MAX = 5

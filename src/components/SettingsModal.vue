@@ -12,6 +12,12 @@ import ARABIC_FONTS from '../data/fonts.js'
 import THEMES from '../data/themes.js'
 import { TAJWEED_RULES, tajweedColor } from '../utils/arabicText.js'
 import { t, UI_LOCALES } from '../i18n/index.js'
+import {
+  STORAGE_KEY,
+  TIP_DISMISSED_KEY,
+  FOOTNOTES_ANNOUNCED_KEY,
+  PWA_INSTALL_DISMISSED_KEY
+} from '../config.js'
 
 const store = usePlayerStore()
 const uiLanguageOptions = UI_LOCALES.map(l => ({ value: l.code, label: l.name }))
@@ -114,20 +120,11 @@ async function forceUpdate() {
       if (waiting) {
         updateAvailable.value = true
         updateStatus.value = t('settings.updateFound')
-        const { clearAudioRuntimeCaches, markSwJustUpdated, notifyBeforeSwUpdate } =
-          await import('../utils/swAudio.js')
-        notifyBeforeSwUpdate()
-        markSwJustUpdated()
-        await clearAudioRuntimeCaches()
-        const reloadOnce = () => {
-          window.location.reload()
-        }
-        navigator.serviceWorker?.addEventListener('controllerchange', reloadOnce, {
-          once: true
+        const { applyWaitingServiceWorker } = await import('../utils/swAudio.js')
+        await applyWaitingServiceWorker({
+          waiting,
+          reloadTimeoutMs: 2000
         })
-        waiting.postMessage({ type: 'SKIP_WAITING' })
-        // Fallback reload if an older SW without clientsClaim never fires controllerchange.
-        setTimeout(reloadOnce, 2000)
         return
       }
     }
@@ -148,10 +145,10 @@ async function forceUpdate() {
 // Reset settings
 function resetSettings() {
   if (confirm(t('settings.resetConfirm'))) {
-    localStorage.removeItem('quran-player-prefs')
-    localStorage.removeItem('quran-tip-dismissed')
-    localStorage.removeItem('quran-pwa-install-dismissed')
-    localStorage.removeItem('quran-footnotes-announced')
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(TIP_DISMISSED_KEY)
+    localStorage.removeItem(PWA_INSTALL_DISMISSED_KEY)
+    localStorage.removeItem(FOOTNOTES_ANNOUNCED_KEY)
     window.location.reload()
   }
 }
@@ -367,6 +364,7 @@ function onLanguageChange(code) {
                   :model-value="store.currentSurahNum"
                   :options="surahOptions"
                   :placeholder="$t('settings.searchSurah')"
+                  :aria-label="$t('settings.surah')"
                   @update:model-value="store.setSurah($event)"
                 />
               </div>
@@ -378,6 +376,7 @@ function onLanguageChange(code) {
                   :model-value="store.currentReciter"
                   :options="reciterOptions"
                   :placeholder="$t('settings.searchReciter')"
+                  :aria-label="$t('settings.reciter')"
                   @update:model-value="store.setReciter($event)"
                 />
               </div>
@@ -389,6 +388,7 @@ function onLanguageChange(code) {
                   :model-value="selectedLanguage"
                   :options="languageOptions"
                   :placeholder="$t('settings.searchTranslation')"
+                  :aria-label="$t('settings.translationLanguage')"
                   @update:model-value="onLanguageChange($event)"
                 />
               </div>
@@ -400,6 +400,7 @@ function onLanguageChange(code) {
                   :model-value="store.currentTranslation"
                   :options="translationOptions"
                   :placeholder="$t('settings.searchTranslation')"
+                  :aria-label="$t('settings.translation')"
                   @update:model-value="store.setTranslation($event)"
                 />
                 <p
@@ -417,6 +418,7 @@ function onLanguageChange(code) {
                   :model-value="null"
                   :options="extraTranslationOptions"
                   :placeholder="$t('settings.addTranslation')"
+                  :aria-label="$t('settings.additionalTranslations')"
                   @update:model-value="store.addExtraTranslation($event)"
                 />
                 <div v-if="extraTranslationChips.length" class="flex flex-wrap gap-1.5 mt-2">
@@ -536,6 +538,7 @@ function onLanguageChange(code) {
                   :model-value="selectedFont"
                   :options="fontOptions"
                   :placeholder="$t('settings.searchFont')"
+                  :aria-label="$t('settings.arabicFont')"
                   @update:model-value="onFontChange($event)"
                 />
               </div>
@@ -675,6 +678,7 @@ function onLanguageChange(code) {
                   :model-value="store.uiLanguage"
                   :options="uiLanguageOptions"
                   :placeholder="$t('settings.uiLanguage')"
+                  :aria-label="$t('settings.uiLanguage')"
                   @update:model-value="store.setUiLanguage($event)"
                 />
               </div>

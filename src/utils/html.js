@@ -1,18 +1,67 @@
-// Minimal HTML sanitizer for rendering third-party tafsir content via v-html.
-// Strips scripts/styles/iframes, inline event handlers, and javascript: URLs.
-// Defense in depth: the source (quran.com) is trusted, but never render raw.
+// Sanitize third-party tafsir HTML (quran.com) before rendering via v-html.
+// Defense in depth: the source is trusted, but never render raw markup.
+// isomorphic-dompurify uses the real window in browsers and jsdom under Node/vitest
+// (happy-dom is incomplete for DOMPurify's temporary DOM).
+import DOMPurify from 'isomorphic-dompurify'
+
+const PURIFY_CONFIG = {
+  ALLOWED_TAGS: [
+    'p',
+    'br',
+    'b',
+    'strong',
+    'i',
+    'em',
+    'u',
+    's',
+    'span',
+    'div',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'li',
+    'blockquote',
+    'hr',
+    'a',
+    'sup',
+    'sub'
+  ],
+  ALLOWED_ATTR: ['href', 'title', 'class', 'lang', 'dir', 'target', 'rel'],
+  ALLOW_DATA_ATTR: false,
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.:-]|$))/i
+}
+
+let hooksInstalled = false
+
+function ensurePurifyHooks() {
+  if (hooksInstalled) {
+    return
+  }
+  hooksInstalled = true
+  DOMPurify.addHook('afterSanitizeAttributes', node => {
+    if (node.tagName === 'A') {
+      const href = node.getAttribute('href')
+      if (href && !/^(https?:|mailto:|#)/i.test(href)) {
+        node.removeAttribute('href')
+      }
+      if (node.getAttribute('target') === '_blank') {
+        node.setAttribute('rel', 'noopener noreferrer')
+      }
+    }
+  })
+}
+
 export function sanitizeHtml(html) {
   if (!html) {
     return ''
   }
-  return String(html)
-    .replace(/<\s*(script|style|iframe|object|embed)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
-    .replace(/<\s*(script|style|iframe|object|embed)\b[^>]*\/?>/gi, '')
-    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
-    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
-    .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
-    .replace(/(href|src)\s*=\s*"\s*javascript:[^"]*"/gi, '$1="#"')
-    .replace(/(href|src)\s*=\s*'\s*javascript:[^']*'/gi, "$1='#'")
+  ensurePurifyHooks()
+  return DOMPurify.sanitize(String(html), PURIFY_CONFIG)
 }
 
 const ENTITY_MAP = {

@@ -4,7 +4,9 @@ import {
   QURANCOM_API,
   MAX_RETRIES,
   RETRY_DELAY,
-  SURAH_CACHE_MAX
+  SURAH_CACHE_MAX,
+  isAllowedAudioUrl,
+  filterAllowedAudioUrls
 } from '../config.js'
 import { parseTranslationText } from '../utils/translationText.js'
 import { htmlToPlainText } from '../utils/html.js'
@@ -53,22 +55,88 @@ async function fetchWithRetry(url, retries = MAX_RETRIES, signal) {
 }
 
 // Deduplicate concurrent identical GETs so loadSurah and preloadNextSurah do not
-// fetch the same resource twice.
+// fetch the same resource twice. Each consumer gets its own AbortSignal; aborting
+// one must not cancel the shared network request while other waiters remain.
 const inflight = new Map()
 
 async function fetchJsonDeduped(url, signal) {
-  if (inflight.has(url)) {
-    return inflight.get(url)
-  }
-  const promise = (async () => {
-    const res = await fetchWithRetry(url, MAX_RETRIES, signal)
-    return res.json()
-  })()
-  inflight.set(url, promise)
-  try {
-    return await promise
-  } finally {
+  let entry = inflight.get(url)
+  // Do not join a request that is already being torn down.
+  if (entry && entry.controller.signal.aborted) {
     inflight.delete(url)
+    entry = null
+  }
+  if (!entry) {
+    const controller = new AbortController()
+    const promise = (async () => {
+      const res = await fetchWithRetry(url, MAX_RETRIES, controller.signal)
+      return res.json()
+    })()
+    entry = { promise, controller, waiters: 0 }
+    inflight.set(url, entry)
+    // Drop the shared entry once the request settles, regardless of consumers.
+    void promise.finally(() => {
+      if (inflight.get(url) === entry) {
+        inflight.delete(url)
+      }
+    })
+  }
+
+  entry.waiters += 1
+  let released = false
+  const release = ({ abortShared }) => {
+    if (released) {
+      return
+    }
+    released = true
+    entry.waiters -= 1
+    if (abortShared && entry.waiters <= 0) {
+      entry.controller.abort()
+    }
+  }
+
+  const abortError = () => new DOMException('The operation was aborted.', 'AbortError')
+
+  try {
+    if (!signal) {
+      return await entry.promise
+    }
+    if (signal.aborted) {
+      release({ abortShared: true })
+      throw abortError()
+    }
+
+    // Race the shared result against this consumer's abort so one abort does not
+    // leave the waiter hanging, and does not cancel other waiters' network work.
+    const result = await new Promise((resolve, reject) => {
+      const onAbort = () => {
+        release({ abortShared: true })
+        reject(abortError())
+      }
+      signal.addEventListener('abort', onAbort, { once: true })
+      entry.promise.then(
+        value => {
+          signal.removeEventListener('abort', onAbort)
+          if (signal.aborted) {
+            reject(abortError())
+            return
+          }
+          resolve(value)
+        },
+        err => {
+          signal.removeEventListener('abort', onAbort)
+          if (signal.aborted) {
+            reject(abortError())
+            return
+          }
+          reject(err)
+        }
+      )
+    })
+    return result
+  } finally {
+    // Successful (or non-signal) waiters release without aborting the shared request.
+    release({ abortShared: false })
   }
 }
 
@@ -150,6 +218,9 @@ export async function fetchSurahAudio(cdnReciterId, chapterNumber, signal) {
   if (!file.audio_url) {
     throw new ApiError('invalid', 'Audio file URL missing')
   }
+  if (!isAllowedAudioUrl(file.audio_url)) {
+    throw new ApiError('invalid', 'Audio URL host is not allowlisted')
+  }
 
   return {
     audioUrl: file.audio_url,
@@ -179,8 +250,13 @@ export async function fetchVerseAudio(cloudReciterId, surahNumber, signal) {
     throw new ApiError('invalid', 'Invalid verse audio response')
   }
 
+  const audioUrls = filterAllowedAudioUrls(data.data.ayahs.map(a => a.audio))
+  if (!audioUrls.length) {
+    throw new ApiError('invalid', 'No allowlisted verse audio URLs')
+  }
+
   return {
-    audioUrls: data.data.ayahs.map(a => a.audio)
+    audioUrls
   }
 }
 

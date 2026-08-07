@@ -4,8 +4,7 @@
 
 import { FOOTNOTE_QURANCOM_IDS } from '../data/footnoteEditions.js'
 
-const FOOTNOTE_SUP_RE =
-  /<sup\b[^>]*\bfoot_note\s*=\s*["']?(\d+)["']?[^>]*>([\s\S]*?)<\/sup>/gi
+const FOOTNOTE_SUP_RE = /<sup\b[^>]*\bfoot_note\s*=\s*["']?(\d+)["']?[^>]*>([\s\S]*?)<\/sup>/gi
 
 const ENTITY_MAP = {
   '&amp;': '&',

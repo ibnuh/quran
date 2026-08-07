@@ -1,15 +1,10 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import {
-  clearAudioRuntimeCaches,
-  markSwJustUpdated,
-  notifyBeforeSwUpdate
-} from '../utils/swAudio.js'
+import { applyWaitingServiceWorker, markSwJustUpdated } from '../utils/swAudio.js'
 
 const show = ref(false)
 const applying = ref(false)
 let updateFn = null
-let reloadArmed = false
 
 function onUpdateAvailable(e) {
   updateFn = e.detail?.updateSW || updateFn
@@ -17,19 +12,6 @@ function onUpdateAvailable(e) {
   if (!applying.value) {
     show.value = true
   }
-}
-
-function armReloadOnControllerChange() {
-  if (reloadArmed || !('serviceWorker' in navigator)) {
-    return
-  }
-  reloadArmed = true
-  const reloadOnce = () => {
-    window.location.reload()
-  }
-  navigator.serviceWorker.addEventListener('controllerchange', reloadOnce, { once: true })
-  // Fallback if an older waiting worker never fires controllerchange.
-  setTimeout(reloadOnce, 2500)
 }
 
 /**
@@ -46,22 +28,10 @@ async function applyUpdate() {
   try {
     // Drop cached MP3s before the new SW claims clients. Stale CacheFirst range
     // entries are what make mid-surah Play dead until a hard reload.
-    notifyBeforeSwUpdate()
-    markSwJustUpdated()
-    await clearAudioRuntimeCaches()
-
-    armReloadOnControllerChange()
-
-    const reg = await navigator.serviceWorker?.getRegistration()
-    if (reg?.waiting) {
-      reg.waiting.postMessage({ type: 'SKIP_WAITING' })
-    }
-
-    // vite-plugin-pwa helper: messageSkipWaiting + optional reload.
-    // Pass true so workbox also reloads once the new worker controls the page.
-    if (typeof updateFn === 'function') {
-      await Promise.resolve(updateFn(true))
-    }
+    await applyWaitingServiceWorker({
+      updateSW: updateFn,
+      reloadTimeoutMs: 2500
+    })
   } catch {
     // Still attempt a reload; a full navigation is the recovery path.
     markSwJustUpdated()

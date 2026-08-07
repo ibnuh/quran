@@ -144,7 +144,8 @@ describe('preferences persistence', () => {
     store.currentSurahNum = 36
     store.currentReciter = 'sudais'
     store.playbackSpeed = 1.5
-    store.savePreferences()
+    // Immediate write (savePreferences is debounced).
+    store.writePreferencesNow()
 
     setActivePinia(createPinia())
     const fresh = usePlayerStore()
@@ -181,5 +182,53 @@ describe('preferences persistence', () => {
     const store = usePlayerStore()
     store.loadPreferences()
     expect(store.theme).toBe('light')
+  })
+
+  it('drops invalid highlightStyle, repeatMode, and tafsirSource', () => {
+    localStorage.setItem(
+      'quran-player-prefs',
+      JSON.stringify({
+        highlightStyle: 'neon-glow',
+        repeatMode: 'forever',
+        tafsirSource: 999999,
+        volume: 2,
+        extraTranslations: ['en.sahih', 'not-a-real-edition'],
+        bookmarks: [{ surahNum: 1, verseIndex: 0 }, { bad: true }, null]
+      })
+    )
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.highlightStyle).toBe('flow')
+    expect(store.repeatMode).toBe('none')
+    expect(store.tafsirSource).toBe(169)
+    expect(store.volume).toBe(1)
+    expect(store.extraTranslations).toEqual(['en.sahih'])
+    expect(store.bookmarks).toEqual([{ surahNum: 1, verseIndex: 0 }])
+  })
+})
+
+describe('canPlayAudio', () => {
+  it('is false when audio is unavailable', () => {
+    const store = usePlayerStore()
+    store.audioUnavailable = true
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://download.quranicaudio.com/quran/test.mp3'
+    expect(store.canPlayAudio).toBe(false)
+  })
+
+  it('is true for full mode with a URL', () => {
+    const store = usePlayerStore()
+    store.audioUnavailable = false
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://download.quranicaudio.com/quran/test.mp3'
+    expect(store.canPlayAudio).toBe(true)
+  })
+
+  it('is true for verse mode with URLs', () => {
+    const store = usePlayerStore()
+    store.audioUnavailable = false
+    store.playbackMode = 'verse'
+    store.audioUrls = ['https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3']
+    expect(store.canPlayAudio).toBe(true)
   })
 })

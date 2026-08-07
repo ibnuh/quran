@@ -3,6 +3,8 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://verses.quran.foundation https://static.qurancdn.com data:; img-src 'self' data: https:; media-src 'self' blob: https://download.quranicaudio.com https://verses.quran.com https://cdn.islamic.network; connect-src 'self' https://api.alquran.cloud https://api.qurancdn.com https://api.quran.com https://download.quranicaudio.com https://verses.quran.com https://cdn.islamic.network https://verses.quran.foundation https://static.qurancdn.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
