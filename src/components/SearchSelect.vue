@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, watch, onBeforeUnmount, useId } from 'vue'
 
 const props = defineProps({
   modelValue: [String, Number],
@@ -7,6 +7,7 @@ const props = defineProps({
   valueKey: { type: String, default: 'value' },
   labelKey: { type: String, default: 'label' },
   placeholder: { type: String, default: 'Search...' },
+  ariaLabel: { type: String, default: '' },
   compact: { type: Boolean, default: false }
 })
 
@@ -15,6 +16,7 @@ const emit = defineEmits(['update:modelValue'])
 const isOpen = ref(false)
 const query = ref('')
 const inputRef = ref(null)
+const listboxId = useId()
 const highlightedIndex = ref(-1)
 
 const selectedOption = computed(() =>
@@ -67,9 +69,13 @@ function open() {
   })
 }
 
+function close() {
+  isOpen.value = false
+}
+
 function select(opt) {
   emit('update:modelValue', opt[props.valueKey])
-  isOpen.value = false
+  close()
 }
 
 function scrollHighlightedIntoView() {
@@ -83,7 +89,8 @@ function scrollHighlightedIntoView() {
 
 function onKeydown(e) {
   if (e.key === 'Escape') {
-    isOpen.value = false
+    e.preventDefault()
+    close()
   } else if (e.key === 'ArrowDown') {
     e.preventDefault()
     highlightedIndex.value = Math.min(highlightedIndex.value + 1, filtered.value.length - 1)
@@ -114,19 +121,26 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     type="button"
     class="trigger"
     :class="compact ? 'trigger-compact' : 'trigger-full'"
+    :aria-label="ariaLabel || undefined"
     :aria-expanded="isOpen"
     aria-haspopup="listbox"
+    :aria-controls="listboxId"
     @click="open"
   >
     <span class="min-w-0 flex-1 flex items-center gap-1.5 truncate">
       <span class="truncate" :class="{ 'opacity-60': !selectedOption }">{{ selectedLabel }}</span>
-      <span
-        v-if="selectedBadge"
-        class="ss-badge shrink-0"
-        :title="selectedBadge"
-      >{{ selectedBadge }}</span>
+      <span v-if="selectedBadge" class="ss-badge shrink-0" :title="selectedBadge">{{
+        selectedBadge
+      }}</span>
     </span>
-    <svg class="shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+    <svg
+      class="shrink-0"
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
       <path d="M7 10l5 5 5-5z" />
     </svg>
   </button>
@@ -136,11 +150,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
       <div
         v-if="isOpen"
         class="fixed top-0 right-0 bottom-0 left-0 z-[60] flex items-start sm:items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="ariaLabel || placeholder"
       >
         <div
           class="absolute top-0 right-0 bottom-0 left-0 bg-black/40"
           role="presentation"
-          @click="isOpen = false"
+          @click="close"
         ></div>
 
         <div
@@ -151,12 +168,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
               ref="inputRef"
               v-model="query"
               type="text"
+              role="searchbox"
               :placeholder="placeholder"
+              :aria-label="placeholder"
+              :aria-controls="listboxId"
               class="search-input"
             />
           </div>
 
-          <div class="flex-1 overflow-y-auto px-2 pb-3" role="listbox">
+          <div :id="listboxId" class="flex-1 overflow-y-auto px-2 pb-3" role="listbox">
             <button
               v-for="(opt, i) in filtered"
               :key="opt[valueKey]"
@@ -173,11 +193,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             >
               <span class="flex-1 min-w-0 flex items-center gap-2 truncate">
                 <span class="truncate">{{ opt[labelKey] }}</span>
-                <span
-                  v-if="opt.badge"
-                  class="ss-badge shrink-0"
-                  :title="opt.badge"
-                >{{ opt.badge }}</span>
+                <span v-if="opt.badge" class="ss-badge shrink-0" :title="opt.badge">{{
+                  opt.badge
+                }}</span>
               </span>
               <svg
                 v-if="opt[valueKey] === modelValue"
@@ -186,12 +204,17 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 class="shrink-0 text-primary"
+                aria-hidden="true"
               >
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
               </svg>
             </button>
-            <p v-if="filtered.length === 0" class="text-center text-sm text-muted py-6">
-              No results found
+            <p
+              v-if="filtered.length === 0"
+              class="text-center text-sm text-muted py-6"
+              role="status"
+            >
+              {{ $t('common.noResults') }}
             </p>
           </div>
         </div>

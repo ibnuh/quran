@@ -56,7 +56,12 @@ function selectFootnote(fn) {
 }
 
 watch(
-  () => [store.currentVerseIndex, store.currentSurahNum, store.currentTranslation, store.showFootnotes],
+  () => [
+    store.currentVerseIndex,
+    store.currentSurahNum,
+    store.currentTranslation,
+    store.showFootnotes
+  ],
   closeFootnote
 )
 

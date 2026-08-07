@@ -29,7 +29,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     <div
       class="fixed top-0 right-0 bottom-0 left-0 z-50 flex items-center justify-center p-4"
       role="dialog"
-      aria-label="Keyboard shortcuts"
+      :aria-label="$t('panels.shortcuts')"
+      aria-modal="true"
     >
       <div
         class="absolute top-0 right-0 bottom-0 left-0 bg-black/40 backdrop-blur-sm"

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   progress: { type: Number, default: 0 },
@@ -10,6 +11,7 @@ const props = defineProps({
   isSeeking: Boolean
 })
 const emit = defineEmits(['seek'])
+const { t } = useI18n()
 
 const isDragging = ref(false)
 const barRef = ref(null)
@@ -32,6 +34,16 @@ function formatTime(ms) {
   const s = totalSec % 60
   return `${m}:${s.toString().padStart(2, '0')}`
 }
+
+const valueText = computed(() => {
+  if (props.durationMs > 0) {
+    return t('controls.seekValueOf', {
+      current: formatTime(displayTimeMs.value),
+      total: formatTime(props.durationMs)
+    })
+  }
+  return t('controls.noAudioLoaded')
+})
 
 function onKeydown(e) {
   if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
@@ -97,11 +109,7 @@ function onPointerCancel(e) {
       aria-valuemin="0"
       aria-valuemax="100"
       :aria-busy="isBusy"
-      :aria-valuetext="
-        durationMs > 0
-          ? formatTime(displayTimeMs) + ' of ' + formatTime(durationMs)
-          : 'No audio loaded'
-      "
+      :aria-valuetext="valueText"
       tabindex="0"
       @pointerdown.prevent="onPointerDown"
       @pointermove.prevent="onPointerMove"

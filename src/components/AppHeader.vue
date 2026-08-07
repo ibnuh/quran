@@ -149,9 +149,7 @@ function onModeMenuKeydown(e) {
     showModeMenu.value = false
     return
   }
-  const buttons = Array.from(
-    document.querySelectorAll('.mode-menu-wrapper [role="menuitemradio"]')
-  )
+  const buttons = Array.from(document.querySelectorAll('.mode-menu-wrapper [role="menuitemradio"]'))
   if (!buttons.length) {
     return
   }
@@ -606,7 +604,13 @@ onBeforeUnmount(() => {
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-body transition-colors cursor-pointer hover:bg-surface relative"
                 @click="onMoreAction('bookmarks')"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-primary shrink-0">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="text-primary shrink-0"
+                >
                   <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
                 </svg>
                 <span class="flex-1 text-left">{{ $t('header.showBookmarks') }}</span>
@@ -621,7 +625,13 @@ onBeforeUnmount(() => {
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-body transition-colors cursor-pointer hover:bg-surface"
                 @click="onMoreAction('shortcuts')"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-primary shrink-0">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="text-primary shrink-0"
+                >
                   <path
                     d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"
                   />
@@ -658,9 +668,11 @@ onBeforeUnmount(() => {
                     d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"
                   />
                 </svg>
-                <span class="flex-1 text-left" :class="store.autoHideControls ? '' : 'opacity-70'">{{
-                  $t('header.autoHide')
-                }}</span>
+                <span
+                  class="flex-1 text-left"
+                  :class="store.autoHideControls ? '' : 'opacity-70'"
+                  >{{ $t('header.autoHide') }}</span
+                >
               </button>
             </div>
           </Transition>

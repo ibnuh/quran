@@ -336,11 +336,7 @@ watch(
               </button>
             </div>
 
-            <p
-              v-else
-              class="fn-body text-body leading-relaxed whitespace-pre-wrap"
-              :key="activeId"
-            >
+            <p v-else class="fn-body text-body leading-relaxed whitespace-pre-wrap" :key="activeId">
               {{ activeText }}
             </p>
           </div>

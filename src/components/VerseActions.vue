@@ -98,9 +98,7 @@ function copyVerse() {
       type="button"
       class="verse-action-btn"
       :class="{ 'is-active': store.isCurrentBookmarked }"
-      :aria-label="
-        store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')
-      "
+      :aria-label="store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')"
       :title="store.isCurrentBookmarked ? $t('verse.removeBookmark') : $t('verse.bookmark')"
       @click="store.toggleBookmark()"
     >

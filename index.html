@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Quran Player - Read & Listen with Word-by-Word Highlighting</title>
   <meta name="description" content="Read and listen to the Quran with synchronized word-by-word highlighting, 30+ reciters, 55+ translations in 28 languages, and offline support.">
   <meta name="keywords" content="Quran, Quran player, Quran recitation, word highlighting, Islamic, Quran audio, Quran translation, Quran online">
@@ -74,12 +74,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://api.alquran.cloud">
   <link rel="preconnect" href="https://api.qurancdn.com">
+  <link rel="preconnect" href="https://api.quran.com">
   <link rel="dns-prefetch" href="https://verses.quran.foundation">
 
-  <!-- Fonts -->
-  <link rel="preload" href="https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2" as="font" type="font/woff2" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=optional" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Lateef:wght@400;700&family=Reem+Kufi:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Fonts: default UI (Inter) + default Arabic (Amiri Quran / Amiri). Other Arabic
+       families are injected on demand via src/utils/arabicFonts.js when selected. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Amiri:wght@400;700&family=Amiri+Quran&display=optional" rel="stylesheet">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -126,9 +126,6 @@
   </style>
 </head>
 <body>
-  <script>
-    try{var p=JSON.parse(localStorage.getItem('quran-player-prefs'));if(p&&p.theme&&p.theme!=='light')document.documentElement.setAttribute('data-theme',p.theme)}catch(e){}
-  </script>
   <div id="app"></div>
   <script type="module" src="/src/main.js"></script>
 </body>

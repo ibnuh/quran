@@ -44,9 +44,12 @@ const updateSW = registerSW({
       return
     }
     // Periodic update check while the tab stays open.
-    setInterval(() => {
-      registration.update()
-    }, 30 * 60 * 1000)
+    setInterval(
+      () => {
+        registration.update()
+      },
+      30 * 60 * 1000
+    )
     // Re-check when the user returns to the tab (covers long backgrounded sessions).
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {

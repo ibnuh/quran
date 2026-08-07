@@ -28,7 +28,7 @@ function clearAllBookmarks() {
     <div
       class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end"
       role="dialog"
-      aria-label="Bookmarks"
+      :aria-label="$t('panels.bookmarks')"
       aria-modal="true"
     >
       <div
@@ -79,48 +79,61 @@ function clearAllBookmarks() {
             <p class="text-xs text-muted/40 mt-1">{{ $t('panels.noBookmarksHint') }}</p>
           </div>
 
-          <div
+          <ul
             v-else
-            class="p-4 space-y-2"
+            class="p-4 space-y-2 list-none m-0"
             style="padding-right: max(1rem, env(safe-area-inset-right, 0px))"
           >
-            <button
+            <li
               v-for="(bm, i) in store.bookmarks"
               :key="bm.surahNum + '-' + bm.verseIndex"
-              class="bookmark-card w-full text-left p-3.5 rounded-xl border border-border hover:border-primary/30 hover:bg-surface transition-colors cursor-pointer group"
-              @click="goToBookmark(i)"
+              class="bookmark-card relative w-full rounded-xl border border-border hover:border-primary/30 hover:bg-surface transition-colors group"
             >
-              <div class="flex items-start justify-between gap-2 mb-1.5">
-                <span class="text-xs font-semibold text-primary tracking-wide">
+              <button
+                type="button"
+                class="w-full text-left p-3.5 pr-12 cursor-pointer bg-transparent border-0"
+                @click="goToBookmark(i)"
+              >
+                <span class="block text-xs font-semibold text-primary tracking-wide mb-1.5">
                   {{ bm.surahName }}
                   <span class="text-muted font-medium">· {{ bm.verseNumber }}</span>
                 </span>
-                <button
-                  type="button"
-                  class="bookmark-remove shrink-0 w-8 h-8 -mt-1 -mr-1 rounded-full flex items-center justify-center text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors cursor-pointer"
-                  :aria-label="
-                    $t('panels.removeBookmarkItem', {
-                      surah: bm.surahName,
-                      verse: bm.verseNumber
-                    })
-                  "
-                  @click.stop="store.removeBookmark(i)"
+                <p
+                  class="text-lg leading-relaxed text-arabic mb-1.5 select-text"
+                  dir="rtl"
+                  lang="ar"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path
-                      d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <p class="text-lg leading-relaxed text-arabic mb-1.5" dir="rtl" lang="ar">
-                {{ bm.verseText }}
-              </p>
-              <p v-if="bm.translationText" class="text-xs text-muted/70 line-clamp-2">
-                {{ bm.translationText }}
-              </p>
-            </button>
-          </div>
+                  {{ bm.verseText }}
+                </p>
+                <p v-if="bm.translationText" class="text-xs text-muted/70 line-clamp-2 select-text">
+                  {{ bm.translationText }}
+                </p>
+              </button>
+              <button
+                type="button"
+                class="bookmark-remove absolute top-2.5 end-2.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors cursor-pointer"
+                :aria-label="
+                  $t('panels.removeBookmarkItem', {
+                    surah: bm.surahName,
+                    verse: bm.verseNumber
+                  })
+                "
+                @click="store.removeBookmark(i)"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                  />
+                </svg>
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

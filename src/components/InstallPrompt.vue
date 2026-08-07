@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { PWA_INSTALL_DISMISSED_KEY } from '../config.js'
 
 const show = ref(false)
-const DISMISSED_KEY = 'quran-pwa-install-dismissed'
+const DISMISSED_KEY = PWA_INSTALL_DISMISSED_KEY
 
 function checkPrompt() {
   if (!window.__pwaInstallPrompt) {
@@ -61,6 +62,8 @@ onBeforeUnmount(() => {
       v-if="show"
       class="fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-80 z-30 bg-card border border-border rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3"
       style="bottom: calc(var(--controls-height, 8rem) + 0.75rem)"
+      role="status"
+      aria-live="polite"
     >
       <svg
         class="shrink-0 text-primary"

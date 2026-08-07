@@ -66,10 +66,7 @@ const matchedVerses = computed(() => {
 })
 
 const showEmptyResults = computed(
-  () =>
-    !!normalized.value &&
-    !matchedSurahs.value.length &&
-    !matchedVerses.value.length
+  () => !!normalized.value && !matchedSurahs.value.length && !matchedVerses.value.length
 )
 
 function pickSurah(num) {
