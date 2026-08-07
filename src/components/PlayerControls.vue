@@ -103,6 +103,7 @@ const props = defineProps({
   isPlaying: Boolean,
   isLoading: Boolean,
   isSeeking: Boolean,
+  playFailed: Boolean,
   progress: { type: Number, default: 0 },
   buffered: { type: Number, default: 0 },
   currentTimeMs: { type: Number, default: 0 },
@@ -113,12 +114,7 @@ const props = defineProps({
   compact: { type: Boolean, default: false }
 })
 
-const canPlay = computed(
-  () =>
-    !store.audioUnavailable &&
-    !!store.playbackMode &&
-    (store.playbackMode === 'full' ? !!store.audioUrl : store.audioUrls.length > 0)
-)
+const canPlay = computed(() => store.canPlayAudio)
 
 // Only show the unavailable banner after a surah has finished loading without
 // audio. On refresh/first paint, canPlay is false while data is still empty, which
@@ -137,7 +133,9 @@ const emit = defineEmits([
   'seek',
   'set-speed',
   'jump-to-verse',
-  'set-sleep'
+  'set-sleep',
+  'retry-play',
+  'dismiss-play-failed'
 ])
 
 function cycleRepeat() {
@@ -201,6 +199,29 @@ function clearRepeat() {
     >
       {{ $t('controls.audioUnavailable') }}
     </p>
+
+    <div
+      v-else-if="playFailed && !isPlaying"
+      class="audio-play-failed text-center text-[0.7rem] sm:text-xs mb-2 landscape-compact:mb-1 leading-snug px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 flex-wrap"
+      role="alert"
+    >
+      <span>{{ $t('controls.playFailed') }}</span>
+      <button
+        type="button"
+        class="text-primary font-medium underline-offset-2 hover:underline cursor-pointer"
+        @click="emit('retry-play')"
+      >
+        {{ $t('controls.retryPlay') }}
+      </button>
+      <button
+        type="button"
+        class="text-muted cursor-pointer"
+        :aria-label="$t('controls.dismissPlayFailed')"
+        @click="emit('dismiss-play-failed')"
+      >
+        {{ $t('controls.dismissPlayFailed') }}
+      </button>
+    </div>
 
     <ProgressBar
       v-if="!compact"
@@ -639,7 +660,8 @@ function clearRepeat() {
     0 3px 10px color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
 
-.audio-unavailable {
+.audio-unavailable,
+.audio-play-failed {
   color: color-mix(in srgb, var(--color-accent) 90%, var(--color-body));
   background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
   border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);

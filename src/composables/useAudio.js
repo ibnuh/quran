@@ -25,6 +25,8 @@ export function useAudio() {
   const buffered = ref(0)
   const playbackRate = ref(1)
   const volume = ref(1)
+  const playFailed = ref(false)
+  const lastError = ref(null)
 
   let onTimeUpdateCb = null
   let onEndedCb = null
@@ -33,7 +35,12 @@ export function useAudio() {
   let pendingSeekMs = null
   let activeSeekTargetMs = null
   let seekSettleTimer = null
+  let loadTimeoutTimer = null
   let playIntentId = 0
+  // Temporarily mute while a mid-file seek is pending so t=0 never audibly flashes.
+  let muteUntilSeek = false
+  const MUTE_SEEK_THRESHOLD_MS = 250
+  const LOAD_TIMEOUT_MS = 20000
 
   function nextPlayIntent() {
     playIntentId += 1
@@ -88,13 +95,12 @@ export function useAudio() {
       audio.src = ''
       isPlaying.value = false
       isLoading.value = false
-      isSeeking.value = false
       progress.value = 0
       currentTimeMs.value = 0
       duration.value = 0
-      pendingSeekMs = null
-      activeSeekTargetMs = null
-      clearTimeout(seekSettleTimer)
+      clearSeekState()
+      clearLoadTimeout()
+      clearPlayFailed()
       publishDebug({ forceKilled: true })
     }
     window.__getAudioSnapshot = () => ({
@@ -162,6 +168,66 @@ export function useAudio() {
     seekSettleTimer = null
   }
 
+  function clearLoadTimeout() {
+    clearTimeout(loadTimeoutTimer)
+    loadTimeoutTimer = null
+  }
+
+  function armLoadTimeout() {
+    clearLoadTimeout()
+    loadTimeoutTimer = setTimeout(() => {
+      if (!isLoading.value && pendingSeekMs == null && activeSeekTargetMs == null) {
+        return
+      }
+      dbg('load timeout')
+      markPlayFailed('timeout')
+      isLoading.value = false
+      isSeeking.value = false
+      clearSeekState()
+      try {
+        audio.pause()
+      } catch {
+        // ignore
+      }
+      isPlaying.value = false
+    }, LOAD_TIMEOUT_MS)
+  }
+
+  function clearSeekState() {
+    pendingSeekMs = null
+    activeSeekTargetMs = null
+    isSeeking.value = false
+    clearSeekSettleTimer()
+    releaseMuteUntilSeek()
+  }
+
+  function applyElementVolume() {
+    audio.volume = muteUntilSeek ? 0 : volume.value
+  }
+
+  function beginMuteUntilSeek() {
+    muteUntilSeek = true
+    audio.volume = 0
+  }
+
+  function releaseMuteUntilSeek() {
+    if (!muteUntilSeek) {
+      return
+    }
+    muteUntilSeek = false
+    applyElementVolume()
+  }
+
+  function markPlayFailed(reason = 'error') {
+    playFailed.value = true
+    lastError.value = reason
+  }
+
+  function clearPlayFailed() {
+    playFailed.value = false
+    lastError.value = null
+  }
+
   function settleSeekIfAtTarget(force = false) {
     if (pendingSeekMs != null || activeSeekTargetMs == null) {
       return false
@@ -174,6 +240,7 @@ export function useAudio() {
     isSeeking.value = false
     verseSeekUntil = Date.now() + 600
     clearSeekSettleTimer()
+    releaseMuteUntilSeek()
     syncProgressFromElement()
     return true
   }
@@ -216,6 +283,11 @@ export function useAudio() {
         scheduleSeekSettleFallback()
       } else {
         settleSeekIfAtTarget(true)
+      }
+      // If we already landed at the target (no move), mute was released in settle.
+      // Otherwise keep muted until seeked/settled.
+      if (!moved || activeSeekTargetMs == null) {
+        releaseMuteUntilSeek()
       }
       dbg('seek applied', { sec })
       return true
@@ -275,6 +347,7 @@ export function useAudio() {
       dbg('canplay', { readyState: el.readyState })
       applyPendingSeek()
       isLoading.value = false
+      clearLoadTimeout()
     })
 
     el.addEventListener('canplaythrough', () => {
@@ -283,11 +356,13 @@ export function useAudio() {
       }
       applyPendingSeek()
       isLoading.value = false
+      clearLoadTimeout()
     })
 
     el.addEventListener('loadstart', () => {
       if (el === audio) {
         isLoading.value = true
+        armLoadTimeout()
       }
     })
 
@@ -321,10 +396,8 @@ export function useAudio() {
       }
       isPlaying.value = false
       isLoading.value = false
-      isSeeking.value = false
-      activeSeekTargetMs = null
-      pendingSeekMs = null
-      clearSeekSettleTimer()
+      clearSeekState()
+      clearLoadTimeout()
       progress.value = 0
       currentTimeMs.value = 0
       if (onEndedCb) {
@@ -348,6 +421,7 @@ export function useAudio() {
       dbg('playing event', { currentTime: el.currentTime })
       applyPendingSeek()
       isLoading.value = false
+      clearLoadTimeout()
     })
 
     el.addEventListener('pause', () => {
@@ -364,8 +438,14 @@ export function useAudio() {
       }
       isPlaying.value = false
       isLoading.value = false
-      isSeeking.value = false
-      clearSeekSettleTimer()
+      clearSeekState()
+      clearLoadTimeout()
+      const mediaErr = el.error
+      markPlayFailed(
+        mediaErr
+          ? `media-${mediaErr.code}${mediaErr.message ? `:${mediaErr.message}` : ''}`
+          : 'error'
+      )
       snapshot('error event')
     })
   }
@@ -386,10 +466,11 @@ export function useAudio() {
       // ignore
     }
     revokeBlobUrl()
+    clearLoadTimeout()
     audio = new Audio()
     audio.preload = 'auto'
     audio.playbackRate = playbackRate.value
-    audio.volume = volume.value
+    applyElementVolume()
     bindAudioEvents(audio)
   }
 
@@ -423,6 +504,14 @@ export function useAudio() {
     return !audio.error && audio.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE
   }
 
+  function isHealthy() {
+    return isElementHealthy()
+  }
+
+  function hasMediaError() {
+    return !!audio.error
+  }
+
   function load(url) {
     if (!url) {
       return
@@ -437,6 +526,7 @@ export function useAudio() {
     // the caller has already set pendingSeekMs for this play.
     dbg('load', url.slice(-60))
     isLoading.value = true
+    armLoadTimeout()
     revokeBlobUrl()
     audio.src = url
     audio.load()
@@ -484,7 +574,7 @@ export function useAudio() {
       return false
     }
     audio.playbackRate = playbackRate.value
-    audio.volume = volume.value
+    applyElementVolume()
     if (audio.readyState < 3) {
       isLoading.value = true
     }
@@ -504,7 +594,9 @@ export function useAudio() {
       }
       if (audio.readyState >= 3) {
         isLoading.value = false
+        clearLoadTimeout()
       }
+      clearPlayFailed()
       snapshot('playFromElement ok')
       return true
     } catch (e) {
@@ -571,6 +663,19 @@ export function useAudio() {
       return false
     }
 
+    clearPlayFailed()
+
+    // Mute until a mid-file seek lands so the audible head never flashes t=0.
+    const needsMute =
+      requestedStartMs != null &&
+      Number.isFinite(requestedStartMs) &&
+      requestedStartMs > MUTE_SEEK_THRESHOLD_MS
+    if (needsMute) {
+      beginMuteUntilSeek()
+    } else {
+      releaseMuteUntilSeek()
+    }
+
     // If the current element is already poisoned (common right after SW update
     // + restore seek), start from a clean element before touching play().
     if (audio.error || !isElementHealthy()) {
@@ -613,6 +718,9 @@ export function useAudio() {
     if (!isCurrentPlayIntent(intent)) {
       return false
     }
+    if (needsMute || (retrySeek != null && retrySeek > MUTE_SEEK_THRESHOLD_MS)) {
+      beginMuteUntilSeek()
+    }
     load(url)
     if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
       queueSeek(retrySeek)
@@ -637,6 +745,9 @@ export function useAudio() {
     if (!isCurrentPlayIntent(intent)) {
       return false
     }
+    if (needsMute || (retrySeek != null && retrySeek > MUTE_SEEK_THRESHOLD_MS)) {
+      beginMuteUntilSeek()
+    }
     if (retrySeek != null && Number.isFinite(retrySeek) && retrySeek >= 0) {
       queueSeek(retrySeek)
     }
@@ -647,10 +758,16 @@ export function useAudio() {
     applyPendingSeek()
     if (await playFromElement(intent)) {
       applyPendingSeek()
-      return !audio.error
+      const ok = !audio.error
+      if (!ok) {
+        markPlayFailed(audio.error ? `media-${audio.error.code}` : 'error')
+        clearSeekState()
+      }
+      return ok
     }
     isLoading.value = false
-    isSeeking.value = false
+    clearSeekState()
+    markPlayFailed('play-failed')
     return false
   }
 
@@ -682,6 +799,7 @@ export function useAudio() {
     audio.pause()
     isLoading.value = false
     isSeeking.value = false
+    clearLoadTimeout()
   }
 
   function stop() {
@@ -691,11 +809,9 @@ export function useAudio() {
     progress.value = 0
     currentTimeMs.value = 0
     buffered.value = 0
-    pendingSeekMs = null
-    activeSeekTargetMs = null
     isLoading.value = false
-    isSeeking.value = false
-    clearSeekSettleTimer()
+    clearSeekState()
+    clearLoadTimeout()
   }
 
   // Keep the requested target authoritative until the media element confirms it.
@@ -744,7 +860,11 @@ export function useAudio() {
   function setVolume(value) {
     const v = Math.max(0, Math.min(1, value))
     volume.value = v
-    audio.volume = v
+    applyElementVolume()
+  }
+
+  function dismissPlayFailed() {
+    clearPlayFailed()
   }
 
   function getLiveTimeMs() {
@@ -766,6 +886,7 @@ export function useAudio() {
     }
     audio.src = ''
     clearSeekSettleTimer()
+    clearLoadTimeout()
     revokeBlobUrl()
   })
 
@@ -779,6 +900,8 @@ export function useAudio() {
     buffered,
     playbackRate,
     volume,
+    playFailed,
+    lastError,
     setExpectedDuration,
     load,
     loadAndPlay,
@@ -789,8 +912,11 @@ export function useAudio() {
     seekTo,
     seek,
     isVerseSeekActive,
+    isHealthy,
+    hasMediaError,
     setPlaybackRate,
     setVolume,
+    dismissPlayFailed,
     getLiveTimeMs,
     onTimeUpdate,
     onEnded

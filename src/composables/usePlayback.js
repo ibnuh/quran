@@ -5,6 +5,10 @@ import { getPreloadCount } from '../config.js'
 // continuous cross-surah playback, and verse-mode audio preloading.
 export function usePlayback(store, audio) {
   const continuingPlayback = ref(false)
+  // Surah that just finished when continuous play was requested. Resume only after
+  // currentSurahNum advances past this value so we never replay the ended surah.
+  let continueFromSurah = null
+  let bookmarkJumpGen = 0
 
   // -- Verse-by-verse preloader --
   const preloadCache = []
@@ -52,13 +56,7 @@ export function usePlayback(store, audio) {
   )
 
   function hasPlayableAudio() {
-    if (store.audioUnavailable || !store.playbackMode) {
-      return false
-    }
-    if (store.playbackMode === 'full') {
-      return !!store.audioUrl
-    }
-    return store.audioUrls.length > 0
+    return store.canPlayAudio
   }
 
   // True when the playhead is already inside the current verse window (within 750ms).
@@ -69,8 +67,10 @@ export function usePlayback(store, audio) {
     }
     // If the media element is poisoned (post-SW-update demuxer error), never treat
     // the playhead as trustworthy — always pass an explicit startMs on the next play.
-    const snap = typeof window !== 'undefined' ? window.__getAudioSnapshot?.() : null
-    if (snap?.error) {
+    if (typeof audio.hasMediaError === 'function' && audio.hasMediaError()) {
+      return false
+    }
+    if (typeof audio.isHealthy === 'function' && !audio.isHealthy()) {
       return false
     }
     const t = audio.currentTimeMs.value
@@ -86,6 +86,51 @@ export function usePlayback(store, audio) {
       return false
     }
     return true
+  }
+
+  function clearContinuingPlayback() {
+    continuingPlayback.value = false
+    continueFromSurah = null
+  }
+
+  async function resumeContinuingPlayback() {
+    if (!continuingPlayback.value) {
+      return
+    }
+    // nextSurah has not advanced yet (watcher can fire on the flag flip alone).
+    if (continueFromSurah != null && store.currentSurahNum === continueFromSurah) {
+      return
+    }
+    if (store.isLoading) {
+      return
+    }
+    if (store.error || store.audioUnavailable) {
+      clearContinuingPlayback()
+      return
+    }
+
+    if (store.playbackMode === 'full' && store.audioUrl) {
+      clearContinuingPlayback()
+      await audio.loadAndPlay(store.audioUrl)
+      return
+    }
+
+    if (store.playbackMode === 'verse' && store.audioUrls.length > 0) {
+      clearContinuingPlayback()
+      store.currentVerseIndex = 0
+      store.currentWordIndex = -1
+      const ok = await audio.loadAndPlay(store.audioUrls[0])
+      if (ok) {
+        preloadAhead()
+      }
+      return
+    }
+
+    // Mode not ready yet (e.g. load still settling); leave flag for a later tick.
+    if (!store.playbackMode) {
+      return
+    }
+    clearContinuingPlayback()
   }
 
   // -- Controls --
@@ -226,22 +271,52 @@ export function usePlayback(store, audio) {
     }
   }
 
-  function handleGoToBookmark(surahNum, verseIndex) {
-    if (surahNum !== store.currentSurahNum) {
-      audio.stop()
-      const unsub = watch(
+  async function handleGoToBookmark(surahNum, verseIndex) {
+    if (surahNum === store.currentSurahNum) {
+      handleJumpToVerse(verseIndex)
+      return
+    }
+
+    audio.stop()
+    const gen = ++bookmarkJumpGen
+    let unsub = null
+    const cleanup = () => {
+      if (unsub) {
+        unsub()
+        unsub = null
+      }
+    }
+    try {
+      // Watch covers edge cases where isLoading flips after setSurah settles.
+      unsub = watch(
         () => store.isLoading,
         loading => {
-          if (!loading && !store.error) {
+          if (loading || gen !== bookmarkJumpGen) {
+            return
+          }
+          cleanup()
+          if (!store.error) {
             handleJumpToVerse(verseIndex)
-            unsub()
           }
         }
       )
-      store.setSurah(surahNum)
-      return
+      await store.setSurah(surahNum)
+      if (gen !== bookmarkJumpGen) {
+        cleanup()
+        return
+      }
+      if (store.isLoading) {
+        // Let the watcher finish the jump when loading ends.
+        return
+      }
+      cleanup()
+      if (!store.error) {
+        handleJumpToVerse(verseIndex)
+      }
+    } catch {
+      // Ignore abort/network errors; UI already surfaces store.error.
+      cleanup()
     }
-    handleJumpToVerse(verseIndex)
   }
 
   function handleSeek(ratio) {
@@ -322,6 +397,7 @@ export function usePlayback(store, audio) {
     }
 
     if (store.canNextSurah) {
+      continueFromSurah = store.currentSurahNum
       continuingPlayback.value = true
       store.nextSurah()
       return
@@ -334,19 +410,22 @@ export function usePlayback(store, audio) {
   // When the surah audio URL changes while the app is already running, keep the
   // element in sync. Do not eager-load on first mount (immediate): post-SW-update
   // mid-file restore seeks poison the element before the user hits Play.
+  // Continuous cross-surah resume for full mode is handled by resumeContinuingPlayback.
   watch(
     () => store.audioUrl,
     (url, prev) => {
       if (!url || store.playbackMode !== 'full') {
         return
       }
-      // Skip the initial empty→url transition from loadSurah on boot.
-      if (prev == null && !continuingPlayback.value && !audio.isPlaying.value) {
+      if (continuingPlayback.value) {
         return
       }
-      const wasPlaying = audio.isPlaying.value || continuingPlayback.value
+      // Skip the initial empty→url transition from loadSurah on boot.
+      if (prev == null && !audio.isPlaying.value) {
+        return
+      }
+      const wasPlaying = audio.isPlaying.value
       audio.stop()
-      continuingPlayback.value = false
       if (wasPlaying) {
         void audio.loadAndPlay(url)
       } else {
@@ -355,10 +434,33 @@ export function usePlayback(store, audio) {
     }
   )
 
-  // Stop audio when the surah or reciter changes.
+  // Resume continuous playback after the next surah finishes loading (full or verse).
+  watch(
+    () => [
+      continuingPlayback.value,
+      store.currentSurahNum,
+      store.isLoading,
+      store.playbackMode,
+      store.audioUrl,
+      store.audioUrls.length,
+      store.error,
+      store.audioUnavailable
+    ],
+    () => {
+      if (!continuingPlayback.value) {
+        return
+      }
+      void resumeContinuingPlayback()
+    }
+  )
+
+  // Stop audio when the surah or reciter changes (unless we are auto-advancing).
   watch(
     () => [store.currentSurahNum, store.currentReciter],
     () => {
+      if (continuingPlayback.value) {
+        return
+      }
       audio.stop()
     }
   )
@@ -388,13 +490,20 @@ export function usePlayback(store, audio) {
     }
   )
 
-  // A-B repeat: loop a verse range while playing (full-mode boundary handling;
-  // verse-mode loop is handled in the onEnded handler below).
+  // A-B and single-verse repeat in full mode: when the playhead leaves the
+  // active window, seek back. Ignore while seeking so scrubbing is not fought.
   watch(
     () => store.currentVerseIndex,
     idx => {
+      if (store.playbackMode !== 'full' || !audio.isPlaying.value) {
+        return
+      }
+      if (audio.isSeeking?.value || audio.isVerseSeekActive?.()) {
+        return
+      }
+
       const ab = store.abRepeat
-      if (!ab || store.playbackMode !== 'full' || !audio.isPlaying.value) {
+      if (!ab) {
         return
       }
       if (idx > ab.end || idx < ab.start) {
@@ -404,6 +513,59 @@ export function usePlayback(store, audio) {
           store.currentWordIndex = -1
           audio.seekTo(timing.timestampFrom)
         }
+      }
+    }
+  )
+
+  // Full-mode single-verse repeat: keep the playhead inside the current verse.
+  // Also re-enforce A-B using live time (in case index did not tick yet).
+  watch(
+    () => audio.currentTimeMs.value,
+    timeMs => {
+      if (store.playbackMode !== 'full' || !audio.isPlaying.value) {
+        return
+      }
+      if (audio.isSeeking?.value || audio.isVerseSeekActive?.()) {
+        return
+      }
+
+      const ab = store.abRepeat
+      if (ab) {
+        const startTiming = store.verseTimings[ab.start]
+        const endTiming = store.verseTimings[ab.end]
+        if (!startTiming) {
+          return
+        }
+        const endMs =
+          endTiming?.timestampTo != null
+            ? endTiming.timestampTo
+            : store.verseTimings[ab.end + 1]?.timestampFrom
+        if (endMs != null && timeMs >= endMs) {
+          store.currentVerseIndex = ab.start
+          store.currentWordIndex = -1
+          audio.seekTo(startTiming.timestampFrom)
+        }
+        return
+      }
+
+      if (store.repeatMode !== 'verse') {
+        return
+      }
+      const idx = store.currentVerseIndex
+      const timing = store.verseTimings[idx]
+      if (!timing) {
+        return
+      }
+      const from = timing.timestampFrom
+      const to =
+        timing.timestampTo != null ? timing.timestampTo : store.verseTimings[idx + 1]?.timestampFrom
+      if (to == null) {
+        return
+      }
+      // Left the verse window: either undershoot after seek, or advanced past end.
+      if (timeMs + 40 >= to || timeMs + 750 < from) {
+        store.currentWordIndex = -1
+        audio.seekTo(from)
       }
     }
   )

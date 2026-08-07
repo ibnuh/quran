@@ -22,12 +22,10 @@ export async function clearAudioRuntimeCaches() {
   const deleted = []
   try {
     const keys = await caches.keys()
+    // Exact names only: substring matching also wiped non-MP3 caches such as
+    // quran-audio-api (JSON/API responses).
     for (const name of keys) {
-      const isAudioCache =
-        AUDIO_RUNTIME_CACHE_NAMES.includes(name) ||
-        name.includes('quran-audio') ||
-        name.includes('quran-verse-audio')
-      if (isAudioCache) {
+      if (AUDIO_RUNTIME_CACHE_NAMES.includes(name)) {
         await caches.delete(name)
         deleted.push(name)
       }
@@ -64,5 +62,47 @@ export function isSwJustUpdated() {
     return sessionStorage.getItem(SW_JUST_UPDATED_KEY) === '1'
   } catch {
     return false
+  }
+}
+
+/**
+ * Activate a waiting service worker after user consent: clear audio caches,
+ * post SKIP_WAITING, and reload on controllerchange (with timeout fallback).
+ * @param {{ waiting?: ServiceWorker | null, updateSW?: ((reload?: boolean) => unknown) | null, reloadTimeoutMs?: number }} [opts]
+ */
+export async function applyWaitingServiceWorker(opts = {}) {
+  const reloadTimeoutMs = opts.reloadTimeoutMs ?? 2500
+  let waiting = opts.waiting || null
+  const updateSW = opts.updateSW
+
+  notifyBeforeSwUpdate()
+  markSwJustUpdated()
+  await clearAudioRuntimeCaches()
+
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    const reloadOnce = () => {
+      window.location.reload()
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', reloadOnce, { once: true })
+    setTimeout(reloadOnce, reloadTimeoutMs)
+
+    if (!waiting) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration()
+        waiting = reg?.waiting || null
+      } catch {
+        waiting = null
+      }
+    }
+  }
+
+  // Post SKIP_WAITING even when ServiceWorker registration APIs are unavailable
+  // (tests / restricted environments), as long as a waiting worker was provided.
+  if (waiting && typeof waiting.postMessage === 'function') {
+    waiting.postMessage({ type: 'SKIP_WAITING' })
+  }
+
+  if (typeof updateSW === 'function') {
+    await Promise.resolve(updateSW(true))
   }
 }

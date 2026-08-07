@@ -15,6 +15,7 @@ import { useDeepLink } from '../composables/useDeepLink.js'
 import { useSleepTimer } from '../composables/useSleepTimer.js'
 import { useSeo } from '../composables/useSeo.js'
 import { BEFORE_SW_UPDATE_EVENT } from '../utils/swAudio.js'
+import { ensureArabicFontStylesheet } from '../utils/arabicFonts.js'
 import THEMES, { resolveThemeId } from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
@@ -91,11 +92,25 @@ const useReadingLayout = computed(() => store.readingMode)
 
 useWordHighlight(store, audio, announce)
 useWakeLock(audio.isPlaying)
-const mediaSession = useMediaSession(store, {
-  togglePlay,
-  prevVerse: handlePrevVerse,
-  nextVerse: handleNextVerse
-})
+const mediaSession = useMediaSession(
+  store,
+  {
+    play: () => {
+      if (!audio.isPlaying.value) {
+        togglePlay()
+      }
+    },
+    pause: () => {
+      if (audio.isPlaying.value) {
+        audio.pause()
+      }
+    },
+    togglePlay,
+    prevVerse: handlePrevVerse,
+    nextVerse: handleNextVerse
+  },
+  audio
+)
 
 // -- Auto-hide controls --
 const {
@@ -133,7 +148,9 @@ function jumpToAyah(ayah) {
   }
 }
 
-function applyDeepLink(surah, ayah) {
+let deepLinkGen = 0
+
+async function applyDeepLink(surah, ayah) {
   if (surah === store.currentSurahNum) {
     if (ayah) {
       jumpToAyah(ayah)
@@ -141,18 +158,43 @@ function applyDeepLink(surah, ayah) {
     return
   }
   audio.stop()
-  const unsub = watch(
-    () => store.isLoading,
-    loading => {
-      if (!loading && !store.error) {
-        if (ayah) {
+  const gen = ++deepLinkGen
+  let unsub = null
+  const cleanup = () => {
+    if (unsub) {
+      unsub()
+      unsub = null
+    }
+  }
+  try {
+    // Cover the case where isLoading is still true after setSurah settles.
+    unsub = watch(
+      () => store.isLoading,
+      loading => {
+        if (loading || gen !== deepLinkGen) {
+          return
+        }
+        cleanup()
+        if (!store.error && ayah) {
           jumpToAyah(ayah)
         }
-        unsub()
       }
+    )
+    await store.setSurah(surah)
+    if (gen !== deepLinkGen) {
+      cleanup()
+      return
     }
-  )
-  store.setSurah(surah)
+    if (store.isLoading) {
+      return
+    }
+    cleanup()
+    if (!store.error && ayah) {
+      jumpToAyah(ayah)
+    }
+  } catch {
+    cleanup()
+  }
 }
 
 const deepLink = useDeepLink(applyDeepLink)
@@ -265,6 +307,8 @@ onMounted(async () => {
   // Play will attach the source and seek in the user-gesture path.
   mediaSession.update()
   checkMobileTip()
+  // Non-default Arabic faces are not in index.html; inject their stylesheets on demand.
+  ensureArabicFontStylesheet(store.arabicFont)
 
   window.addEventListener('online', onOnline)
   window.addEventListener('offline', onOffline)
@@ -278,6 +322,13 @@ onMounted(async () => {
   }
   updateHeaderHeight()
 })
+
+watch(
+  () => store.arabicFont,
+  fontId => {
+    ensureArabicFontStylesheet(fontId)
+  }
+)
 </script>
 
 <template>
@@ -298,6 +349,8 @@ onMounted(async () => {
         v-if="!isOnline"
         class="absolute top-0 left-0 right-0 z-50 bg-amber-600 text-white text-center text-xs pb-1.5 px-4 font-medium"
         style="padding-top: max(0.375rem, env(safe-area-inset-top, 0px))"
+        role="status"
+        aria-live="polite"
       >
         {{ $t('app.offline') }}
       </div>
@@ -315,6 +368,8 @@ onMounted(async () => {
           ? 'translate-y-0 opacity-100'
           : '-translate-y-full opacity-0 pointer-events-none'
       "
+      :inert="!controlsVisible"
+      :aria-hidden="controlsVisible ? undefined : 'true'"
     >
       <AppHeader
         @open-settings="showSettings = true"
@@ -331,7 +386,7 @@ onMounted(async () => {
 
     <main
       ref="mainRef"
-      class="h-full flex flex-col overflow-y-auto overflow-x-hidden scrollable cursor-pointer select-none max-w-full"
+      class="h-full flex flex-col overflow-y-auto overflow-x-hidden scrollable cursor-pointer max-w-full"
       :style="{
         transition: 'padding-top 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
         paddingTop: (headerHeight || 16) + 24 + 'px',
@@ -371,11 +426,14 @@ onMounted(async () => {
           ? 'translate-y-0 opacity-100'
           : 'translate-y-full opacity-0 pointer-events-none'
       "
+      :inert="!controlsVisible"
+      :aria-hidden="controlsVisible ? undefined : 'true'"
     >
       <PlayerControls
         :is-playing="audio.isPlaying.value"
         :is-loading="audio.isLoading.value"
         :is-seeking="audio.isSeeking.value"
+        :play-failed="audio.playFailed.value"
         :progress="audio.progress.value"
         :buffered="audio.buffered.value"
         :current-time-ms="audio.currentTimeMs.value"
@@ -392,6 +450,8 @@ onMounted(async () => {
         @set-speed="handleSetSpeed"
         @jump-to-verse="handleJumpToVerse"
         @set-sleep="sleepTimer.start"
+        @retry-play="togglePlay"
+        @dismiss-play-failed="audio.dismissPlayFailed()"
       />
     </div>
 
