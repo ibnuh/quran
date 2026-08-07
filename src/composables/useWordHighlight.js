@@ -1,5 +1,6 @@
 import { watch, onBeforeUnmount } from 'vue'
 import { SAVE_PREFS_DEBOUNCE } from '../config.js'
+import { t } from '../i18n/index.js'
 
 // Drives verse/word highlighting from audio playback time.
 // In "full" mode with word highlighting on, a requestAnimationFrame loop runs for
@@ -18,9 +19,39 @@ export function useWordHighlight(store, audio, announce) {
     const surah = store.currentSurah
     if (surah) {
       announce(
-        `Verse ${store.currentVerse?.number || idx + 1} of ${store.totalVerses}, ${surah.englishName}`
+        t('sr.verseChange', {
+          verse: store.currentVerse?.number || idx + 1,
+          total: store.totalVerses,
+          surah: surah.englishName
+        })
       )
     }
+  }
+
+  // Avoid thrashing reactive subscribers: only write when the value actually changes.
+  function setWordIndex(idx) {
+    if (store.currentWordIndex !== idx) {
+      store.currentWordIndex = idx
+    }
+  }
+
+  function resolveVerseIndex(timeMs) {
+    // Right after a manual verse seek, keep the explicitly-set index so MP3
+    // seek undershoot does not bounce it back to the previous verse.
+    if (audio.isVerseSeekActive()) {
+      return store.currentVerseIndex
+    }
+    // Single-verse repeat locks the highlighted verse; usePlayback seeks the
+    // playhead back when it leaves the window.
+    if (store.repeatMode === 'verse' && !store.abRepeat) {
+      return store.currentVerseIndex
+    }
+    // A-B repeat: clamp index inside the selected range while playing.
+    if (store.abRepeat) {
+      const raw = store.getVerseIndexAtTime(timeMs)
+      return Math.min(store.abRepeat.end, Math.max(store.abRepeat.start, raw))
+    }
+    return store.getVerseIndexAtTime(timeMs)
   }
 
   function startLoop() {
@@ -32,18 +63,14 @@ export function useWordHighlight(store, audio, announce) {
       const timeMs = audio.getLiveTimeMs()
       if (timeMs !== lastRafTimeMs) {
         lastRafTimeMs = timeMs
-        // Right after a manual verse seek, keep the explicitly-set index so MP3
-        // seek undershoot does not bounce it back to the previous verse.
-        const idx = audio.isVerseSeekActive()
-          ? store.currentVerseIndex
-          : store.getVerseIndexAtTime(timeMs)
+        const idx = resolveVerseIndex(timeMs)
         if (idx !== store.currentVerseIndex) {
           store.currentVerseIndex = idx
-          store.currentWordIndex = -1
+          setWordIndex(-1)
           debouncedSavePrefs()
           announceVerse(idx)
         }
-        store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
+        setWordIndex(store.getWordIndexAtTime(timeMs, idx))
         const dur = audio.duration.value
         if (dur > 0) {
           audio.progress.value = (timeMs / dur) * 100
@@ -68,18 +95,15 @@ export function useWordHighlight(store, audio, announce) {
       return
     }
     if (store.playbackMode === 'full') {
-      // Keep the manually-set index during the post-seek window (see RAF note).
-      const idx = audio.isVerseSeekActive()
-        ? store.currentVerseIndex
-        : store.getVerseIndexAtTime(timeMs)
+      const idx = resolveVerseIndex(timeMs)
       if (idx !== store.currentVerseIndex) {
         store.currentVerseIndex = idx
-        store.currentWordIndex = -1
+        setWordIndex(-1)
         debouncedSavePrefs()
         announceVerse(idx)
       }
       if (store.wordHighlight) {
-        store.currentWordIndex = store.getWordIndexAtTime(timeMs, idx)
+        setWordIndex(store.getWordIndexAtTime(timeMs, idx))
       }
     }
   })

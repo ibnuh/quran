@@ -23,12 +23,7 @@ const readingStyle = computed(() => ({
   textAlignLast: justify.value ? 'right' : 'auto'
 }))
 
-const canPlay = computed(
-  () =>
-    !store.audioUnavailable &&
-    !!store.playbackMode &&
-    (store.playbackMode === 'full' ? !!store.audioUrl : store.audioUrls.length > 0)
-)
+const canPlay = computed(() => store.canPlayAudio)
 
 // Bismillah for the surah header (not tied to current verse index).
 const showSurahBismillah = computed(
@@ -110,10 +105,7 @@ watch(
     nextTick(() => scrollToActive(false))
   }
 )
-watch(
-  () => [store.currentTranslation, store.showFootnotes],
-  closeFootnote
-)
+watch(() => [store.currentTranslation, store.showFootnotes], closeFootnote)
 
 onMounted(() => nextTick(() => scrollToActive(false)))
 </script>
@@ -133,12 +125,30 @@ onMounted(() => nextTick(() => scrollToActive(false)))
     <div
       v-for="(verse, i) in store.verses"
       :key="i"
+      v-memo="[
+        i === store.currentVerseIndex,
+        i === store.currentVerseIndex ? store.currentWordIndex : -1,
+        i === store.currentVerseIndex ? openFootnote : null,
+        plainTranslation(i),
+        store.arabicFontSize,
+        store.translationFontSize,
+        store.arabicFontFamily,
+        store.wordHighlight,
+        store.highlightStyle,
+        store.tajweed,
+        store.mushafMode,
+        store.justifyText,
+        store.verseEndOrnament,
+        store.showFootnotes,
+        store.readMode,
+        canPlay,
+        store.verseActions.bookmark,
+        store.verseActions.share,
+        store.verseActions.copy,
+        store.verseActions.tafsir
+      ]"
       class="reading-row w-full text-right rounded-xl px-4 py-4 mb-2 transition-[background-color,box-shadow,border-color] duration-200"
-      :class="
-        i === store.currentVerseIndex
-          ? 'reading-row-active'
-          : 'hover:bg-card/80'
-      "
+      :class="i === store.currentVerseIndex ? 'reading-row-active' : 'hover:bg-card/80'"
       :aria-current="i === store.currentVerseIndex ? 'true' : undefined"
     >
       <!-- Arabic + plain translation stay in one select control; interactive
@@ -149,7 +159,11 @@ onMounted(() => nextTick(() => scrollToActive(false)))
         :aria-label="$t('reading.selectVerse', { n: verse.number })"
         @click="emit('select', i)"
       >
-        <VerseArabic :index="i" :p-style="readingStyle">
+        <VerseArabic
+          :index="i"
+          :p-style="readingStyle"
+          :active-word-index="i === store.currentVerseIndex ? store.currentWordIndex : -1"
+        >
           <template #trailing>
             <span class="reading-ayah-num"
               ><span class="reading-ayah-num-inner">{{ verse.number }}</span></span

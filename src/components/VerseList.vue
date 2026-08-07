@@ -44,7 +44,7 @@ watch(
     <div
       class="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-end"
       role="dialog"
-      aria-label="Verse list"
+      :aria-label="$t('panels.allVerses')"
       aria-modal="true"
     >
       <div
@@ -83,7 +83,7 @@ watch(
 
           <div
             ref="listRef"
-            class="p-4 space-y-2"
+            class="p-4 space-y-2 verse-list-items"
             style="padding-right: max(1rem, env(safe-area-inset-right, 0px))"
           >
             <VerseItem
@@ -93,7 +93,7 @@ watch(
               :translation="store.translationVerses[i]"
               :is-active="i === store.currentVerseIndex"
               :class="{ 'verse-active': i === store.currentVerseIndex }"
-              class="scroll-mt-16"
+              class="scroll-mt-16 verse-list-item"
               @select="selectVerse(i)"
             />
           </div>
@@ -104,6 +104,12 @@ watch(
 </template>
 
 <style scoped>
+/* Skip painting off-screen rows in long surahs without a virtualizer dependency. */
+.verse-list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 5.5rem;
+}
+
 .panel-enter-active {
   transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }

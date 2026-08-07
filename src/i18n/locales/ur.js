@@ -72,11 +72,16 @@ export default {
     clear: 'صاف کریں',
     sleepTimer: 'سلیپ ٹائمر',
     audioUnavailable: 'اس سورہ کے لیے آڈیو دستیاب نہیں',
+    playFailed: 'چلانے میں ناکامی۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
+    retryPlay: 'دوبارہ کوشش',
+    dismissPlayFailed: 'بند کریں',
     verseOf: 'آیت {current} از {total}',
     jumpToVerse: 'آیت پر جائیں',
     goTo: 'جائیں',
     go: 'جائیں',
-    seek: 'آڈیو منتقل کریں'
+    seek: 'آڈیو منتقل کریں',
+    seekValueOf: '{current} از {total}',
+    noAudioLoaded: 'کوئی آڈیو لوڈ نہیں'
   },
   verse: {
     actions: 'آیت کی کارروائیاں',
@@ -230,6 +235,10 @@ export default {
     selectVerse: 'آیت {n} منتخب کریں',
     playFromHere: 'یہاں سے چلائیں'
   },
+  sr: {
+    verseChange: 'آیت {verse} از {total}، {surah}',
+    verseOf: 'آیت {current} از {total}، {surah}'
+  },
   feature: {
     footnotesTitle: 'نیا: ترجمے کے حواشی',
     footnotesBody:
@@ -260,6 +269,10 @@ export default {
     description: 'فوری رسائی کے لیے اپنی ہوم اسکرین میں شامل کریں۔',
     install: 'انسٹال',
     dismiss: 'برخاست'
+  },
+  common: {
+    noResults: 'کوئی نتیجہ نہیں ملا',
+    of: 'از'
   },
   notFound: {
     title: 'صفحہ نہیں ملا',

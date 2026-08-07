@@ -72,11 +72,16 @@ export default {
     clear: 'Clear',
     sleepTimer: 'Sleep timer',
     audioUnavailable: 'Audio is not available for this surah',
+    playFailed: 'Playback failed. Check your connection and try again.',
+    retryPlay: 'Retry',
+    dismissPlayFailed: 'Dismiss',
     verseOf: 'Verse {current} of {total}',
     jumpToVerse: 'Jump to verse',
     goTo: 'Go to',
     go: 'Go',
-    seek: 'Seek audio'
+    seek: 'Seek audio',
+    seekValueOf: '{current} of {total}',
+    noAudioLoaded: 'No audio loaded'
   },
   verse: {
     actions: 'Verse actions',
@@ -229,6 +234,10 @@ export default {
     selectVerse: 'Select verse {n}',
     playFromHere: 'Play from here'
   },
+  sr: {
+    verseChange: 'Verse {verse} of {total}, {surah}',
+    verseOf: 'Verse {current} of {total}, {surah}'
+  },
   feature: {
     footnotesTitle: 'New: translation footnotes',
     footnotesBody:
@@ -259,6 +268,10 @@ export default {
     description: 'Add to your home screen for quick access.',
     install: 'Install',
     dismiss: 'Dismiss'
+  },
+  common: {
+    noResults: 'No results found',
+    of: 'of'
   },
   notFound: {
     title: 'Page not found',

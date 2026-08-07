@@ -25,6 +25,15 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(commitHash)
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia', 'vue-i18n']
+        }
+      }
+    }
+  },
   plugins: [
     vue(),
     tailwindcss(),

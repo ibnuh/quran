@@ -72,11 +72,16 @@ export default {
     clear: 'مسح',
     sleepTimer: 'مؤقت النوم',
     audioUnavailable: 'الصوت غير متوفر لهذه السورة',
+    playFailed: 'فشل التشغيل. تحقق من اتصالك وحاول مرة أخرى.',
+    retryPlay: 'إعادة المحاولة',
+    dismissPlayFailed: 'تجاهل',
     verseOf: 'الآية {current} من {total}',
     jumpToVerse: 'الانتقال إلى آية',
     goTo: 'انتقل إلى',
     go: 'انتقال',
-    seek: 'تغيير موضع الصوت'
+    seek: 'تغيير موضع الصوت',
+    seekValueOf: '{current} من {total}',
+    noAudioLoaded: 'لا يوجد صوت محمّل'
   },
   verse: {
     actions: 'إجراءات الآية',
@@ -229,6 +234,10 @@ export default {
     selectVerse: 'تحديد الآية {n}',
     playFromHere: 'تشغيل من هنا'
   },
+  sr: {
+    verseChange: 'الآية {verse} من {total}، {surah}',
+    verseOf: 'الآية {current} من {total}، {surah}'
+  },
   feature: {
     footnotesTitle: 'جديد: حواشي الترجمة',
     footnotesBody:
@@ -259,6 +268,10 @@ export default {
     description: 'أضفه إلى شاشتك الرئيسية للوصول السريع.',
     install: 'تثبيت',
     dismiss: 'تجاهل'
+  },
+  common: {
+    noResults: 'لا توجد نتائج',
+    of: 'من'
   },
   notFound: {
     title: 'الصفحة غير موجودة',

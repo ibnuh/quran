@@ -2,11 +2,26 @@ import { onMounted, onBeforeUnmount } from 'vue'
 
 export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp }) {
   function handler(e) {
-    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') {
+    const target = e.target
+    if (!target) {
+      return
+    }
+    const tag = target.tagName
+    // Ignore when focus is on interactive controls so Space/arrows keep native behavior.
+    if (
+      tag === 'SELECT' ||
+      tag === 'INPUT' ||
+      tag === 'TEXTAREA' ||
+      tag === 'BUTTON' ||
+      tag === 'A'
+    ) {
+      return
+    }
+    if (target.closest('[role="slider"], [role="menu"], [role="menuitem"], button, a, textarea')) {
       return
     }
     // Don't handle shortcuts when a modal/dialog is open (except ? for help toggle)
-    if (e.target.closest('[role="dialog"]') && e.key !== '?') {
+    if (target.closest('[role="dialog"]') && e.key !== '?') {
       return
     }
 

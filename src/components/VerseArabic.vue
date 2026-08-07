@@ -19,7 +19,10 @@ const props = defineProps({
   index: { type: Number, required: true },
   pStyle: { type: Object, default: () => ({}) },
   pClass: { type: String, default: '' },
-  animate: { type: Boolean, default: false }
+  animate: { type: Boolean, default: false },
+  // When provided by a parent list (e.g. ReadingView), inactive rows pass -1 so they
+  // do not subscribe to store.currentWordIndex and re-render on every word tick.
+  activeWordIndex: { type: Number, default: undefined }
 })
 const store = usePlayerStore()
 
@@ -40,10 +43,14 @@ const hasWordTimings = computed(() => {
   const timing = store.verseTimings[props.index]
   return !!(timing && timing.segments && timing.segments.length > 0)
 })
-// Word highlight only applies to the verse currently being recited.
-const activeWordIndex = computed(() =>
-  props.index === store.currentVerseIndex ? store.currentWordIndex : -1
-)
+// Prefer the prop when the parent isolates the active verse; otherwise fall back to
+// store (single-verse display only ever renders the current index).
+const activeWordIndex = computed(() => {
+  if (props.activeWordIndex !== undefined) {
+    return props.activeWordIndex
+  }
+  return props.index === store.currentVerseIndex ? store.currentWordIndex : -1
+})
 const wordHighlightOn = computed(() => store.wordHighlight && hasWordTimings.value)
 const tajweedHighlightActive = computed(() => tajweedActive.value && wordHighlightOn.value)
 
