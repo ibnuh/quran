@@ -662,7 +662,8 @@ function clearRepeat() {
 
 .audio-unavailable,
 .audio-play-failed {
-  color: color-mix(in srgb, var(--color-accent) 90%, var(--color-body));
+  /* Mix accent with body so small text stays WCAG AA on light surfaces. */
+  color: color-mix(in srgb, var(--color-accent) 55%, var(--color-body));
   background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
   border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
 }

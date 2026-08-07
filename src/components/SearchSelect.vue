@@ -278,19 +278,11 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   text-transform: uppercase;
   padding: 0.22rem 0.45rem;
   border-radius: 9999px;
-  /* Stronger contrast than primary-on-tint (axe color-contrast on light themes). */
-  color: var(--color-primary-dark, #0d4a33);
-  background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  /* Solid primary + white text: reliable WCAG AA on all themes. */
+  color: #ffffff;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
   white-space: nowrap;
-}
-[data-theme='dark'] .ss-badge,
-[data-theme='black'] .ss-badge,
-[data-theme='midnight'] .ss-badge,
-[data-theme='nature'] .ss-badge,
-[data-theme='sunset'] .ss-badge {
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-card));
 }
 
 .option-item {

@@ -218,7 +218,8 @@ export function mockApi(page) {
       body: JSON.stringify({
         audio_files: [
           {
-            audio_url: 'https://example.com/audio.mp3',
+            // Must use an allowlisted audio host (see ALLOWED_AUDIO_HOSTS in config.js).
+            audio_url: 'https://download.quranicaudio.com/quran/mock/001.mp3',
             duration: 70000,
             verse_timings: Array.from({ length: 7 }, (_, i) => ({
               verse_key: `1:${i + 1}`,

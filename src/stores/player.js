@@ -43,10 +43,14 @@ const TRANSLATION_IDS = new Set(TRANSLATIONS.map(t => t.identifier))
 const TAFSIR_IDS = new Set(TAFSIRS.map(t => t.id))
 
 function flushPendingPreferences() {
-  if (savePrefsTimer) {
-    clearTimeout(savePrefsTimer)
-    savePrefsTimer = null
+  // Only flush when a debounced write is actually pending. Always writing on
+  // pagehide would overwrite localStorage that tests (or other tabs) just set
+  // before a reload, clobbering the intended prefs.
+  if (!savePrefsTimer) {
+    return
   }
+  clearTimeout(savePrefsTimer)
+  savePrefsTimer = null
   if (prefsFlushStore) {
     prefsFlushStore.writePreferencesNow()
   }
@@ -953,15 +957,16 @@ export const usePlayerStore = defineStore('player', {
     },
 
     async applyArabicFont(id, { save = true } = {}) {
+      // Apply the id immediately so concurrent savePreferences (e.g. loadSurah)
+      // never rewrites localStorage with the previous default font.
+      this.arabicFont = id
+      if (save) {
+        this.savePreferences()
+      }
       const requestId = ++latestArabicFontRequestId
       await ensureArabicFontLoaded(id)
       if (requestId !== latestArabicFontRequestId) {
         return
-      }
-
-      this.arabicFont = id
-      if (save) {
-        this.savePreferences()
       }
     },
 
@@ -1133,16 +1138,16 @@ export const usePlayerStore = defineStore('player', {
       this.savePreferences()
     },
 
-    // Debounced write so rapid UI changes do not thrash localStorage.
+    // Immediate write for durable user actions (bookmarks, theme, surah). High-frequency
+    // callers (word highlight) already debounce via SAVE_PREFS_DEBOUNCE before calling.
+    // pagehide/visibility only flush a pending timer if one is ever scheduled.
     savePreferences() {
       ensurePrefsFlushListeners(this)
       if (savePrefsTimer) {
         clearTimeout(savePrefsTimer)
-      }
-      savePrefsTimer = setTimeout(() => {
         savePrefsTimer = null
-        this.writePreferencesNow()
-      }, SAVE_PREFS_DEBOUNCE)
+      }
+      this.writePreferencesNow()
     },
 
     writePreferencesNow() {

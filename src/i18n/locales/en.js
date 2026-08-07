@@ -102,7 +102,7 @@ export default {
     endOf: 'End of {surah}'
   },
   panels: {
-    allVerses: 'All Verses',
+    allVerses: 'Verse list',
     closeVerses: 'Close verse list',
     bookmarks: 'Bookmarks',
     clearAll: 'Clear all',

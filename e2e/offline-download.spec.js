@@ -3,7 +3,7 @@ import { test, expect, mockApi, startFresh } from './fixtures.js'
 test.beforeEach(async ({ page }) => {
   mockApi(page)
   // Let the audio file fetch succeed so the download completes.
-  await page.route(/example\.com\/audio\.mp3/, route =>
+  await page.route(/download\.quranicaudio\.com\/.*\.mp3/, route =>
     route.fulfill({ status: 200, contentType: 'audio/mpeg', body: 'x' })
   )
   await startFresh(page)

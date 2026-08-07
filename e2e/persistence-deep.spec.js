@@ -29,7 +29,8 @@ test('reciter preference persists across reload', async ({ page }) => {
   await page.evaluate(() => {
     const raw = localStorage.getItem('quran-player-prefs')
     const prefs = raw ? JSON.parse(raw) : {}
-    prefs.reciter = 'abdul_basit'
+    // Must use a real catalog id; invalid ids are dropped by normalizePrefs.
+    prefs.reciter = 'abdulbasit-murattal'
     localStorage.setItem('quran-player-prefs', JSON.stringify(prefs))
   })
   await page.reload()
@@ -38,7 +39,7 @@ test('reciter preference persists across reload', async ({ page }) => {
     const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw).reciter : null
   }, STORAGE_KEY)
-  expect(stored).toBe('abdul_basit')
+  expect(stored).toBe('abdulbasit-murattal')
 })
 
 test('arabic font preference persists', async ({ page }) => {
@@ -46,7 +47,8 @@ test('arabic font preference persists', async ({ page }) => {
   await page.evaluate(() => {
     const raw = localStorage.getItem('quran-player-prefs')
     const prefs = raw ? JSON.parse(raw) : {}
-    prefs.arabicFont = 'uthmanic-hafs'
+    // Must use a real catalog id; invalid ids are dropped by normalizePrefs.
+    prefs.arabicFont = 'uthmanic'
     localStorage.setItem('quran-player-prefs', JSON.stringify(prefs))
   })
   await page.reload()
@@ -55,7 +57,7 @@ test('arabic font preference persists', async ({ page }) => {
     const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw).arabicFont : null
   }, STORAGE_KEY)
-  expect(stored).toBe('uthmanic-hafs')
+  expect(stored).toBe('uthmanic')
 })
 
 test('all preference fields are saved in localStorage', async ({ page }) => {
