@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('page loads with default surah Al-Fatiha (surah 1)', async ({ page }) => {
-  await expect(page.locator('h1')).toBeVisible()
+  await expect(page.locator('h1.surah-title')).toBeVisible()
   await expect(page.locator('.verse-arabic')).toBeVisible()
   await expect(page.getByText('Juz 1')).toBeVisible()
 })
