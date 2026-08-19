@@ -48,14 +48,20 @@ export function useMediaSession(store, handlers, audio = null) {
         pause()
       }
     })
+    // At a surah boundary the verse buttons have nowhere to go; fall through to
+    // the adjacent surah so lock-screen prev/next never turn into dead buttons.
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       if (store.canPrevVerse) {
         handlers.prevVerse()
+      } else if (store.canPrevSurah && typeof handlers.prevSurah === 'function') {
+        handlers.prevSurah()
       }
     })
     navigator.mediaSession.setActionHandler('nexttrack', () => {
       if (store.canNextVerse) {
         handlers.nextVerse()
+      } else if (store.canNextSurah && typeof handlers.nextSurah === 'function') {
+        handlers.nextSurah()
       }
     })
   }
