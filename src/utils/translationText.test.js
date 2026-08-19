@@ -58,6 +58,24 @@ describe('parseTranslationText', () => {
     expect(result.text).toBe('Allah & His messengers')
   })
 
+  it('decodes numeric entities above the BMP without corrupting them', () => {
+    // U+1EE00 ARABIC MATHEMATICAL ALEF; fromCharCode would truncate this to a
+    // lone surrogate. Force the tag path so decodeEntities runs on stripped text.
+    const result = parseTranslationText('<i>mark &#126464; here</i>')
+    expect(result.text).toBe('mark \u{1EE00} here')
+  })
+
+  it('decodes hex entities above the BMP', () => {
+    const result = parseTranslationText('<i>mark &#x1EE00; here</i>')
+    expect(result.text).toBe('mark \u{1EE00} here')
+  })
+
+  it('keeps invalid numeric entities as literal text', () => {
+    // 0x110000 is above the Unicode range; fromCodePoint would throw on it.
+    const result = parseTranslationText('<i>bad &#1114112; entity</i>')
+    expect(result.text).toBe('bad &#1114112; entity')
+  })
+
   it('handles empty input', () => {
     expect(parseTranslationText('')).toEqual({ text: '', segments: [], footnotes: [] })
     expect(parseTranslationText(null)).toEqual({ text: '', segments: [], footnotes: [] })

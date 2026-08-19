@@ -162,6 +162,11 @@ function normalizePrefs(prefs) {
   if (out.surah !== undefined && (out.surah < 1 || out.surah > TOTAL_SURAHS)) {
     out.surah = undefined
   }
+  // loadSurah clamps indexes past the end of the surah, but a negative or
+  // non-integer index would survive that check and leave currentVerse null.
+  if (out.verse !== undefined && (!Number.isInteger(out.verse) || out.verse < 0)) {
+    out.verse = undefined
+  }
   // Clamp into the supported range: out-of-range rates throw NotSupportedError
   // when applied to the media element on boot.
   if (typeof out.playbackSpeed === 'number' && Number.isFinite(out.playbackSpeed)) {
