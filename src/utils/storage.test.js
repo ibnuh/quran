@@ -1,9 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import {
-  safeLocalStorageGet,
-  safeLocalStorageSet,
-  safeLocalStorageRemove
-} from './storage.js'
+import { safeLocalStorageGet, safeLocalStorageSet, safeLocalStorageRemove } from './storage.js'
 
 const KEY = 'storage-test-key'
 
