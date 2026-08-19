@@ -17,6 +17,11 @@ export function useSleepTimer(onExpire) {
     remainingMs.value = 0
   }
 
+  function expire() {
+    onExpire()
+    clear()
+  }
+
   function start(minutes) {
     clear()
     if (!minutes) {
@@ -25,12 +30,16 @@ export function useSleepTimer(onExpire) {
     activeMinutes.value = minutes
     endAt = Date.now() + minutes * 60000
     remainingMs.value = minutes * 60000
-    timeout = setTimeout(() => {
-      onExpire()
-      clear()
-    }, minutes * 60000)
+    timeout = setTimeout(expire, minutes * 60000)
     interval = setInterval(() => {
-      remainingMs.value = Math.max(0, endAt - Date.now())
+      const remaining = Math.max(0, endAt - Date.now())
+      remainingMs.value = remaining
+      // Safety net: background tabs throttle long timeouts, so the deadline can
+      // pass long before the timeout fires. Expire on wall-clock time instead of
+      // letting playback overshoot; clear() below also cancels the stale timeout.
+      if (remaining <= 0) {
+        expire()
+      }
     }, 1000)
   }
 

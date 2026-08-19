@@ -45,13 +45,23 @@ const valueText = computed(() => {
   return t('controls.noAudioLoaded')
 })
 
+// In RTL layouts (Arabic/Urdu UI set dir="rtl" on the root) the track fills from
+// the right, so pointer math and horizontal arrow keys must mirror.
+function isRtl() {
+  const dirEl = barRef.value?.closest?.('[dir]')
+  return (dirEl?.getAttribute('dir') || '').toLowerCase() === 'rtl'
+}
+
 function onKeydown(e) {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+  // Horizontal arrows follow the visual direction, matching native range inputs.
+  const increaseKey = isRtl() ? 'ArrowLeft' : 'ArrowRight'
+  const decreaseKey = isRtl() ? 'ArrowRight' : 'ArrowLeft'
+  if (e.key === increaseKey || e.key === 'ArrowUp') {
     e.preventDefault()
     e.stopPropagation()
     const step = e.shiftKey ? 0.1 : 0.02
     emit('seek', Math.min(1, displayRatio.value + step))
-  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+  } else if (e.key === decreaseKey || e.key === 'ArrowDown') {
     e.preventDefault()
     e.stopPropagation()
     const step = e.shiftKey ? 0.1 : 0.02
@@ -72,7 +82,8 @@ function getSeekRatio(e) {
   if (rect.width <= 0) {
     return 0
   }
-  return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  const raw = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  return isRtl() ? 1 - raw : raw
 }
 
 function onPointerDown(e) {
@@ -133,7 +144,7 @@ function onPointerCancel(e) {
       <div
         class="progress-thumb"
         :class="{ 'progress-thumb-active': isDragging }"
-        :style="{ left: displayProgress + '%' }"
+        :style="{ insetInlineStart: displayProgress + '%' }"
       ></div>
     </div>
     <div class="flex justify-between mt-1.5" :class="durationMs > 0 ? '' : 'invisible'">
@@ -169,9 +180,12 @@ function onPointerCancel(e) {
 .progress-wrapper:focus-visible .progress-track {
   height: 6px;
 }
+/* Anchor to the inline start so the elapsed part grows from the right in RTL. */
 .progress-buffered {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 0;
   height: 100%;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--color-muted) 28%, transparent);
@@ -179,7 +193,9 @@ function onPointerCancel(e) {
 }
 .progress-fill {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 0;
   height: 100%;
   border-radius: 9999px;
   background: linear-gradient(
@@ -207,15 +223,18 @@ function onPointerCancel(e) {
     transform: translateX(560%);
   }
 }
+/* Horizontal centering uses a logical margin (not translateX) so the thumb sits
+   on the playhead in both LTR and RTL layouts. */
 .progress-thumb {
   position: absolute;
   top: 50%;
   width: 14px;
   height: 14px;
+  margin-inline-start: -7px;
   border-radius: 50%;
   background: var(--color-primary);
   border: 2px solid color-mix(in srgb, var(--color-card) 90%, #fff);
-  transform: translate(-50%, -50%) scale(0);
+  transform: translateY(-50%) scale(0);
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   pointer-events: none;
   box-shadow: 0 1px 4px color-mix(in srgb, #000 18%, transparent);
@@ -224,7 +243,7 @@ function onPointerCancel(e) {
 .progress-wrapper:hover .progress-thumb,
 .progress-wrapper:focus-visible .progress-thumb,
 .progress-thumb-active {
-  transform: translate(-50%, -50%) scale(1) !important;
+  transform: translateY(-50%) scale(1) !important;
 }
 .progress-thumb-active {
   box-shadow:
@@ -242,7 +261,8 @@ function onPointerCancel(e) {
   .progress-thumb {
     width: 18px;
     height: 18px;
-    transform: translate(-50%, -50%) scale(1);
+    margin-inline-start: -9px;
+    transform: translateY(-50%) scale(1);
   }
 }
 
