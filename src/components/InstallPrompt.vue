@@ -23,10 +23,15 @@ async function install() {
   if (!prompt) {
     return
   }
-  prompt.prompt()
-  const { outcome } = await prompt.userChoice
+  try {
+    // prompt() is one-shot and throws if it was already consumed (or is
+    // blocked); never leave that as an unhandled rejection.
+    prompt.prompt()
+    await prompt.userChoice
+  } catch {
+    // Fall through: the prompt is spent either way.
+  }
   show.value = false
-  // Prompt is consumed after use regardless of outcome
   window.__pwaInstallPrompt = null
 }
 

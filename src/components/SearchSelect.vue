@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, nextTick, watch, onBeforeUnmount, useId } from 'vue'
+import { useFocusTrap } from '../composables/useFocusTrap.js'
 
 const props = defineProps({
   modelValue: [String, Number],
@@ -16,8 +17,15 @@ const emit = defineEmits(['update:modelValue'])
 const isOpen = ref(false)
 const query = ref('')
 const inputRef = ref(null)
+const dialogRef = ref(null)
 const listboxId = useId()
 const highlightedIndex = ref(-1)
+
+// Keep Tab focus inside the picker while it is open (and suppress any outer
+// dialog's trap, e.g. Settings). autoFocus stays off: open() already focuses
+// the search input, except on touch devices where popping the keyboard is
+// deliberately avoided. Escape is handled by onKeydown below.
+useFocusTrap(dialogRef, { autoFocus: false })
 
 const selectedOption = computed(() =>
   props.options.find(o => o[props.valueKey] === props.modelValue)
@@ -161,6 +169,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
         ></div>
 
         <div
+          ref="dialogRef"
           class="relative bg-card w-full sm:max-w-md sm:rounded-2xl rounded-b-2xl sm:rounded-2xl shadow-2xl max-h-[85dvh] flex flex-col"
         >
           <div class="px-4 pb-2" style="padding-top: max(1rem, env(safe-area-inset-top, 0px))">

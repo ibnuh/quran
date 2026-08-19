@@ -76,6 +76,12 @@ function onClickOutside(e) {
   }
 }
 
+function onToolsMenuKeydown(e) {
+  if (e.key === 'Escape') {
+    showToolsMenu.value = false
+  }
+}
+
 function onSpeedMenuKeydown(e) {
   if (!showSpeedMenu.value) {
     return
@@ -483,6 +489,7 @@ function clearRepeat() {
               <div
                 v-if="showToolsMenu"
                 class="absolute bottom-full right-0 mb-2 bg-card rounded-xl shadow-2xl border border-border p-3 z-50 w-60 text-left space-y-4"
+                @keydown="onToolsMenuKeydown"
               >
                 <!-- Volume -->
                 <div>
