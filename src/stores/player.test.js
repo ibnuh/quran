@@ -177,6 +177,36 @@ describe('preferences persistence', () => {
     expect(store.currentSurahNum).toBe(1)
   })
 
+  it('drops a negative stored verse index', () => {
+    // loadSurah only clamps indexes past the end; a negative or non-integer
+    // index would survive it and leave currentVerse null.
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ verse: -3 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentVerseIndex).toBe(0)
+  })
+
+  it('drops a non-numeric stored verse index', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ verse: '5' }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentVerseIndex).toBe(0)
+  })
+
+  it('drops a fractional stored verse index', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ verse: 2.5 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentVerseIndex).toBe(0)
+  })
+
+  it('keeps a valid stored verse index', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ verse: 5 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentVerseIndex).toBe(5)
+  })
+
   it('ignores an unknown theme', () => {
     localStorage.setItem('quran-player-prefs', JSON.stringify({ theme: 'neon' }))
     const store = usePlayerStore()
