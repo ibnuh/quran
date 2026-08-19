@@ -184,6 +184,29 @@ describe('preferences persistence', () => {
     expect(store.theme).toBe('light')
   })
 
+  it('clamps a stored playbackSpeed above the supported range', () => {
+    // Out-of-range rates would throw NotSupportedError when applied to the
+    // media element on boot, so persisted values must be clamped.
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ playbackSpeed: 100 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.playbackSpeed).toBe(2)
+  })
+
+  it('clamps a stored playbackSpeed below the supported range', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ playbackSpeed: 0.01 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.playbackSpeed).toBe(0.5)
+  })
+
+  it('drops a non-numeric playbackSpeed and keeps the default', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ playbackSpeed: 'fast' }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.playbackSpeed).toBe(1)
+  })
+
   it('drops invalid highlightStyle, repeatMode, and tafsirSource', () => {
     localStorage.setItem(
       'quran-player-prefs',
@@ -204,6 +227,22 @@ describe('preferences persistence', () => {
     expect(store.volume).toBe(1)
     expect(store.extraTranslations).toEqual(['en.sahih'])
     expect(store.bookmarks).toEqual([{ surahNum: 1, verseIndex: 0 }])
+  })
+})
+
+describe('setJuz', () => {
+  it('persists the juz start verse so a reload restores it', async () => {
+    const store = usePlayerStore()
+    store.loadSurah = async () => {
+      // Juz 2 starts at Al-Baqara (2) verse 142.
+      store.verses = Array.from({ length: 286 }, (_, i) => ({ number: i + 1, text: 'كلمة' }))
+      store.translationVerses = store.verses.map(v => ({ number: v.number, text: 'x' }))
+    }
+    await store.setJuz(2)
+    expect(store.currentSurahNum).toBe(2)
+    expect(store.currentVerseIndex).toBe(141)
+    const saved = JSON.parse(localStorage.getItem('quran-player-prefs'))
+    expect(saved.verse).toBe(141)
   })
 })
 

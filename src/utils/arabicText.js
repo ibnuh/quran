@@ -18,6 +18,33 @@ export function toArabicDigits(value) {
   return String(value).replace(/\d/g, d => ARABIC_DIGITS[Number(d)])
 }
 
+// Harakat/tanween (U+064B-U+065F), dagger alef (U+0670), Quranic annotation marks
+// (U+06D6-U+06ED), and tatweel (U+0640): all display-only, never typed in searches.
+const ARABIC_MARKS_RE = /[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g
+
+// Fold Arabic text for search matching: strip vocalization marks, unify the
+// letter variants users type interchangeably (alef forms, yeh forms, teh
+// marbuta), and convert Arabic-Indic digits to ASCII. The canonical Uthmani
+// data is fully vocalized (e.g. "سُورَةُ ٱلْفَاتِحَةِ"), so a plain query like
+// "الفاتحة" can only match after both sides pass through this fold.
+export function normalizeArabicForSearch(text) {
+  if (!text) {
+    return ''
+  }
+  return String(text)
+    .replace(ARABIC_MARKS_RE, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/[ىی]/g, 'ي')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
 // Tajweed rule colors (mid-tones chosen to read on both light and dark themes).
 export const TAJWEED_COLORS = {
   ghunnah: '#e07b39',
