@@ -12,6 +12,7 @@ import ARABIC_FONTS from '../data/fonts.js'
 import THEMES from '../data/themes.js'
 import { TAJWEED_RULES, tajweedColor } from '../utils/arabicText.js'
 import { t, UI_LOCALES } from '../i18n/index.js'
+import { safeLocalStorageRemove } from '../utils/storage.js'
 import {
   STORAGE_KEY,
   TIP_DISMISSED_KEY,
@@ -69,9 +70,14 @@ const canInstall = ref(!!window.__pwaInstallPrompt)
 async function installApp() {
   const prompt = window.__pwaInstallPrompt
   if (prompt) {
-    prompt.prompt()
-    const { outcome } = await prompt.userChoice
-    // Prompt is consumed after use regardless of outcome
+    try {
+      // prompt() is one-shot and throws if it was already consumed (or is
+      // blocked); never leave that as an unhandled rejection.
+      prompt.prompt()
+      await prompt.userChoice
+    } catch {
+      // Fall through: the prompt is spent either way.
+    }
     window.__pwaInstallPrompt = null
     canInstall.value = false
   } else if (isIOS) {
@@ -145,10 +151,10 @@ async function forceUpdate() {
 // Reset settings
 function resetSettings() {
   if (confirm(t('settings.resetConfirm'))) {
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem(TIP_DISMISSED_KEY)
-    localStorage.removeItem(PWA_INSTALL_DISMISSED_KEY)
-    localStorage.removeItem(FOOTNOTES_ANNOUNCED_KEY)
+    safeLocalStorageRemove(STORAGE_KEY)
+    safeLocalStorageRemove(TIP_DISMISSED_KEY)
+    safeLocalStorageRemove(PWA_INSTALL_DISMISSED_KEY)
+    safeLocalStorageRemove(FOOTNOTES_ANNOUNCED_KEY)
     window.location.reload()
   }
 }

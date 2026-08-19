@@ -91,7 +91,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
         v-if="showPicker"
         role="grid"
         :aria-label="$t('header.selectJuz')"
-        class="absolute left-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 w-[220px]"
+        class="absolute start-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 w-[220px]"
       >
         <div class="grid grid-cols-5 gap-1">
           <button

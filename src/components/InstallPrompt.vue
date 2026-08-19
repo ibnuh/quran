@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { PWA_INSTALL_DISMISSED_KEY } from '../config.js'
+import { safeLocalStorageGet, safeLocalStorageSet } from '../utils/storage.js'
 
 const show = ref(false)
 const DISMISSED_KEY = PWA_INSTALL_DISMISSED_KEY
@@ -9,7 +10,7 @@ function checkPrompt() {
   if (!window.__pwaInstallPrompt) {
     return
   }
-  const dismissed = localStorage.getItem(DISMISSED_KEY)
+  const dismissed = safeLocalStorageGet(DISMISSED_KEY)
   if (dismissed) {
     return
   }
@@ -37,7 +38,7 @@ async function install() {
 
 function dismiss() {
   show.value = false
-  localStorage.setItem(DISMISSED_KEY, '1')
+  safeLocalStorageSet(DISMISSED_KEY, '1')
 }
 
 function onInstalled() {

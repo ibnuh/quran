@@ -496,7 +496,7 @@ onBeforeUnmount(() => {
             <div
               v-if="showThemePicker"
               role="menu"
-              class="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[160px]"
+              class="absolute end-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-2 z-50 min-w-[160px]"
               @keydown="onThemePickerKeydown"
             >
               <button
@@ -515,7 +515,7 @@ onBeforeUnmount(() => {
                 <span>{{ $t('header.auto') }}</span>
                 <svg
                   v-if="store.theme === 'auto'"
-                  class="ml-auto w-4 h-4 text-primary"
+                  class="ms-auto w-4 h-4 text-primary"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
@@ -537,7 +537,7 @@ onBeforeUnmount(() => {
                 <span>{{ theme.name }}</span>
                 <svg
                   v-if="store.theme === theme.id"
-                  class="ml-auto w-4 h-4 text-primary"
+                  class="ms-auto w-4 h-4 text-primary"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
@@ -596,7 +596,7 @@ onBeforeUnmount(() => {
             <div
               v-if="showMoreMenu"
               role="menu"
-              class="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-1.5 z-50 min-w-[180px]"
+              class="absolute end-0 top-full mt-2 bg-card rounded-xl shadow-2xl border border-border p-1.5 z-50 min-w-[180px]"
               @keydown="onMoreMenuKeydown"
             >
               <button
@@ -867,10 +867,11 @@ onBeforeUnmount(() => {
 
 .mode-menu {
   overflow: hidden;
-  /* Desktop / tablet: anchor to the trigger's right edge. */
+  /* Desktop / tablet: anchor to the trigger's inline-end edge so the panel
+     opens toward the content in both LTR and RTL layouts. */
   position: absolute;
   top: calc(100% + 0.5rem);
-  right: 0;
+  inset-inline-end: 0;
   width: min(18.5rem, calc(100vw - 1.5rem));
 }
 /* Mobile: center in the viewport so a wide panel is not pinned to the right cluster. */

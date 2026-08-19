@@ -43,17 +43,17 @@ const updateSW = registerSW({
     if (!registration) {
       return
     }
+    // update() rejects while offline; swallow it so periodic checks never
+    // surface as unhandled promise rejections.
+    const checkForUpdate = () => {
+      registration.update().catch(() => {})
+    }
     // Periodic update check while the tab stays open.
-    setInterval(
-      () => {
-        registration.update()
-      },
-      30 * 60 * 1000
-    )
+    setInterval(checkForUpdate, 30 * 60 * 1000)
     // Re-check when the user returns to the tab (covers long backgrounded sessions).
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        registration.update()
+        checkForUpdate()
       }
     })
   }
