@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { fetchFootnote } from '../services/api.js'
+import { isRtlDocument } from '../utils/direction.js'
 
 const props = defineProps({
   footnoteId: { type: Number, required: true },
@@ -27,7 +28,10 @@ function onKeydown(e) {
     e.preventDefault()
     e.stopPropagation()
     if (hasMultiple.value) {
-      goRelative(e.key === 'ArrowRight' ? 1 : -1)
+      // Note markers lay out right to left in RTL, so the "next note" arrow
+      // follows the visual direction like the rest of the horizontal keys.
+      const forwardKey = isRtlDocument() ? 'ArrowLeft' : 'ArrowRight'
+      goRelative(e.key === forwardKey ? 1 : -1)
     }
   }
 }

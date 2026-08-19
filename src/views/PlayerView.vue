@@ -16,6 +16,7 @@ import { useSleepTimer } from '../composables/useSleepTimer.js'
 import { useSeo } from '../composables/useSeo.js'
 import { BEFORE_SW_UPDATE_EVENT } from '../utils/swAudio.js'
 import { ensureArabicFontStylesheet } from '../utils/arabicFonts.js'
+import { isRtlDocument } from '../utils/direction.js'
 import THEMES, { resolveThemeId } from '../data/themes.js'
 import AppHeader from '../components/AppHeader.vue'
 import SettingsBar from '../components/SettingsBar.vue'
@@ -212,17 +213,22 @@ useUrlSync(store, urlSyncEnabled)
 const sleepTimer = useSleepTimer(() => audio.pause())
 
 // -- Swipe gestures --
-useSwipe(mainRef, {
-  onSwipeLeft: () => {
-    if (store.canNextVerse) {
-      handleNextVerse()
-    }
-  },
-  onSwipeRight: () => {
-    if (store.canPrevVerse) {
-      handlePrevVerse()
-    }
+// Swipes follow the visual reading direction (like the mirrored seek bar and
+// controls): in RTL layouts the next verse "comes from the left", so the
+// physical gestures swap along with the rest of the UI.
+function swipeForward() {
+  if (store.canNextVerse) {
+    handleNextVerse()
   }
+}
+function swipeBackward() {
+  if (store.canPrevVerse) {
+    handlePrevVerse()
+  }
+}
+useSwipe(mainRef, {
+  onSwipeLeft: () => (isRtlDocument() ? swipeBackward() : swipeForward()),
+  onSwipeRight: () => (isRtlDocument() ? swipeForward() : swipeBackward())
 })
 
 useKeyboardShortcuts({

@@ -40,6 +40,7 @@ describe('useKeyboardShortcuts', () => {
       wrapper = null
     }
     document.body.innerHTML = ''
+    document.documentElement.removeAttribute('dir')
     vi.clearAllMocks()
   })
 
@@ -143,5 +144,43 @@ describe('useKeyboardShortcuts', () => {
     key('ArrowRight', document.body)
     key('ArrowRight', document.body, { repeat: true })
     expect(nextVerse).toHaveBeenCalledTimes(2)
+  })
+
+  it('maps ArrowRight to next and ArrowLeft to prev in LTR', async () => {
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    key('ArrowRight', document.body)
+    key('ArrowLeft', document.body)
+    expect(nextVerse).toHaveBeenCalledTimes(1)
+    expect(prevVerse).toHaveBeenCalledTimes(1)
+  })
+
+  it('mirrors horizontal arrows in RTL layouts (Arabic/Urdu UI)', async () => {
+    document.documentElement.setAttribute('dir', 'rtl')
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    // In RTL the next verse sits visually to the left, matching the mirrored controls.
+    key('ArrowLeft', document.body)
+    expect(nextVerse).toHaveBeenCalledTimes(1)
+    expect(prevVerse).not.toHaveBeenCalled()
+
+    key('ArrowRight', document.body)
+    expect(prevVerse).toHaveBeenCalledTimes(1)
+    expect(nextVerse).toHaveBeenCalledTimes(1)
+  })
+
+  it('follows a mid-session direction switch without remounting', async () => {
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    key('ArrowRight', document.body)
+    expect(nextVerse).toHaveBeenCalledTimes(1)
+
+    document.documentElement.setAttribute('dir', 'rtl')
+    key('ArrowRight', document.body)
+    expect(prevVerse).toHaveBeenCalledTimes(1)
+    expect(nextVerse).toHaveBeenCalledTimes(1)
   })
 })

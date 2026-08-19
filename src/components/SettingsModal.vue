@@ -13,6 +13,7 @@ import THEMES from '../data/themes.js'
 import { TAJWEED_RULES, tajweedColor } from '../utils/arabicText.js'
 import { t, UI_LOCALES } from '../i18n/index.js'
 import { safeLocalStorageRemove } from '../utils/storage.js'
+import { isRtlDocument } from '../utils/direction.js'
 import {
   STORAGE_KEY,
   TIP_DISMISSED_KEY,
@@ -40,9 +41,13 @@ function selectTab(id) {
 
 function onTabKeydown(event, index) {
   let next = index
-  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+  // Per WAI-ARIA tabs, horizontal arrows follow the visual layout, so they
+  // swap in RTL where the tab strip renders right to left.
+  const nextKey = isRtlDocument() ? 'ArrowLeft' : 'ArrowRight'
+  const prevKey = isRtlDocument() ? 'ArrowRight' : 'ArrowLeft'
+  if (event.key === nextKey || event.key === 'ArrowDown') {
     next = (index + 1) % TABS.length
-  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+  } else if (event.key === prevKey || event.key === 'ArrowUp') {
     next = (index - 1 + TABS.length) % TABS.length
   } else if (event.key === 'Home') {
     next = 0

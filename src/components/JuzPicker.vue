@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import JUZS from '../data/juzs.js'
+import { isRtlDocument } from '../utils/direction.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close'])
@@ -40,13 +41,17 @@ function onKeydown(e) {
   }
   const current = buttons.indexOf(document.activeElement)
   const cols = 5
-  if (e.key === 'ArrowRight') {
+  // Grid rows render right to left in RTL, so horizontal arrows must follow
+  // the visual direction to move focus the way the user expects.
+  const nextKey = isRtlDocument() ? 'ArrowLeft' : 'ArrowRight'
+  const prevKey = isRtlDocument() ? 'ArrowRight' : 'ArrowLeft'
+  if (e.key === nextKey) {
     e.preventDefault()
     const next = current + 1
     if (next < buttons.length) {
       buttons[next].focus()
     }
-  } else if (e.key === 'ArrowLeft') {
+  } else if (e.key === prevKey) {
     e.preventDefault()
     const prev = current - 1
     if (prev >= 0) {
