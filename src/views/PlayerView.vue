@@ -11,7 +11,7 @@ import { useAutoHideControls } from '../composables/useAutoHideControls.js'
 import { useMediaSession } from '../composables/useMediaSession.js'
 import { useWakeLock } from '../composables/useWakeLock.js'
 import { useMobileTip } from '../composables/useMobileTip.js'
-import { useDeepLink } from '../composables/useDeepLink.js'
+import { useDeepLink, useUrlSync } from '../composables/useDeepLink.js'
 import { useSleepTimer } from '../composables/useSleepTimer.js'
 import { useSeo } from '../composables/useSeo.js'
 import { BEFORE_SW_UPDATE_EVENT } from '../utils/swAudio.js'
@@ -107,7 +107,9 @@ const mediaSession = useMediaSession(
     },
     togglePlay,
     prevVerse: handlePrevVerse,
-    nextVerse: handleNextVerse
+    nextVerse: handleNextVerse,
+    prevSurah: handlePrevSurah,
+    nextSurah: handleNextSurah
   },
   audio
 )
@@ -152,7 +154,9 @@ let deepLinkGen = 0
 
 async function applyDeepLink(surah, ayah) {
   if (surah === store.currentSurahNum) {
-    if (ayah) {
+    // Ignore route events that already match the current position (e.g. our own
+    // URL sync replaces); re-jumping would restart the verse mid-playback.
+    if (ayah && ayah !== store.currentVerse?.number) {
       jumpToAyah(ayah)
     }
     return
@@ -198,6 +202,11 @@ async function applyDeepLink(surah, ayah) {
 }
 
 const deepLink = useDeepLink(applyDeepLink)
+
+// Address bar follows in-app navigation once boot (prefs + initial deep link)
+// has settled, so copying the URL always shares the verse being read.
+const urlSyncEnabled = ref(false)
+useUrlSync(store, urlSyncEnabled)
 
 // -- Sleep timer --
 const sleepTimer = useSleepTimer(() => audio.pause())
@@ -306,6 +315,7 @@ onMounted(async () => {
   // (PIPELINE_ERROR_READ) until a hard reload. Verse index is already restored;
   // Play will attach the source and seek in the user-gesture path.
   mediaSession.update()
+  urlSyncEnabled.value = true
   checkMobileTip()
   // Non-default Arabic faces are not in index.html; inject their stylesheets on demand.
   ensureArabicFontStylesheet(store.arabicFont)

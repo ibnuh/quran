@@ -18,6 +18,24 @@ describe('htmlToPlainText', () => {
       'Line one\nLine two\nLine three'
     )
   })
+
+  it('decodes BMP numeric entities', () => {
+    expect(htmlToPlainText('&#65;&#x62;')).toBe('Ab')
+    // Arabic ornate parenthesis U+FD3E via decimal reference.
+    expect(htmlToPlainText('&#64830;')).toBe('\uFD3E')
+  })
+
+  it('decodes astral numeric entities as whole code points', () => {
+    // U+1EE00 ARABIC MATHEMATICAL ALEF is above the BMP; fromCharCode would
+    // truncate it to a lone surrogate.
+    expect(htmlToPlainText('&#x1EE00;')).toBe('\u{1EE00}')
+    expect(htmlToPlainText('&#125440;')).toBe('\u{1EA00}')
+  })
+
+  it('leaves out-of-range numeric entities untouched', () => {
+    expect(htmlToPlainText('&#x110000;')).toBe('&#x110000;')
+    expect(htmlToPlainText('&#99999999;')).toBe('&#99999999;')
+  })
 })
 
 describe('sanitizeHtml', () => {

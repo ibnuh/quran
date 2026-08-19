@@ -206,6 +206,12 @@ export function usePlayback(store, audio) {
   }
 
   function handleNextVerse() {
+    // At the last verse there is nowhere to advance; seeking or reloading here
+    // would restart the verse that is already playing (keyboard/swipe path,
+    // since the UI button is disabled at the boundary).
+    if (!store.canNextVerse) {
+      return
+    }
     store.nextVerse()
     if (store.playbackMode === 'full') {
       const timing = store.verseTimings[store.currentVerseIndex]
