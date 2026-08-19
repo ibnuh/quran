@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, watch, onBeforeUnmount, useId } from 'vue'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
+import { matchesLatinSearch } from '../utils/latinText.js'
 
 const props = defineProps({
   modelValue: [String, Number],
@@ -37,9 +38,7 @@ const selectedLabel = computed(() =>
 const selectedBadge = computed(() => selectedOption.value?.badge || '')
 
 function fuzzyMatch(text, q) {
-  const lower = text.toLowerCase()
-  const terms = q.toLowerCase().split(/\s+/)
-  return terms.every(term => lower.includes(term))
+  return matchesLatinSearch(text, q)
 }
 
 const filtered = computed(() => {
