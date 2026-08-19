@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
 import { normalizeArabicForSearch } from '../utils/arabicText.js'
+import { matchesLatinSearch } from '../utils/latinText.js'
 import SURAHS from '../data/surahs.js'
 
 const store = usePlayerStore()
@@ -21,8 +22,9 @@ const SURAH_NAMES_FOLDED = SURAHS.map(s => normalizeArabicForSearch(s.name))
 const foldedQuery = computed(() => normalizeArabicForSearch(query.value))
 const hasArabicQuery = computed(() => /[\u0600-\u06FF]/.test(query.value))
 
-// Match surahs by number (Western or Arabic-Indic digits), English name,
-// translation, or Arabic name (diacritic-insensitive).
+// Match surahs by number (Western or Arabic-Indic digits), romanized name
+// (Indonesian/English vowel-length fold), translation, or Arabic name
+// (diacritic-insensitive).
 const matchedSurahs = computed(() => {
   const q = normalized.value
   if (!q) {
@@ -33,8 +35,8 @@ const matchedSurahs = computed(() => {
     return (
       String(s.number) === q ||
       (fq && String(s.number) === fq) ||
-      s.englishName.toLowerCase().includes(q) ||
-      s.englishNameTranslation.toLowerCase().includes(q) ||
+      matchesLatinSearch(s.englishName, q) ||
+      matchesLatinSearch(s.englishNameTranslation, q) ||
       (hasArabicQuery.value && fq && SURAH_NAMES_FOLDED[i].includes(fq))
     )
   }).slice(0, 8)
