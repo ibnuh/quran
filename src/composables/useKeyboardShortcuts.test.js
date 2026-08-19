@@ -14,12 +14,13 @@ function mountShortcuts(handlers) {
   return mount(Comp, { attachTo: document.body })
 }
 
-function key(code, target) {
+function key(code, target, init = {}) {
   const e = new KeyboardEvent('keydown', {
     code,
     key: code === 'Space' ? ' ' : code,
     bubbles: true,
-    cancelable: true
+    cancelable: true,
+    ...init
   })
   Object.defineProperty(e, 'target', { value: target })
   document.dispatchEvent(e)
@@ -89,5 +90,58 @@ describe('useKeyboardShortcuts', () => {
     key('ArrowLeft', item)
     expect(nextVerse).not.toHaveBeenCalled()
     expect(prevVerse).not.toHaveBeenCalled()
+  })
+
+  it('leaves browser/system combos alone (Alt, Ctrl, Meta modifiers)', async () => {
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    // Alt+Left/Right are browser back/forward; Ctrl/Meta combos belong to the OS.
+    const altLeft = key('ArrowLeft', document.body, { altKey: true })
+    const altRight = key('ArrowRight', document.body, { altKey: true })
+    const ctrlSpace = key('Space', document.body, { ctrlKey: true })
+    const metaRight = key('ArrowRight', document.body, { metaKey: true })
+
+    expect(prevVerse).not.toHaveBeenCalled()
+    expect(nextVerse).not.toHaveBeenCalled()
+    expect(togglePlay).not.toHaveBeenCalled()
+    expect(altLeft.defaultPrevented).toBe(false)
+    expect(altRight.defaultPrevented).toBe(false)
+    expect(ctrlSpace.defaultPrevented).toBe(false)
+    expect(metaRight.defaultPrevented).toBe(false)
+  })
+
+  it('ignores keys when focus is in an editable region', async () => {
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    const editable = document.createElement('div')
+    editable.contentEditable = 'true'
+    document.body.appendChild(editable)
+    Object.defineProperty(editable, 'isContentEditable', { value: true })
+
+    key('Space', editable)
+    key('ArrowRight', editable)
+    expect(togglePlay).not.toHaveBeenCalled()
+    expect(nextVerse).not.toHaveBeenCalled()
+  })
+
+  it('does not toggle play repeatedly while Space is held down', async () => {
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    key('Space', document.body)
+    key('Space', document.body, { repeat: true })
+    key('Space', document.body, { repeat: true })
+    expect(togglePlay).toHaveBeenCalledTimes(1)
+  })
+
+  it('still navigates on repeated arrow keys', async () => {
+    wrapper = mountShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp })
+    await nextTick()
+
+    key('ArrowRight', document.body)
+    key('ArrowRight', document.body, { repeat: true })
+    expect(nextVerse).toHaveBeenCalledTimes(2)
   })
 })

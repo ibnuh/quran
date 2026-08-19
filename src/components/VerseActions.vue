@@ -1,11 +1,15 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
+import { copyText } from '../utils/clipboard.js'
 
 const emit = defineEmits(['open-tafsir'])
 const store = usePlayerStore()
 const copied = ref(false)
+let copiedTimer = null
+
+onBeforeUnmount(() => clearTimeout(copiedTimer))
 
 const hasAnyAction = computed(
   () =>
@@ -39,11 +43,11 @@ function shareVerse() {
   if (navigator.share) {
     navigator.share({ title: verseReference(), text, url }).catch(() => {})
   } else {
-    navigator.clipboard.writeText(`${text}\n${url}`).catch(() => {})
+    void copyText(`${text}\n${url}`)
   }
 }
 
-function copyVerse() {
+async function copyVerse() {
   const surah = store.currentSurah
   const verse = store.currentVerse
   const translation = store.currentTranslationVerse
@@ -51,15 +55,13 @@ function copyVerse() {
     return
   }
   const text = `${verse.text}\n\n${translation?.text || ''}\n\n${verseReference()}\n${canonicalUrl()}`
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      copied.value = true
-      setTimeout(() => {
-        copied.value = false
-      }, 1500)
-    })
-    .catch(() => {})
+  if (await copyText(text)) {
+    copied.value = true
+    clearTimeout(copiedTimer)
+    copiedTimer = setTimeout(() => {
+      copied.value = false
+    }, 1500)
+  }
 }
 </script>
 
