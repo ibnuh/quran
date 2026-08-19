@@ -56,6 +56,14 @@ function onKeydown(e) {
     e.stopPropagation()
     const step = e.shiftKey ? 0.1 : 0.02
     emit('seek', Math.max(0, displayRatio.value - step))
+  } else if (e.key === 'Home') {
+    e.preventDefault()
+    e.stopPropagation()
+    emit('seek', 0)
+  } else if (e.key === 'End') {
+    e.preventDefault()
+    e.stopPropagation()
+    emit('seek', 1)
   }
 }
 

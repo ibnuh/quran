@@ -2,6 +2,11 @@ import { onMounted, onBeforeUnmount } from 'vue'
 
 export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp }) {
   function handler(e) {
+    // Leave browser and OS combos alone (Alt+Left is back, Ctrl/Meta belong to
+    // the system); preventDefault on these would hijack navigation.
+    if (e.altKey || e.ctrlKey || e.metaKey) {
+      return
+    }
     const target = e.target
     if (!target) {
       return
@@ -13,7 +18,8 @@ export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleH
       tag === 'INPUT' ||
       tag === 'TEXTAREA' ||
       tag === 'BUTTON' ||
-      tag === 'A'
+      tag === 'A' ||
+      target.isContentEditable
     ) {
       return
     }
@@ -35,7 +41,11 @@ export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleH
 
     if (e.code === 'Space') {
       e.preventDefault()
-      togglePlay()
+      // Holding Space auto-repeats keydown; toggling on each one would rapidly
+      // flip play/pause. Arrows keep repeating for fast navigation.
+      if (!e.repeat) {
+        togglePlay()
+      }
     } else if (e.code === 'ArrowRight') {
       e.preventDefault()
       nextVerse()

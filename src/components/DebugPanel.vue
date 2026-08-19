@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { resolveThemeId } from '../data/themes.js'
+import { copyText } from '../utils/clipboard.js'
 
 // Lightweight on-device diagnostics overlay. Enable with ?debug=1 (persists in
 // localStorage so it survives reloads in an installed PWA); disable with ?debug=0.
@@ -28,16 +29,13 @@ function refresh() {
   }
 }
 
-function copy() {
-  navigator.clipboard
-    .writeText(JSON.stringify(info.value, null, 2))
-    .then(() => {
-      copied.value = true
-      setTimeout(() => {
-        copied.value = false
-      }, 1500)
-    })
-    .catch(() => {})
+async function copy() {
+  if (await copyText(JSON.stringify(info.value, null, 2))) {
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 1500)
+  }
 }
 
 function disable() {
