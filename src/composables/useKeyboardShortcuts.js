@@ -1,4 +1,5 @@
 import { onMounted, onBeforeUnmount } from 'vue'
+import { isRtlDocument } from '../utils/direction.js'
 
 export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleHelp }) {
   function handler(e) {
@@ -46,12 +47,16 @@ export function useKeyboardShortcuts({ togglePlay, nextVerse, prevVerse, toggleH
       if (!e.repeat) {
         togglePlay()
       }
-    } else if (e.code === 'ArrowRight') {
+    } else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
       e.preventDefault()
-      nextVerse()
-    } else if (e.code === 'ArrowLeft') {
-      e.preventDefault()
-      prevVerse()
+      // Horizontal arrows follow the visual direction, matching the mirrored
+      // seek bar and controls: in RTL layouts the next verse sits to the left.
+      const forwardCode = isRtlDocument() ? 'ArrowLeft' : 'ArrowRight'
+      if (e.code === forwardCode) {
+        nextVerse()
+      } else {
+        prevVerse()
+      }
     }
   }
 

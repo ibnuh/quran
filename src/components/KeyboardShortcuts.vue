@@ -1,17 +1,24 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
+import { UI_LOCALES } from '../i18n/index.js'
 
 const emit = defineEmits(['close'])
 const panelRef = ref(null)
 useFocusTrap(panelRef)
 
-const shortcuts = [
+const { locale } = useI18n()
+// Horizontal arrow shortcuts mirror in RTL layouts (next verse is to the left),
+// so the help must show the direction the keys actually navigate.
+const isRtl = computed(() => UI_LOCALES.find(l => l.code === locale.value)?.dir === 'rtl')
+
+const shortcuts = computed(() => [
   { keys: ['Space'], action: 'panels.shortcutPlay' },
-  { keys: ['\u2190'], action: 'panels.shortcutPrev' },
-  { keys: ['\u2192'], action: 'panels.shortcutNext' },
+  { keys: [isRtl.value ? '\u2192' : '\u2190'], action: 'panels.shortcutPrev' },
+  { keys: [isRtl.value ? '\u2190' : '\u2192'], action: 'panels.shortcutNext' },
   { keys: ['?'], action: 'panels.shortcutHelp' }
-]
+])
 
 function onKeydown(e) {
   if (e.key === 'Escape' || e.key === '?') {
