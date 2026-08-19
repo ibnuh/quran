@@ -436,7 +436,7 @@ function clearRepeat() {
               <div
                 v-if="showSpeedMenu"
                 role="menu"
-                class="absolute bottom-full right-0 mb-2 bg-card rounded-lg shadow-2xl border border-border p-1 z-50 min-w-[4.5rem]"
+                class="absolute bottom-full end-0 mb-2 bg-card rounded-lg shadow-2xl border border-border p-1 z-50 min-w-[4.5rem]"
                 @keydown="onSpeedMenuKeydown"
               >
                 <button
@@ -488,7 +488,7 @@ function clearRepeat() {
             <Transition name="speed-pop">
               <div
                 v-if="showToolsMenu"
-                class="absolute bottom-full right-0 mb-2 bg-card rounded-xl shadow-2xl border border-border p-3 z-50 w-60 text-left space-y-4"
+                class="absolute bottom-full end-0 mb-2 bg-card rounded-xl shadow-2xl border border-border p-3 z-50 w-60 text-start space-y-4"
                 @keydown="onToolsMenuKeydown"
               >
                 <!-- Volume -->

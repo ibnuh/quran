@@ -1,9 +1,10 @@
 import { ref, onBeforeUnmount } from 'vue'
+import { safeLocalStorageGet } from '../utils/storage.js'
 
 // Enable with localStorage.quran-debug-audio = '1' or ?debugAudio=1
 const DEBUG_AUDIO =
   typeof window !== 'undefined' &&
-  (window.localStorage?.getItem('quran-debug-audio') === '1' ||
+  (safeLocalStorageGet('quran-debug-audio') === '1' ||
     /(?:\?|&)debugAudio=1(?:&|$)/.test(window.location.search || ''))
 function dbg(...args) {
   if (DEBUG_AUDIO) {

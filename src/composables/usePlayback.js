@@ -1,5 +1,6 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { getPreloadCount } from '../config.js'
+import { safeLocalStorageGet } from '../utils/storage.js'
 
 // Playback orchestration: play/pause, verse and surah navigation, repeat handling,
 // continuous cross-surah playback, and verse-mode audio preloading.
@@ -137,7 +138,7 @@ export function usePlayback(store, audio) {
   function togglePlay() {
     const debugOn =
       typeof window !== 'undefined' &&
-      (window.localStorage?.getItem('quran-debug-audio') === '1' ||
+      (safeLocalStorageGet('quran-debug-audio') === '1' ||
         /(?:\?|&)debugAudio=1(?:&|$)/.test(window.location?.search || ''))
     if (debugOn) {
       console.info('[playback] togglePlay', {

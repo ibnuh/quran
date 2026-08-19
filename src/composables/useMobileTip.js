@@ -1,11 +1,12 @@
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { TIP_DISMISSED_KEY, MOBILE_TIP_TIMEOUT } from '../config.js'
 import { t } from '../i18n/index.js'
+import { safeLocalStorageGet, safeLocalStorageSet } from '../utils/storage.js'
 
 // One-time mobile hint suggesting landscape mode and auto-hide controls.
 export function useMobileTip(store) {
   const showMobileTip = ref(false)
-  const tipDismissed = ref(localStorage.getItem(TIP_DISMISSED_KEY) === '1')
+  const tipDismissed = ref(safeLocalStorageGet(TIP_DISMISSED_KEY) === '1')
   const tipMessage = ref('')
   const tipAction = ref('') // 'auto-hide' | 'landscape' | 'both'
   let tipTimer = null
@@ -13,7 +14,7 @@ export function useMobileTip(store) {
   function dismissPermanently() {
     showMobileTip.value = false
     tipDismissed.value = true
-    localStorage.setItem(TIP_DISMISSED_KEY, '1')
+    safeLocalStorageSet(TIP_DISMISSED_KEY, '1')
   }
 
   function checkMobileTip() {
