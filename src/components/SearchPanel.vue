@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { usePlayerStore } from '../stores/player.js'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
+import { normalizeArabicForSearch } from '../utils/arabicText.js'
 import SURAHS from '../data/surahs.js'
 
 const store = usePlayerStore()
@@ -13,18 +14,28 @@ useFocusTrap(panelRef, { onEscape: () => emit('close') })
 
 const normalized = computed(() => query.value.trim().toLowerCase())
 
-// Match surahs by number, English name, translation, or Arabic name.
+// The stored surah names are fully vocalized Uthmani text; fold them once so
+// plain unvocalized queries (e.g. "الفاتحة") can match.
+const SURAH_NAMES_FOLDED = SURAHS.map(s => normalizeArabicForSearch(s.name))
+
+const foldedQuery = computed(() => normalizeArabicForSearch(query.value))
+const hasArabicQuery = computed(() => /[\u0600-\u06FF]/.test(query.value))
+
+// Match surahs by number (Western or Arabic-Indic digits), English name,
+// translation, or Arabic name (diacritic-insensitive).
 const matchedSurahs = computed(() => {
   const q = normalized.value
   if (!q) {
     return []
   }
-  return SURAHS.filter(s => {
+  const fq = foldedQuery.value
+  return SURAHS.filter((s, i) => {
     return (
       String(s.number) === q ||
+      (fq && String(s.number) === fq) ||
       s.englishName.toLowerCase().includes(q) ||
       s.englishNameTranslation.toLowerCase().includes(q) ||
-      s.name.includes(query.value.trim())
+      (hasArabicQuery.value && fq && SURAH_NAMES_FOLDED[i].includes(fq))
     )
   }).slice(0, 8)
 })
@@ -46,17 +57,32 @@ const suggestedSurahs = computed(() => {
   return SUGGESTED_SURAH_NUMS.map(num => SURAHS.find(s => s.number === num)).filter(Boolean)
 })
 
-// Match verses within the currently loaded surah by translation text.
+// Folded Arabic verse texts, computed once per surah (only when an Arabic
+// query is active) so per-keystroke matching is a plain substring test.
+const foldedVerseTexts = computed(() =>
+  hasArabicQuery.value ? store.verses.map(v => normalizeArabicForSearch(v.text)) : []
+)
+
+// Match verses within the currently loaded surah by translation text or by
+// the Arabic verse text (diacritic-insensitive).
 const matchedVerses = computed(() => {
   const q = normalized.value
   if (!q || q.length < 2) {
     return []
   }
+  const fq = hasArabicQuery.value ? foldedQuery.value : ''
+  const arabicTexts = foldedVerseTexts.value
   const results = []
-  for (let i = 0; i < store.translationVerses.length; i++) {
+  for (let i = 0; i < store.verses.length; i++) {
     const t = store.translationVerses[i]
-    if (t?.text && t.text.toLowerCase().includes(q)) {
-      results.push({ index: i, number: store.verses[i]?.number ?? i + 1, text: t.text })
+    const translationMatch = t?.text && t.text.toLowerCase().includes(q)
+    const arabicMatch = fq.length >= 2 && arabicTexts[i]?.includes(fq)
+    if (translationMatch || arabicMatch) {
+      results.push({
+        index: i,
+        number: store.verses[i]?.number ?? i + 1,
+        text: t?.text || store.verses[i]?.text || ''
+      })
       if (results.length >= 12) {
         break
       }

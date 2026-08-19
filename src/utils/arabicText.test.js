@@ -5,8 +5,43 @@ import {
   toVerseTokens,
   toTajweedWords,
   toArabicDigits,
+  normalizeArabicForSearch,
   parseTajweed
 } from './arabicText.js'
+
+describe('normalizeArabicForSearch', () => {
+  it('matches a plain unvocalized query against a fully vocalized surah name', () => {
+    const name = normalizeArabicForSearch('سُورَةُ ٱلْفَاتِحَةِ')
+    expect(name.includes(normalizeArabicForSearch('الفاتحة'))).toBe(true)
+    expect(name.includes(normalizeArabicForSearch('فاتحه'))).toBe(true)
+  })
+
+  it('strips the dagger alef so الرحمن matches ٱلرَّحْمَٰن', () => {
+    const name = normalizeArabicForSearch('سُورَةُ ٱلرَّحْمَٰن')
+    expect(name.includes(normalizeArabicForSearch('الرحمن'))).toBe(true)
+  })
+
+  it('normalizes alef, yeh, and teh marbuta variants', () => {
+    expect(normalizeArabicForSearch('أإآٱ')).toBe('اااا')
+    expect(normalizeArabicForSearch('هدى')).toBe(normalizeArabicForSearch('هدي'))
+    expect(normalizeArabicForSearch('البقرة')).toBe(normalizeArabicForSearch('البقره'))
+  })
+
+  it('converts Arabic-Indic digits to ASCII so ١١٤ matches 114', () => {
+    expect(normalizeArabicForSearch('١١٤')).toBe('114')
+    expect(normalizeArabicForSearch('۲')).toBe('2')
+  })
+
+  it('strips tatweel and collapses whitespace', () => {
+    expect(normalizeArabicForSearch('الرحـــيم')).toBe('الرحيم')
+    expect(normalizeArabicForSearch('  سورة   يس  ')).toBe('سوره يس')
+  })
+
+  it('returns an empty string for empty input', () => {
+    expect(normalizeArabicForSearch('')).toBe('')
+    expect(normalizeArabicForSearch(undefined)).toBe('')
+  })
+})
 
 describe('parseTajweed', () => {
   it('splits tajweed HTML into ordered text/rule segments', () => {

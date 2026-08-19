@@ -19,6 +19,7 @@ import {
   PREFS_VERSION,
   TOTAL_SURAHS,
   SAVE_PREFS_DEBOUNCE,
+  SPEEDS,
   AUDIO_RUNTIME_CACHE_NAMES,
   getResponsiveDefaults,
   isAllowedAudioUrl,
@@ -38,6 +39,8 @@ let prefsFlushStore = null
 let prefsFlushListenersBound = false
 
 const HIGHLIGHT_STYLES = new Set(['glow', 'background', 'underline', 'minimal', 'sweep', 'flow'])
+const MIN_PLAYBACK_SPEED = Math.min(...SPEEDS)
+const MAX_PLAYBACK_SPEED = Math.max(...SPEEDS)
 const REPEAT_MODES = new Set(['none', 'verse', 'surah'])
 const TRANSLATION_IDS = new Set(TRANSLATIONS.map(t => t.identifier))
 const TAFSIR_IDS = new Set(TAFSIRS.map(t => t.id))
@@ -159,7 +162,14 @@ function normalizePrefs(prefs) {
   if (out.surah !== undefined && (out.surah < 1 || out.surah > TOTAL_SURAHS)) {
     out.surah = undefined
   }
-  if (typeof out.playbackSpeed !== 'number' || out.playbackSpeed <= 0) {
+  // Clamp into the supported range: out-of-range rates throw NotSupportedError
+  // when applied to the media element on boot.
+  if (typeof out.playbackSpeed === 'number' && Number.isFinite(out.playbackSpeed)) {
+    out.playbackSpeed = Math.max(
+      MIN_PLAYBACK_SPEED,
+      Math.min(MAX_PLAYBACK_SPEED, out.playbackSpeed)
+    )
+  } else {
     out.playbackSpeed = undefined
   }
   if (typeof out.volume === 'number') {
@@ -1093,6 +1103,8 @@ export const usePlayerStore = defineStore('player', {
       if (idx >= 0) {
         this.currentVerseIndex = idx
         this.currentWordIndex = -1
+        // Persist the jumped-to verse; setSurah only saved verse 0.
+        this.savePreferences()
       }
     },
 
