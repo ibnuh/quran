@@ -6,23 +6,29 @@ import {
   isSwJustUpdated,
   notifyBeforeSwUpdate,
   applyWaitingServiceWorker,
+  fingerprintSwScript,
+  shouldAnnounceServiceWorkerUpdate,
+  dismissUpdateFingerprint,
+  clearDismissedUpdateFingerprint,
+  getDismissedUpdateFingerprint,
   BEFORE_SW_UPDATE_EVENT
 } from './swAudio.js'
-import { SW_JUST_UPDATED_KEY } from '../config.js'
+import { SW_JUST_UPDATED_KEY, PWA_UPDATE_DISMISSED_KEY } from '../config.js'
 
 describe('swAudio', () => {
   const originalCaches = globalThis.caches
-  const originalSession = globalThis.sessionStorage
 
   beforeEach(() => {
     sessionStorage.clear()
+    localStorage.clear()
   })
 
   afterEach(() => {
     globalThis.caches = originalCaches
-    // sessionStorage is restored by happy-dom; just clear it
     sessionStorage.clear()
+    localStorage.clear()
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('clearAudioRuntimeCaches deletes exact audio cache names only', async () => {
@@ -79,13 +85,30 @@ describe('swAudio', () => {
     })
 
     expect(beforeHandler).toHaveBeenCalledTimes(1)
-    expect(postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' })
+    // When updateSW is provided it is the skip path; direct postMessage is the fallback.
     expect(updateSW).toHaveBeenCalledWith(true)
+    expect(postMessage).not.toHaveBeenCalled()
     expect(isSwJustUpdated()).toBe(true)
     expect(store.has('quran-audio-files')).toBe(false)
     expect(store.has('workbox-precache-v2')).toBe(true)
 
     window.removeEventListener(BEFORE_SW_UPDATE_EVENT, beforeHandler)
+  })
+
+  it('applyWaitingServiceWorker posts SKIP_WAITING when updateSW is missing', async () => {
+    const postMessage = vi.fn()
+    const waiting = { postMessage }
+    globalThis.caches = {
+      keys: async () => [],
+      delete: async () => true
+    }
+
+    await applyWaitingServiceWorker({
+      waiting,
+      reloadTimeoutMs: 50
+    })
+
+    expect(postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' })
   })
 
   it('clearAudioRuntimeCaches returns [] when Cache API is missing', async () => {
@@ -110,5 +133,88 @@ describe('swAudio', () => {
     notifyBeforeSwUpdate()
     expect(handler).toHaveBeenCalledTimes(1)
     window.removeEventListener(BEFORE_SW_UPDATE_EVENT, handler)
+  })
+
+  it('fingerprintSwScript is stable for the same body and differs across builds', () => {
+    const a = fingerprintSwScript('workbox-precache-manifest:abc123' + 'x'.repeat(200))
+    const b = fingerprintSwScript('workbox-precache-manifest:abc123' + 'x'.repeat(200))
+    const c = fingerprintSwScript('workbox-precache-manifest:zzz999' + 'y'.repeat(200))
+    expect(a).toBe(b)
+    expect(a).not.toBe(c)
+    expect(fingerprintSwScript('')).toBe(null)
+  })
+
+  it('shouldAnnounceServiceWorkerUpdate suppresses when no worker is waiting', async () => {
+    const result = await shouldAnnounceServiceWorkerUpdate({ waiting: null })
+    expect(result).toEqual({ announce: false, fingerprint: null })
+  })
+
+  it('shouldAnnounceServiceWorkerUpdate suppresses right after a user-accepted update', async () => {
+    markSwJustUpdated()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => 'sw-body-v2-' + 'z'.repeat(120)
+      }))
+    )
+    const result = await shouldAnnounceServiceWorkerUpdate({
+      waiting: { scriptURL: 'https://quran.ibnuhx.com/sw.js' }
+    })
+    expect(result.announce).toBe(false)
+  })
+
+  it('shouldAnnounceServiceWorkerUpdate suppresses a waiting SW the user already dismissed', async () => {
+    const body = 'sw-body-dismissed-' + 'a'.repeat(150)
+    const fp = fingerprintSwScript(body)
+    dismissUpdateFingerprint(fp)
+    expect(getDismissedUpdateFingerprint()).toBe(fp)
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => body
+      }))
+    )
+
+    const result = await shouldAnnounceServiceWorkerUpdate({
+      waiting: { scriptURL: 'https://quran.ibnuhx.com/sw.js' }
+    })
+    expect(result.announce).toBe(false)
+    expect(result.fingerprint).toBe(fp)
+  })
+
+  it('shouldAnnounceServiceWorkerUpdate allows a newer waiting SW after Later', async () => {
+    dismissUpdateFingerprint(fingerprintSwScript('old-sw-' + 'a'.repeat(150)))
+    const newBody = 'new-sw-' + 'b'.repeat(150)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => newBody
+      }))
+    )
+
+    const result = await shouldAnnounceServiceWorkerUpdate({
+      waiting: { scriptURL: 'https://quran.ibnuhx.com/sw.js' }
+    })
+    expect(result.announce).toBe(true)
+    expect(result.fingerprint).toBe(fingerprintSwScript(newBody))
+  })
+
+  it('applyWaitingServiceWorker clears a dismissed Later fingerprint', async () => {
+    dismissUpdateFingerprint('stale-fp')
+    expect(localStorage.getItem(PWA_UPDATE_DISMISSED_KEY)).toBe('stale-fp')
+    globalThis.caches = {
+      keys: async () => [],
+      delete: async () => true
+    }
+    await applyWaitingServiceWorker({
+      waiting: { postMessage: vi.fn() },
+      reloadTimeoutMs: 50
+    })
+    expect(getDismissedUpdateFingerprint()).toBe(null)
+    clearDismissedUpdateFingerprint()
   })
 })

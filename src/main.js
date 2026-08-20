@@ -5,6 +5,7 @@ import router from './router/index.js'
 import App from './App.vue'
 import { i18n, setUiLocale, detectUiLocale } from './i18n/index.js'
 import './assets/styles/main.css'
+import { shouldAnnounceServiceWorkerUpdate } from './utils/swAudio.js'
 
 // Note: the saved theme (data-theme + theme-color meta) and animations setting are
 // applied before first paint by a blocking inline script in index.html, so the
@@ -34,10 +35,40 @@ app.mount('#app')
 // stays waiting until the user accepts. Do NOT reload on controllerchange here:
 // that caused silent auto-updates mid-session. Only UpdatePrompt / Settings reload
 // after an explicit user action.
+//
+// Workbox can emit "waiting" more than once for the same waiting worker (periodic
+// registration.update, tab focus). Gate announcements so the toast only opens once
+// per distinct SW build, and never right after a user-accepted update.
+let lastAnnouncedFingerprint = null
+let announceInFlight = false
+
+async function announceUpdateIfNeeded(updateSW) {
+  if (announceInFlight) {
+    return
+  }
+  announceInFlight = true
+  try {
+    const registration = await navigator.serviceWorker?.getRegistration()
+    const { announce, fingerprint } = await shouldAnnounceServiceWorkerUpdate(registration)
+    if (!announce) {
+      return
+    }
+    if (fingerprint && fingerprint === lastAnnouncedFingerprint) {
+      return
+    }
+    lastAnnouncedFingerprint = fingerprint
+    window.dispatchEvent(new CustomEvent('sw-update-available', { detail: { updateSW } }))
+  } catch {
+    // Offline / no SW - ignore.
+  } finally {
+    announceInFlight = false
+  }
+}
+
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    window.dispatchEvent(new CustomEvent('sw-update-available', { detail: { updateSW } }))
+    void announceUpdateIfNeeded(updateSW)
   },
   onRegisteredSW(_, registration) {
     if (!registration) {

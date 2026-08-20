@@ -1,17 +1,49 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { applyWaitingServiceWorker, markSwJustUpdated } from '../utils/swAudio.js'
+import {
+  applyWaitingServiceWorker,
+  markSwJustUpdated,
+  isSwJustUpdated,
+  shouldAnnounceServiceWorkerUpdate,
+  dismissUpdateFingerprint,
+  clearDismissedUpdateFingerprint
+} from '../utils/swAudio.js'
 
 const show = ref(false)
 const applying = ref(false)
 let updateFn = null
+let currentFingerprint = null
+// Snapshot at boot so a post-Update reload does not re-open the toast if Workbox
+// re-emits "waiting" before the old worker is fully gone.
+const suppressThisBoot = isSwJustUpdated()
+// Only announce each waiting fingerprint once per page lifetime.
+const announcedFingerprints = new Set()
 
-function onUpdateAvailable(e) {
+async function onUpdateAvailable(e) {
   updateFn = e.detail?.updateSW || updateFn
-  // Don't re-show the toast while a reload is already in progress.
-  if (!applying.value) {
-    show.value = true
+  if (applying.value || show.value || suppressThisBoot) {
+    return
   }
+
+  let registration = null
+  try {
+    registration = await navigator.serviceWorker?.getRegistration()
+  } catch {
+    registration = null
+  }
+
+  const { announce, fingerprint } = await shouldAnnounceServiceWorkerUpdate(registration)
+  if (!announce) {
+    return
+  }
+  if (fingerprint && announcedFingerprints.has(fingerprint)) {
+    return
+  }
+  if (fingerprint) {
+    announcedFingerprints.add(fingerprint)
+  }
+  currentFingerprint = fingerprint
+  show.value = true
 }
 
 /**
@@ -23,14 +55,13 @@ async function applyUpdate() {
     return
   }
   applying.value = true
-  // Keep the toast visible so the user sees progress before reload.
+  clearDismissedUpdateFingerprint()
+  currentFingerprint = null
 
   try {
-    // Drop cached MP3s before the new SW claims clients. Stale CacheFirst range
-    // entries are what make mid-surah Play dead until a hard reload.
     await applyWaitingServiceWorker({
       updateSW: updateFn,
-      reloadTimeoutMs: 2500
+      reloadTimeoutMs: 8000
     })
   } catch {
     // Still attempt a reload; a full navigation is the recovery path.
@@ -44,8 +75,11 @@ function dismiss() {
     return
   }
   show.value = false
-  // Don't show again this session even if onNeedRefresh fires again
-  window.removeEventListener('sw-update-available', onUpdateAvailable)
+  // Remember this waiting worker so Later does not re-open every tab focus /
+  // page load until a newer SW build is waiting.
+  if (currentFingerprint) {
+    dismissUpdateFingerprint(currentFingerprint)
+  }
 }
 
 onMounted(() => window.addEventListener('sw-update-available', onUpdateAvailable))
