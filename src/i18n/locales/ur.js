@@ -90,6 +90,7 @@ export default {
     share: 'آیت شیئر کریں',
     copy: 'آیت کا متن کاپی کریں',
     copied: 'کاپی ہو گیا',
+    linkCopied: 'لنک کاپی ہو گیا',
     openTafsir: 'تفسیر کھولیں',
     footnoteN: 'حاشیہ {n}',
     footnoteTitle: 'حاشیہ {n}',

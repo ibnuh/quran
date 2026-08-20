@@ -90,6 +90,7 @@ export default {
     share: 'Share this verse',
     copy: 'Copy verse text',
     copied: 'Copied',
+    linkCopied: 'Link copied',
     openTafsir: 'Open tafsir',
     footnoteN: 'Footnote {n}',
     footnoteTitle: 'Footnote {n}',

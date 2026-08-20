@@ -35,6 +35,19 @@ test('toggling off a verse action hides its button', async ({ page }) => {
   await expect(page.getByLabel('Copy verse text')).toBeVisible()
 })
 
+test.describe('share fallback copy feedback', () => {
+  // Desktop Chromium has no navigator.share, so Share falls back to copying the link.
+  test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
+
+  test('shows Link copied feedback, then reverts', async ({ page }) => {
+    await page.getByLabel('Share this verse').click()
+    await expect(page.getByLabel('Link copied')).toBeVisible()
+    // The feedback resets after a short delay.
+    await expect(page.getByLabel('Share this verse')).toBeVisible()
+    await expect(page.getByLabel('Link copied')).toHaveCount(0)
+  })
+})
+
 test('verse action visibility persists across reload', async ({ page }) => {
   const modal = await openDisplaySettings(page)
   await toggleAction(modal, 'Copy')
