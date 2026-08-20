@@ -1,15 +1,24 @@
 <script setup>
 import { computed, ref, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../stores/player.js'
 import { buildVerseUrl } from '../composables/useDeepLink.js'
+import { useScreenReader } from '../composables/useScreenReader.js'
 import { copyText } from '../utils/clipboard.js'
 
 const emit = defineEmits(['open-tafsir'])
 const store = usePlayerStore()
+const { t } = useI18n()
+const { announce } = useScreenReader()
 const copied = ref(false)
 let copiedTimer = null
+const linkCopied = ref(false)
+let linkCopiedTimer = null
 
-onBeforeUnmount(() => clearTimeout(copiedTimer))
+onBeforeUnmount(() => {
+  clearTimeout(copiedTimer)
+  clearTimeout(linkCopiedTimer)
+})
 
 const hasAnyAction = computed(
   () =>
@@ -29,7 +38,7 @@ function canonicalUrl() {
   return `${window.location.origin}${buildVerseUrl(store.currentSurahNum, store.currentVerse.number)}`
 }
 
-function shareVerse() {
+async function shareVerse() {
   const surah = store.currentSurah
   const verse = store.currentVerse
   const translation = store.currentTranslationVerse
@@ -42,8 +51,18 @@ function shareVerse() {
 
   if (navigator.share) {
     navigator.share({ title: verseReference(), text, url }).catch(() => {})
-  } else {
-    void copyText(`${text}\n${url}`)
+    return
+  }
+
+  // No native share sheet (common on desktop): copy the link instead and show
+  // the same transient feedback the copy button uses, so Share never looks dead.
+  if (await copyText(`${text}\n${url}`)) {
+    linkCopied.value = true
+    announce(t('verse.linkCopied'))
+    clearTimeout(linkCopiedTimer)
+    linkCopiedTimer = setTimeout(() => {
+      linkCopied.value = false
+    }, 1500)
   }
 }
 
@@ -121,11 +140,13 @@ async function copyVerse() {
       v-if="store.verseActions.share"
       type="button"
       class="verse-action-btn"
-      :aria-label="$t('verse.share')"
-      :title="$t('verse.share')"
+      :class="{ 'is-copied': linkCopied }"
+      :aria-label="linkCopied ? $t('verse.linkCopied') : $t('verse.share')"
+      :title="linkCopied ? $t('verse.linkCopied') : $t('verse.share')"
       @click="shareVerse"
     >
       <svg
+        v-if="!linkCopied"
         width="15"
         height="15"
         viewBox="0 0 24 24"
@@ -135,6 +156,18 @@ async function copyVerse() {
         aria-hidden="true"
       >
         <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+      </svg>
+      <svg
+        v-else
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M20 6L9 17l-5-5" />
       </svg>
     </button>
 

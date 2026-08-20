@@ -90,6 +90,7 @@ export default {
     share: 'مشاركة الآية',
     copy: 'نسخ نص الآية',
     copied: 'تم النسخ',
+    linkCopied: 'تم نسخ الرابط',
     openTafsir: 'فتح التفسير',
     footnoteN: 'الحاشية {n}',
     footnoteTitle: 'الحاشية {n}',
