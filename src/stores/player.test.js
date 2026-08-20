@@ -238,6 +238,38 @@ describe('preferences persistence', () => {
     expect(store.playbackSpeed).toBe(1)
   })
 
+  it('normalizes a persisted numeric translation id to a qdc string', () => {
+    // Quran.com ids were historically persisted as bare numbers; components
+    // call startsWith on the value, so it must load as a string.
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ translation: 20 }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentTranslation).toBe('qdc.20')
+  })
+
+  it('keeps a persisted qdc string translation id as-is', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ translation: 'qdc.84' }))
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.currentTranslation).toBe('qdc.84')
+  })
+
+  it('drops a non-integer numeric translation id and keeps the default', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ translation: 20.5 }))
+    const store = usePlayerStore()
+    const original = store.currentTranslation
+    store.loadPreferences()
+    expect(store.currentTranslation).toBe(original)
+  })
+
+  it('drops a non-string non-number translation value', () => {
+    localStorage.setItem('quran-player-prefs', JSON.stringify({ translation: { id: 20 } }))
+    const store = usePlayerStore()
+    const original = store.currentTranslation
+    store.loadPreferences()
+    expect(store.currentTranslation).toBe(original)
+  })
+
   it('drops invalid highlightStyle, repeatMode, and tafsirSource', () => {
     localStorage.setItem(
       'quran-player-prefs',
