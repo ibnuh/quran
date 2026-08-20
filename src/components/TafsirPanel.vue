@@ -168,8 +168,14 @@ watch(() => [store.tafsirSource, store.currentVerseIndex, store.currentSurahNum]
 .tafsir-leave-to {
   opacity: 0;
 }
+/* The drawer anchors to the inline-end edge (flex justify-end), which is the
+   left side in RTL, so the slide must mirror. */
 .tafsir-enter-from > :last-child,
 .tafsir-leave-to > :last-child {
   transform: translateX(100%);
+}
+[dir='rtl'] .tafsir-enter-from > :last-child,
+[dir='rtl'] .tafsir-leave-to > :last-child {
+  transform: translateX(-100%);
 }
 </style>
