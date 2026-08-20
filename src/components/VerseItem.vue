@@ -42,7 +42,7 @@ defineEmits(['select'])
       >
         {{ toDisplayArabic(verse.text) }}
       </p>
-      <p class="text-sm sm:text-[0.85rem] leading-normal text-muted">
+      <p class="text-sm sm:text-[0.85rem] leading-normal text-muted text-start" dir="auto">
         {{ translation.text }}
       </p>
     </div>

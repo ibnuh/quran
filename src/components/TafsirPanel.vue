@@ -110,7 +110,12 @@ watch(() => [store.tafsirSource, store.currentVerseIndex, store.currentSurahNum]
               </button>
             </div>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div v-else class="tafsir-body text-sm text-body leading-relaxed" v-html="html"></div>
+            <div
+              v-else
+              class="tafsir-body text-sm text-body leading-relaxed text-start"
+              dir="auto"
+              v-html="html"
+            ></div>
           </div>
         </div>
       </div>
