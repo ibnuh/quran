@@ -416,6 +416,155 @@ describe('offline downloads per reciter', () => {
     expect(store.downloadedSurahs).toEqual([{ reciter: 'sudais', surah: 36 }])
   })
 
+  // Stub the Cache API and record which URLs get deleted per cache name.
+  function stubCaches() {
+    const deleted = {}
+    vi.stubGlobal('caches', {
+      async open(name) {
+        deleted[name] = deleted[name] || []
+        return {
+          async put() {},
+          async delete(url) {
+            deleted[name].push(url)
+            return true
+          }
+        }
+      }
+    })
+    return deleted
+  }
+
+  it('deletes the full-surah MP3 from both audio runtime caches on remove', async () => {
+    const deleted = stubCaches()
+    const store = usePlayerStore()
+    const url = 'https://download.quranicaudio.com/quran/mock/036.mp3'
+    store.currentSurahNum = 36
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'full'
+    store.audioUrl = url
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 36 }]
+
+    await store.removeDownload(36)
+
+    expect(store.downloadedSurahs).toEqual([])
+    expect(deleted['quran-audio-files']).toEqual([url])
+    expect(deleted['quran-verse-audio-files']).toEqual([url])
+  })
+
+  it('deletes every per-verse MP3 from the audio runtime caches on remove', async () => {
+    const deleted = stubCaches()
+    const store = usePlayerStore()
+    const urls = [
+      'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
+      'https://cdn.islamic.network/quran/audio/128/ar.alafasy/2.mp3'
+    ]
+    store.currentSurahNum = 1
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'verse'
+    store.audioUrls = urls
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 1 }]
+
+    await store.removeDownload(1)
+
+    expect(deleted['quran-audio-files']).toEqual(urls)
+    expect(deleted['quran-verse-audio-files']).toEqual(urls)
+  })
+
+  it('falls back to the surah cache for URLs when another surah is loaded', async () => {
+    const deleted = stubCaches()
+    const store = usePlayerStore()
+    const url = 'https://download.quranicaudio.com/quran/mock/036.mp3'
+    cacheSurah(36, store.currentTranslation, 'alafasy', {
+      verses: [],
+      translationVerses: [],
+      playbackMode: 'full',
+      audioUrl: url,
+      audioDurationMs: 1000,
+      verseTimings: [],
+      audioUrls: []
+    })
+    store.currentSurahNum = 2
+    store.currentReciter = 'alafasy'
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 36 }]
+
+    await store.removeDownload(36)
+
+    expect(store.downloadedSurahs).toEqual([])
+    expect(deleted['quran-audio-files']).toEqual([url])
+    expect(deleted['quran-verse-audio-files']).toEqual([url])
+  })
+
+  it('does not delete cached audio that belongs to another reciter', async () => {
+    const deleted = stubCaches()
+    const store = usePlayerStore()
+    // The loaded audio belongs to sudais; removing the alafasy download for the
+    // same surah must not purge it.
+    store.currentSurahNum = 37
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'full'
+    store.audioUrl = null
+    cacheSurah(37, store.currentTranslation, 'sudais', {
+      verses: [],
+      translationVerses: [],
+      playbackMode: 'full',
+      audioUrl: 'https://download.quranicaudio.com/quran/sudais/037.mp3',
+      audioDurationMs: 1000,
+      verseTimings: [],
+      audioUrls: []
+    })
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 37 }]
+
+    await store.removeDownload(37)
+
+    expect(store.downloadedSurahs).toEqual([])
+    expect(deleted['quran-audio-files'] || []).toEqual([])
+    expect(deleted['quran-verse-audio-files'] || []).toEqual([])
+  })
+
+  it('skips cache deletion for non-allowlisted URLs', async () => {
+    const deleted = stubCaches()
+    const store = usePlayerStore()
+    store.currentSurahNum = 38
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://evil.example.com/038.mp3'
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 38 }]
+
+    await store.removeDownload(38)
+
+    expect(store.downloadedSurahs).toEqual([])
+    expect(deleted['quran-audio-files'] || []).toEqual([])
+  })
+
+  it('still removes the prefs entry when the Cache API is unavailable', async () => {
+    const store = usePlayerStore()
+    store.currentSurahNum = 39
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://download.quranicaudio.com/quran/mock/039.mp3'
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 39 }]
+
+    await expect(store.removeDownload(39)).resolves.toBeUndefined()
+    expect(store.downloadedSurahs).toEqual([])
+  })
+
+  it('keeps the prefs entry removal even when a cache delete throws', async () => {
+    vi.stubGlobal('caches', {
+      async open() {
+        throw new Error('cache unavailable')
+      }
+    })
+    const store = usePlayerStore()
+    store.currentSurahNum = 40
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://download.quranicaudio.com/quran/mock/040.mp3'
+    store.downloadedSurahs = [{ reciter: 'alafasy', surah: 40 }]
+
+    await expect(store.removeDownload(40)).resolves.toBeUndefined()
+    expect(store.downloadedSurahs).toEqual([])
+  })
+
   it('migrates v2 bare surah numbers to entries keyed by the stored reciter', () => {
     localStorage.setItem(
       'quran-player-prefs',

@@ -284,6 +284,26 @@ async function putResponseInAudioCaches(url, response) {
   }
 }
 
+// Evict the given MP3 URLs from every runtime audio cache so removing a
+// download actually frees storage instead of only forgetting the prefs entry.
+async function deleteUrlsFromAudioCaches(urls) {
+  if (typeof caches === 'undefined' || !urls.length) {
+    return
+  }
+  for (const cacheName of AUDIO_RUNTIME_CACHE_NAMES) {
+    try {
+      const cache = await caches.open(cacheName)
+      for (const url of urls) {
+        // ignoreVary: Workbox may store responses with Vary headers that
+        // would otherwise prevent an exact-URL match from deleting.
+        await cache.delete(url, { ignoreVary: true })
+      }
+    } catch {
+      // Cache delete is best-effort (private mode, missing Cache API).
+    }
+  }
+}
+
 let loadAbortController = null
 
 const _responsiveDefaults = getResponsiveDefaults()
@@ -772,11 +792,35 @@ export const usePlayerStore = defineStore('player', {
       }
     },
 
-    removeDownload(num) {
+    async removeDownload(num) {
+      const reciter = this.currentReciter
       this.downloadedSurahs = this.downloadedSurahs.filter(
-        d => !(d.reciter === this.currentReciter && d.surah === num)
+        d => !(d.reciter === reciter && d.surah === num)
       )
       this.savePreferences()
+      // Collect the MP3 URLs this download put in the runtime audio caches:
+      // from live state when the removed surah is the loaded one, plus the
+      // in-memory surah cache. URLs are reciter-specific, so entries for the
+      // same surah under other reciters are untouched.
+      const urls = new Set()
+      if (this.currentSurahNum === num) {
+        if (this.audioUrl) {
+          urls.add(this.audioUrl)
+        }
+        for (const url of this.audioUrls) {
+          urls.add(url)
+        }
+      }
+      const cached = getCachedSurah(num, this.currentTranslation, reciter)
+      if (cached) {
+        if (cached.audioUrl) {
+          urls.add(cached.audioUrl)
+        }
+        for (const url of cached.audioUrls || []) {
+          urls.add(url)
+        }
+      }
+      await deleteUrlsFromAudioCaches(filterAllowedAudioUrls([...urls]))
     },
 
     getVerseIndexAtTime(timeMs) {
