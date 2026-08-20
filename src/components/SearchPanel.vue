@@ -199,7 +199,7 @@ function clearQuery() {
               v-for="s in recentSurahs"
               :key="'r-' + s.number"
               type="button"
-              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-colors"
+              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-start cursor-pointer transition-colors"
               @click="pickSurah(s.number)"
             >
               <span
@@ -231,7 +231,7 @@ function clearQuery() {
               v-for="s in suggestedSurahs"
               :key="'s-' + s.number"
               type="button"
-              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-colors"
+              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-start cursor-pointer transition-colors"
               @click="pickSurah(s.number)"
             >
               <span
@@ -260,7 +260,7 @@ function clearQuery() {
               v-for="s in matchedSurahs"
               :key="'m-' + s.number"
               type="button"
-              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-colors"
+              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-start cursor-pointer transition-colors"
               @click="pickSurah(s.number)"
             >
               <span
@@ -289,7 +289,7 @@ function clearQuery() {
               v-for="v in matchedVerses"
               :key="v.index"
               type="button"
-              class="search-row w-full flex items-start gap-3 px-4 py-2.5 text-left cursor-pointer transition-colors"
+              class="search-row w-full flex items-start gap-3 px-4 py-2.5 text-start cursor-pointer transition-colors"
               @click="pickVerse(v.index)"
             >
               <span

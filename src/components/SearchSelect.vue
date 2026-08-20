@@ -254,7 +254,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   background: var(--color-surface);
   color: var(--color-body);
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   transition: border-color 0.2s ease;
   font-family: 'Inter', system-ui, sans-serif;
 }
@@ -318,7 +318,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   color: var(--color-body);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.9rem;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition: background 0.15s ease;
 }

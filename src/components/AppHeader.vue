@@ -614,7 +614,7 @@ onBeforeUnmount(() => {
                 >
                   <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
                 </svg>
-                <span class="flex-1 text-left">{{ $t('header.showBookmarks') }}</span>
+                <span class="flex-1 text-start">{{ $t('header.showBookmarks') }}</span>
                 <span
                   v-if="store.bookmarks.length > 0"
                   class="min-w-[1.125rem] h-[1.125rem] px-1 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center"
@@ -637,7 +637,7 @@ onBeforeUnmount(() => {
                     d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"
                   />
                 </svg>
-                <span class="flex-1 text-left">{{ $t('header.showShortcuts') }}</span>
+                <span class="flex-1 text-start">{{ $t('header.showShortcuts') }}</span>
               </button>
               <button
                 role="menuitem"
@@ -670,7 +670,7 @@ onBeforeUnmount(() => {
                   />
                 </svg>
                 <span
-                  class="flex-1 text-left"
+                  class="flex-1 text-start"
                   :class="store.autoHideControls ? '' : 'opacity-70'"
                   >{{ $t('header.autoHide') }}</span
                 >
@@ -937,7 +937,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.65rem;
   width: 100%;
-  text-align: left;
+  text-align: start;
   padding: 0.55rem 0.6rem;
   border: 1px solid transparent;
   border-radius: 0.8rem;
