@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { defineComponent, reactive } from 'vue'
+import { defineComponent, reactive, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { useMediaSession } from './useMediaSession.js'
 
@@ -9,6 +9,7 @@ function createStoreMock(overrides = {}) {
     currentReciter: 'alafasy',
     currentVerseIndex: 0,
     totalVerses: 3,
+    playbackMode: 'full',
     currentSurah: { englishName: 'Al-Baqara', englishNameTranslation: 'The Cow' },
     currentVerse: { number: 1 },
     currentReciterData: { name: 'Reciter' },
@@ -28,11 +29,21 @@ function createStoreMock(overrides = {}) {
   })
 }
 
-function mountMediaSession(store, handlers) {
+function createAudioMock(overrides = {}) {
+  return {
+    isPlaying: ref(false),
+    duration: ref(100000),
+    currentTimeMs: ref(30000),
+    playbackRate: ref(1),
+    ...overrides
+  }
+}
+
+function mountMediaSession(store, handlers, audio = null) {
   let session = null
   const Comp = defineComponent({
     setup() {
-      session = useMediaSession(store, handlers)
+      session = useMediaSession(store, handlers, audio)
       return {}
     },
     template: '<div />'
@@ -41,7 +52,7 @@ function mountMediaSession(store, handlers) {
   return { wrapper, session }
 }
 
-describe('useMediaSession track actions', () => {
+describe('useMediaSession actions', () => {
   let wrapper
   let actionHandlers
 
@@ -75,8 +86,8 @@ describe('useMediaSession track actions', () => {
     vi.clearAllMocks()
   })
 
-  function bind(store, handlers) {
-    const mounted = mountMediaSession(store, handlers)
+  function bind(store, handlers, audio = null) {
+    const mounted = mountMediaSession(store, handlers, audio)
     wrapper = mounted.wrapper
     mounted.session.update()
   }
@@ -143,5 +154,79 @@ describe('useMediaSession track actions', () => {
 
     expect(handlers.prevVerse).not.toHaveBeenCalled()
     expect(handlers.prevSurah).toHaveBeenCalledTimes(1)
+  })
+
+  it('seekto scrubs the full-surah file to the requested time', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    bind(createStoreMock(), handlers, createAudioMock({ duration: ref(100000) }))
+
+    actionHandlers.seekto({ seekTime: 25 })
+
+    expect(handlers.seek).toHaveBeenCalledTimes(1)
+    expect(handlers.seek).toHaveBeenCalledWith(0.25)
+  })
+
+  it('seekto is inert in verse mode', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    bind(createStoreMock({ playbackMode: 'verse' }), handlers, createAudioMock())
+
+    actionHandlers.seekto({ seekTime: 25 })
+
+    expect(handlers.seek).not.toHaveBeenCalled()
+  })
+
+  it('seekto ignores events without a finite seekTime and works without audio wired', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    bind(createStoreMock(), handlers, createAudioMock())
+
+    actionHandlers.seekto({})
+
+    expect(handlers.seek).not.toHaveBeenCalled()
+
+    wrapper.unmount()
+    bind(createStoreMock(), handlers)
+
+    expect(() => actionHandlers.seekto({ seekTime: 25 })).not.toThrow()
+    expect(handlers.seek).not.toHaveBeenCalled()
+  })
+
+  it('seekbackward steps back by the provided offset', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    const audio = createAudioMock({ duration: ref(100000), currentTimeMs: ref(30000) })
+    bind(createStoreMock(), handlers, audio)
+
+    actionHandlers.seekbackward({ seekOffset: 5 })
+
+    expect(handlers.seek).toHaveBeenCalledWith(0.25)
+  })
+
+  it('seekbackward defaults to 10 seconds and clamps at the start', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    const audio = createAudioMock({ duration: ref(100000), currentTimeMs: ref(4000) })
+    bind(createStoreMock(), handlers, audio)
+
+    actionHandlers.seekbackward({})
+
+    expect(handlers.seek).toHaveBeenCalledWith(0)
+  })
+
+  it('seekforward defaults to 10 seconds and clamps at the end', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    const audio = createAudioMock({ duration: ref(100000), currentTimeMs: ref(95000) })
+    bind(createStoreMock(), handlers, audio)
+
+    actionHandlers.seekforward({})
+
+    expect(handlers.seek).toHaveBeenCalledWith(1)
+  })
+
+  it('seekforward and seekbackward are inert in verse mode', () => {
+    const handlers = { togglePlay: vi.fn(), seek: vi.fn() }
+    bind(createStoreMock({ playbackMode: 'verse' }), handlers, createAudioMock())
+
+    actionHandlers.seekforward({})
+    actionHandlers.seekbackward({})
+
+    expect(handlers.seek).not.toHaveBeenCalled()
   })
 })

@@ -64,6 +64,38 @@ export function useMediaSession(store, handlers, audio = null) {
         handlers.nextSurah()
       }
     })
+
+    // Lock-screen scrubber and 10s skip buttons. Only full-surah mode has one
+    // seekable file; verse mode plays short per-verse clips where a whole-surah
+    // seek target has no meaning, so the handlers stay inert there.
+    const canSeek = () =>
+      typeof handlers.seek === 'function' &&
+      store.playbackMode === 'full' &&
+      audio != null &&
+      (audio.duration?.value || 0) > 0
+
+    navigator.mediaSession.setActionHandler('seekto', details => {
+      if (!canSeek() || !Number.isFinite(details?.seekTime)) {
+        return
+      }
+      handlers.seek((details.seekTime * 1000) / audio.duration.value)
+    })
+    navigator.mediaSession.setActionHandler('seekbackward', details => {
+      if (!canSeek()) {
+        return
+      }
+      const offsetMs = (details?.seekOffset || 10) * 1000
+      const targetMs = Math.max(0, (audio.currentTimeMs?.value || 0) - offsetMs)
+      handlers.seek(targetMs / audio.duration.value)
+    })
+    navigator.mediaSession.setActionHandler('seekforward', details => {
+      if (!canSeek()) {
+        return
+      }
+      const offsetMs = (details?.seekOffset || 10) * 1000
+      const targetMs = Math.min(audio.duration.value, (audio.currentTimeMs?.value || 0) + offsetMs)
+      handlers.seek(targetMs / audio.duration.value)
+    })
   }
 
   function updatePlaybackState() {
