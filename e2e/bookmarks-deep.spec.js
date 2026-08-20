@@ -48,5 +48,6 @@ test('clear all bookmarks removes them', async ({ page }) => {
   await page.getByLabel('Show bookmarks').click()
   const panel = page.getByRole('dialog', { name: 'Bookmarks' })
   await panel.getByText('Clear all').click()
+  await panel.getByText('Confirm clear all').click()
   await expect(panel.getByText('No bookmarks yet')).toBeVisible()
 })
