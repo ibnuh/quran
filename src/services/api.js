@@ -4,6 +4,7 @@ import {
   QURANCOM_API,
   MAX_RETRIES,
   RETRY_DELAY,
+  FETCH_TIMEOUT,
   SURAH_CACHE_MAX,
   isAllowedAudioUrl,
   filterAllowedAudioUrls
@@ -24,8 +25,23 @@ export class ApiError extends Error {
 async function fetchWithRetry(url, retries = MAX_RETRIES, signal) {
   let lastErr = null
   for (let attempt = 0; attempt <= retries; attempt++) {
+    if (signal?.aborted) {
+      throw new DOMException('The operation was aborted.', 'AbortError')
+    }
+    // Each attempt gets its own deadline: abort the attempt after FETCH_TIMEOUT
+    // so a stalled response (captive portal, dead Wi-Fi, hung CDN) fails and can
+    // retry, instead of leaving the caller awaiting forever. The caller signal is
+    // forwarded onto the same per-attempt controller.
+    const attemptController = new AbortController()
+    const onCallerAbort = () => attemptController.abort()
+    let timedOut = false
+    const timer = setTimeout(() => {
+      timedOut = true
+      attemptController.abort()
+    }, FETCH_TIMEOUT)
+    signal?.addEventListener('abort', onCallerAbort, { once: true })
     try {
-      const res = await fetch(url, signal ? { signal } : undefined)
+      const res = await fetch(url, { signal: attemptController.signal })
       if (!res.ok) {
         if (res.status === 404) {
           throw new ApiError('not-found', `Not found (HTTP 404)`, 404)
@@ -34,18 +50,26 @@ async function fetchWithRetry(url, retries = MAX_RETRIES, signal) {
       }
       return res
     } catch (err) {
-      if (err.name === 'AbortError') {
+      if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+        // Caller-initiated aborts propagate as-is; our own deadline is a
+        // transient network failure that should retry like any other.
+        if (signal?.aborted || !timedOut) {
+          throw err
+        }
+        lastErr = new ApiError('network', `Request timed out after ${FETCH_TIMEOUT}ms`)
+      } else if (err instanceof ApiError && err.kind === 'not-found') {
+        // 404 is not transient; do not retry.
         throw err
+      } else {
+        lastErr = err
       }
-      // 404 is not transient; do not retry.
-      if (err instanceof ApiError && err.kind === 'not-found') {
-        throw err
-      }
-      lastErr = err
       if (attempt === retries) {
         break
       }
       await new Promise(r => setTimeout(r, RETRY_DELAY * Math.pow(2, attempt)))
+    } finally {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', onCallerAbort)
     }
   }
   if (lastErr instanceof ApiError) {
@@ -75,11 +99,14 @@ async function fetchJsonDeduped(url, signal) {
     entry = { promise, controller, waiters: 0 }
     inflight.set(url, entry)
     // Drop the shared entry once the request settles, regardless of consumers.
-    void promise.finally(() => {
+    // Attached via then(cleanup, cleanup) rather than finally() so a rejected
+    // request does not spawn an unhandled derived promise.
+    const cleanup = () => {
       if (inflight.get(url) === entry) {
         inflight.delete(url)
       }
-    })
+    }
+    promise.then(cleanup, cleanup)
   }
 
   entry.waiters += 1
