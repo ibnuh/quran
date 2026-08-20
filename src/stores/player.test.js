@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePlayerStore } from './player.js'
 import { cacheSurah } from '../services/api.js'
@@ -358,6 +358,115 @@ describe('setReciter', () => {
     store.currentVerseIndex = 10
     await store.setReciter('sudais')
     expect(store.currentVerseIndex).toBe(0)
+  })
+})
+
+describe('offline downloads per reciter', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function stubFetchOk() {
+    vi.stubGlobal('fetch', async () => ({
+      ok: true,
+      clone() {
+        return this
+      },
+      arrayBuffer: async () => new ArrayBuffer(0)
+    }))
+  }
+
+  it('records the reciter with a download so another reciter is not marked downloaded', async () => {
+    stubFetchOk()
+    const store = usePlayerStore()
+    store.currentSurahNum = 36
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://download.quranicaudio.com/quran/mock/036.mp3'
+    await store.downloadCurrentSurah()
+    expect(store.downloadedSurahs).toEqual([{ reciter: 'alafasy', surah: 36 }])
+    expect(store.isCurrentDownloaded).toBe(true)
+
+    store.currentReciter = 'sudais'
+    expect(store.isCurrentDownloaded).toBe(false)
+
+    store.currentReciter = 'alafasy'
+    expect(store.isCurrentDownloaded).toBe(true)
+  })
+
+  it('does not duplicate an entry when the same reciter downloads a surah twice', async () => {
+    stubFetchOk()
+    const store = usePlayerStore()
+    store.currentSurahNum = 36
+    store.playbackMode = 'full'
+    store.audioUrl = 'https://download.quranicaudio.com/quran/mock/036.mp3'
+    await store.downloadCurrentSurah()
+    await store.downloadCurrentSurah()
+    expect(store.downloadedSurahs.length).toBe(1)
+  })
+
+  it('removes a download only for the current reciter', () => {
+    const store = usePlayerStore()
+    store.downloadedSurahs = [
+      { reciter: 'alafasy', surah: 36 },
+      { reciter: 'sudais', surah: 36 }
+    ]
+    store.currentReciter = 'alafasy'
+    store.removeDownload(36)
+    expect(store.downloadedSurahs).toEqual([{ reciter: 'sudais', surah: 36 }])
+  })
+
+  it('migrates v2 bare surah numbers to entries keyed by the stored reciter', () => {
+    localStorage.setItem(
+      'quran-player-prefs',
+      JSON.stringify({ version: 2, reciter: 'sudais', downloadedSurahs: [36, 1] })
+    )
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.downloadedSurahs).toEqual([
+      { reciter: 'sudais', surah: 36 },
+      { reciter: 'sudais', surah: 1 }
+    ])
+  })
+
+  it('migrates v2 downloads to the default reciter when the stored reciter is invalid', () => {
+    localStorage.setItem(
+      'quran-player-prefs',
+      JSON.stringify({ version: 2, reciter: 'does-not-exist', downloadedSurahs: [36] })
+    )
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.downloadedSurahs).toEqual([{ reciter: 'alafasy', surah: 36 }])
+  })
+
+  it('drops malformed download entries on load', () => {
+    localStorage.setItem(
+      'quran-player-prefs',
+      JSON.stringify({
+        version: 3,
+        downloadedSurahs: [
+          { reciter: 'alafasy', surah: 36 },
+          { reciter: 'does-not-exist', surah: 2 },
+          { reciter: 'alafasy', surah: 999 },
+          36,
+          null
+        ]
+      })
+    )
+    const store = usePlayerStore()
+    store.loadPreferences()
+    expect(store.downloadedSurahs).toEqual([{ reciter: 'alafasy', surah: 36 }])
+  })
+
+  it('round-trips download entries through localStorage', () => {
+    const store = usePlayerStore()
+    store.downloadedSurahs = [{ reciter: 'sudais', surah: 36 }]
+    store.writePreferencesNow()
+
+    setActivePinia(createPinia())
+    const fresh = usePlayerStore()
+    fresh.loadPreferences()
+    expect(fresh.downloadedSurahs).toEqual([{ reciter: 'sudais', surah: 36 }])
   })
 })
 
