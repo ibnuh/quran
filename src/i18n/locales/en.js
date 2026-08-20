@@ -122,8 +122,10 @@ export default {
     suggested: 'Suggested',
     suggestedHint: 'Popular surahs to start with',
     versesIn: 'Verses in {surah}',
+    goToAyah: 'Go to {surah} {verse}',
     noMatchesTitle: 'No matches',
-    noMatches: 'Try a surah name or number. Verse search covers the current surah only.',
+    noMatches:
+      'Try a surah name, a number, or a reference like 2:255. Verse search covers the current surah only.',
     tafsir: 'Tafsir',
     tafsirSource: 'Tafsir source',
     closeTafsir: 'Close tafsir',

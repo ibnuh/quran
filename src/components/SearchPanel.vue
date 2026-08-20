@@ -4,10 +4,11 @@ import { usePlayerStore } from '../stores/player.js'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
 import { normalizeArabicForSearch } from '../utils/arabicText.js'
 import { matchesLatinSearch } from '../utils/latinText.js'
+import { parseAyahReference } from '../utils/ayahReference.js'
 import SURAHS from '../data/surahs.js'
 
 const store = usePlayerStore()
-const emit = defineEmits(['close', 'select-surah', 'select-verse'])
+const emit = defineEmits(['close', 'select-surah', 'select-verse', 'select-ayah'])
 const panelRef = ref(null)
 const query = ref('')
 
@@ -40,6 +41,13 @@ const matchedSurahs = computed(() => {
       (hasArabicQuery.value && fq && SURAH_NAMES_FOLDED[i].includes(fq))
     )
   }).slice(0, 8)
+})
+
+// An ayah reference like "2:255" or "٢ ٢٥٥" offers a direct jump, mirroring
+// the /2/255 deep link.
+const ayahReference = computed(() => {
+  const ref = parseAyahReference(query.value)
+  return ref ? { ...ref, surahInfo: SURAHS[ref.surah - 1] } : null
 })
 
 // Recently opened surahs, shown when the query is empty.
@@ -94,7 +102,11 @@ const matchedVerses = computed(() => {
 })
 
 const showEmptyResults = computed(
-  () => !!normalized.value && !matchedSurahs.value.length && !matchedVerses.value.length
+  () =>
+    !!normalized.value &&
+    !ayahReference.value &&
+    !matchedSurahs.value.length &&
+    !matchedVerses.value.length
 )
 
 function pickSurah(num) {
@@ -104,6 +116,12 @@ function pickSurah(num) {
 
 function pickVerse(index) {
   emit('select-verse', index)
+  emit('close')
+}
+
+function pickAyahReference() {
+  const { surah, ayah } = ayahReference.value
+  emit('select-ayah', { surah, ayah })
   emit('close')
 }
 
@@ -246,6 +264,33 @@ function clearQuery() {
               </span>
               <span class="shrink-0 text-sm text-muted font-arabic" dir="rtl" lang="ar">{{
                 s.name
+              }}</span>
+            </button>
+          </div>
+
+          <div v-if="ayahReference">
+            <button
+              type="button"
+              class="search-row w-full flex items-center gap-3 px-4 py-2.5 text-start cursor-pointer transition-colors"
+              @click="pickAyahReference"
+            >
+              <span
+                class="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center"
+                >{{ ayahReference.surah }}</span
+              >
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm text-body truncate">{{
+                  $t('panels.goToAyah', {
+                    surah: ayahReference.surahInfo.englishName,
+                    verse: ayahReference.ayah
+                  })
+                }}</span>
+                <span class="block text-xs text-muted truncate">{{
+                  ayahReference.surahInfo.englishNameTranslation
+                }}</span>
+              </span>
+              <span class="shrink-0 text-sm text-muted font-arabic" dir="rtl" lang="ar">{{
+                ayahReference.surahInfo.name
               }}</span>
             </button>
           </div>
