@@ -212,9 +212,14 @@ function normalizePrefs(prefs) {
     out.tafsirSource = undefined
   }
   if (out.translation && !TRANSLATION_IDS.has(out.translation)) {
-    // Allow Quran.com numeric ids encoded as strings/numbers via resolve path;
-    // only drop clearly invalid non-string/non-number values.
-    if (typeof out.translation !== 'string' && typeof out.translation !== 'number') {
+    // Quran.com ids may be persisted as bare numbers; normalize them to qdc.N
+    // strings so consumers can rely on string methods (startsWith, split).
+    if (typeof out.translation === 'number') {
+      out.translation =
+        Number.isInteger(out.translation) && out.translation > 0
+          ? `qdc.${out.translation}`
+          : undefined
+    } else if (typeof out.translation !== 'string') {
       out.translation = undefined
     }
   }
