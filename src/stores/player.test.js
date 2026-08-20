@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePlayerStore } from './player.js'
+import { cacheSurah } from '../services/api.js'
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -273,6 +274,58 @@ describe('setJuz', () => {
     expect(store.currentVerseIndex).toBe(141)
     const saved = JSON.parse(localStorage.getItem('quran-player-prefs'))
     expect(saved.verse).toBe(141)
+  })
+})
+
+describe('setReciter', () => {
+  it('keeps the current verse index across a reciter switch', async () => {
+    const store = usePlayerStore()
+    store.loadSurah = async () => {} // avoid real network in unit test
+    store.currentSurahNum = 2
+    store.verses = Array.from({ length: 286 }, (_, i) => ({ number: i + 1, text: 'كلمة' }))
+    store.currentVerseIndex = 149
+    await store.setReciter('sudais')
+    expect(store.currentReciter).toBe('sudais')
+    expect(store.currentVerseIndex).toBe(149)
+  })
+
+  it('persists the kept verse index so a reload restores it', async () => {
+    const store = usePlayerStore()
+    store.loadSurah = async () => {}
+    store.verses = Array.from({ length: 286 }, (_, i) => ({ number: i + 1, text: 'كلمة' }))
+    store.currentVerseIndex = 149
+    await store.setReciter('sudais')
+    const saved = JSON.parse(localStorage.getItem('quran-player-prefs'))
+    expect(saved.reciter).toBe('sudais')
+    expect(saved.verse).toBe(149)
+  })
+
+  it('resets the word highlight index because timings are reciter-specific', async () => {
+    const store = usePlayerStore()
+    store.loadSurah = async () => {}
+    store.verses = [{ number: 1, text: 'كلمة كلمة' }]
+    store.currentWordIndex = 1
+    await store.setReciter('sudais')
+    expect(store.currentWordIndex).toBe(-1)
+  })
+
+  it('clamps an out-of-range verse index through loadSurah', async () => {
+    const store = usePlayerStore()
+    // Prime the surah cache so the real loadSurah resolves synchronously and
+    // exercises its clamp for indexes past the end of the surah.
+    const verses = Array.from({ length: 3 }, (_, i) => ({ number: i + 1, text: 'كلمة' }))
+    cacheSurah(store.currentSurahNum, store.currentTranslation, 'sudais', {
+      verses,
+      translationVerses: verses.map(v => ({ number: v.number, text: 'x' })),
+      playbackMode: 'full',
+      audioUrl: 'https://download.quranicaudio.com/quran/mock/001.mp3',
+      audioDurationMs: 30000,
+      verseTimings: [],
+      audioUrls: []
+    })
+    store.currentVerseIndex = 10
+    await store.setReciter('sudais')
+    expect(store.currentVerseIndex).toBe(0)
   })
 })
 

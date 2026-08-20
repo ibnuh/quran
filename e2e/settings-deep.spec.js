@@ -1,4 +1,4 @@
-import { test, expect, mockApi, startFresh } from './fixtures.js'
+import { test, expect, mockApi, startFresh, waitForSurahLoad, expectVerseChip } from './fixtures.js'
 
 test.beforeEach(async ({ page }) => {
   mockApi(page)
@@ -44,6 +44,25 @@ test('arabic font changes in settings modal', async ({ page }) => {
 test('highlight style selection exists in settings', async ({ page }) => {
   const modal = await openSettingsTab(page, 'Playback')
   await expect(modal.getByText(/Highlight style/i)).toBeVisible()
+})
+
+test('switching reciters keeps the current verse', async ({ page }) => {
+  await page.getByLabel('Next verse').click()
+  await page.getByLabel('Next verse').click()
+  await expectVerseChip(page, 3)
+
+  const modal = await openSettingsTab(page, 'Playback')
+  await modal.getByRole('button', { name: 'Reciter' }).click()
+  await page.getByRole('option', { name: /as-Sudais/ }).click()
+  await waitForSurahLoad(page)
+
+  await expectVerseChip(page, 3)
+  const stored = await page.evaluate(() => {
+    const raw = localStorage.getItem('quran-player-prefs')
+    return raw ? JSON.parse(raw) : null
+  })
+  expect(stored.reciter).toBe('sudais')
+  expect(stored.verse).toBe(2)
 })
 
 test('about section is present in settings', async ({ page }) => {
