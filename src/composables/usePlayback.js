@@ -1,6 +1,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { getPreloadCount } from '../config.js'
 import { safeLocalStorageGet } from '../utils/storage.js'
+import JUZS from '../data/juzs.js'
 
 // Playback orchestration: play/pause, verse and surah navigation, repeat handling,
 // continuous cross-surah playback, and verse-mode audio preloading.
@@ -276,6 +277,26 @@ export function usePlayback(store, audio) {
         preloadAhead()
       }
     }
+  }
+
+  // Jump to a juz. When the juz starts inside the current surah, go through the
+  // verse seek path: writing only the index would be snapped back to the playhead
+  // by the word-highlight loop within one frame. Cross-surah jumps keep using
+  // setJuz, which loads the new surah and persists the target verse.
+  async function handleGoToJuz(num) {
+    const juz = JUZS.find(j => j.number === num)
+    if (!juz) {
+      return
+    }
+    if (juz.startSurah === store.currentSurahNum) {
+      const idx = store.verses.findIndex(v => v.number === juz.startVerse)
+      if (idx >= 0) {
+        handleJumpToVerse(idx)
+        return
+      }
+    }
+    audio.stop()
+    await store.setJuz(num)
   }
 
   async function handleGoToBookmark(surahNum, verseIndex) {
@@ -591,6 +612,7 @@ export function usePlayback(store, audio) {
     handleVerseSelect,
     playFromVerse,
     handleJumpToVerse,
+    handleGoToJuz,
     handleGoToBookmark,
     handleSeek,
     handleSetSpeed
