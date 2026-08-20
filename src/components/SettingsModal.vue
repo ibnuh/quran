@@ -238,7 +238,8 @@ onMounted(updateStorage)
 
 function toggleDownload() {
   if (store.isCurrentDownloaded) {
-    store.removeDownload(store.currentSurahNum)
+    // Remove deletes the cached MP3s, so the storage estimate must refresh.
+    store.removeDownload(store.currentSurahNum).then(updateStorage)
   } else {
     store.downloadCurrentSurah().then(updateStorage)
   }
