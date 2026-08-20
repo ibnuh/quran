@@ -83,6 +83,7 @@ const {
   handleVerseSelect,
   playFromVerse,
   handleJumpToVerse,
+  handleGoToJuz,
   handleGoToBookmark,
   handleSeek,
   handleSetSpeed
@@ -394,6 +395,7 @@ watch(
         @toggle-shortcuts="showShortcuts = !showShortcuts"
         @toggle-bookmarks="showBookmarks = !showBookmarks"
         @toggle-search="showSearch = !showSearch"
+        @select-juz="handleGoToJuz"
       />
       <div class="absolute top-full left-0 right-0 pointer-events-none">
         <SettingsBar :visible="showSettingsBar" @collapse="showSettingsBar = false" />

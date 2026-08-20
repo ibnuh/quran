@@ -11,7 +11,8 @@ const emit = defineEmits([
   'toggle-shortcuts',
   'toggle-settings-bar',
   'toggle-bookmarks',
-  'toggle-search'
+  'toggle-search',
+  'select-juz'
 ])
 const store = usePlayerStore()
 const { t } = useI18n()
@@ -222,7 +223,7 @@ onBeforeUnmount(() => {
           </svg>
           <span>{{ $t('header.quickSettings') }}</span>
         </button>
-        <JuzPicker />
+        <JuzPicker @select="num => emit('select-juz', num)" />
         <button
           class="flex header-btn shrink-0"
           :aria-label="$t('header.search')"

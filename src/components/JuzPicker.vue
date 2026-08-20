@@ -5,7 +5,7 @@ import JUZS from '../data/juzs.js'
 import { isRtlDocument } from '../utils/direction.js'
 
 const store = usePlayerStore()
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'select'])
 const showPicker = ref(false)
 const pickerRef = ref(null)
 
@@ -20,7 +20,9 @@ function selectJuz(num) {
     (juz.startSurah !== store.currentSurahNum ||
       juz.startVerse !== (store.verses[store.currentVerseIndex]?.number || 0))
   ) {
-    store.setJuz(num)
+    // The parent routes this through the playback seek path so the audio
+    // playhead actually moves; setting the store index alone is not enough.
+    emit('select', num)
   }
   showPicker.value = false
 }

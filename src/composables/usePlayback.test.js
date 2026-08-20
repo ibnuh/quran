@@ -171,3 +171,92 @@ describe('usePlayback verse navigation', () => {
     expect(audio.seekTo).toHaveBeenCalledWith(0)
   })
 })
+
+describe('usePlayback juz navigation', () => {
+  let wrapper
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount()
+      wrapper = null
+    }
+    vi.clearAllMocks()
+  })
+
+  // Surah 2 (Al-Baqarah, 286 verses). Juz 2 starts at verse 142 (index 141).
+  function createBaqarahStore(overrides = {}) {
+    const verses = Array.from({ length: 286 }, (_, i) => ({ number: i + 1, text: 'x' }))
+    const verseTimings = verses.map((_, i) => ({
+      timestampFrom: i * 1000,
+      timestampTo: (i + 1) * 1000
+    }))
+    return createStoreMock({
+      currentSurahNum: 2,
+      totalVerses: 286,
+      verses,
+      verseTimings,
+      audioDurationMs: 286000,
+      setJuz: vi.fn(() => Promise.resolve()),
+      ...overrides
+    })
+  }
+
+  it('seeks full-mode audio to the juz start when the surah does not change (playing)', async () => {
+    const store = createBaqarahStore()
+    const audio = createAudioMock({ playing: true })
+    const mounted = mountPlayback(store, audio)
+    wrapper = mounted.wrapper
+
+    await mounted.playback.handleGoToJuz(2)
+
+    expect(store.currentVerseIndex).toBe(141)
+    expect(audio.playAt).toHaveBeenCalledWith(store.audioUrl, 141000)
+    expect(store.setJuz).not.toHaveBeenCalled()
+  })
+
+  it('loads and seeks full-mode audio to the juz start when paused', async () => {
+    const store = createBaqarahStore()
+    const audio = createAudioMock({ playing: false })
+    const mounted = mountPlayback(store, audio)
+    wrapper = mounted.wrapper
+
+    await mounted.playback.handleGoToJuz(3)
+
+    // Juz 3 starts at Al-Baqarah verse 253 (index 252).
+    expect(store.currentVerseIndex).toBe(252)
+    expect(audio.load).toHaveBeenCalledWith(store.audioUrl)
+    expect(audio.seekTo).toHaveBeenCalledWith(252000)
+    expect(store.setJuz).not.toHaveBeenCalled()
+  })
+
+  it('reloads the verse-mode file at the juz start when playing', async () => {
+    const audioUrls = Array.from({ length: 286 }, (_, i) => `https://audio.test/v${i + 1}.mp3`)
+    const store = createBaqarahStore({
+      playbackMode: 'verse',
+      audioUrl: null,
+      audioUrls,
+      verseTimings: []
+    })
+    const audio = createAudioMock({ playing: true })
+    const mounted = mountPlayback(store, audio)
+    wrapper = mounted.wrapper
+
+    await mounted.playback.handleGoToJuz(2)
+
+    expect(store.currentVerseIndex).toBe(141)
+    expect(audio.loadAndPlay).toHaveBeenCalledWith(audioUrls[141])
+    expect(store.setJuz).not.toHaveBeenCalled()
+  })
+
+  it('stops audio and delegates to setJuz when the juz starts in another surah', async () => {
+    const store = createBaqarahStore({ currentSurahNum: 1 })
+    const audio = createAudioMock({ playing: true })
+    const mounted = mountPlayback(store, audio)
+    wrapper = mounted.wrapper
+
+    await mounted.playback.handleGoToJuz(2)
+
+    expect(audio.stop).toHaveBeenCalled()
+    expect(store.setJuz).toHaveBeenCalledWith(2)
+  })
+})
