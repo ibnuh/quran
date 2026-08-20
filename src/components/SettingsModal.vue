@@ -243,6 +243,10 @@ function toggleDownload() {
     store.downloadCurrentSurah().then(updateStorage)
   }
 }
+
+// Downloads are keyed per reciter, so the same surah saved with two reciters
+// is one surah here but two entries in downloadedSurahs.
+const savedSurahCount = computed(() => new Set(store.downloadedSurahs.map(d => d.surah)).size)
 // The Madani mushaf glyph font (QCF) is offered as an entry in the same dropdown rather
 // than a separate toggle: picking it turns on mushaf mode, picking any real font turns it
 // off. QCF_FONT_VALUE is a sentinel, not a real font id.
@@ -872,7 +876,7 @@ function onLanguageChange(code) {
                   v-if="storageText || store.downloadedSurahs.length"
                   class="text-xs text-muted text-center"
                 >
-                  {{ $t('settings.surahsSaved', { count: store.downloadedSurahs.length })
+                  {{ $t('settings.surahsSaved', { count: savedSurahCount })
                   }}<span v-if="storageText"> · {{ storageText }}</span>
                 </p>
               </div>

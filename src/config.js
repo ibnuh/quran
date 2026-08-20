@@ -12,7 +12,7 @@ export const SW_JUST_UPDATED_KEY = 'quran-sw-just-updated'
 // Runtime Workbox cache names for Quran audio (must match vite.config.js).
 export const AUDIO_RUNTIME_CACHE_NAMES = ['quran-audio-files', 'quran-verse-audio-files']
 // Bump when the persisted preferences shape changes in a non-additive way.
-export const PREFS_VERSION = 2
+export const PREFS_VERSION = 3
 
 // -- API endpoints --
 export const TEXT_API = 'https://api.alquran.cloud/v1'

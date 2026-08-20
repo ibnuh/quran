@@ -100,6 +100,12 @@ function errorMessageFor(err, { isAudio = false } = {}) {
   return t('errors.generic')
 }
 
+const DEFAULT_RECITER_ID = 'alafasy'
+
+function isValidReciterId(id) {
+  return typeof id === 'string' && RECITERS.some(r => r.id === id)
+}
+
 // Versioned migrators run in order from the stored version up to PREFS_VERSION.
 // Key is the version being migrated *from*.
 const PREFS_MIGRATORS = {
@@ -109,6 +115,19 @@ const PREFS_MIGRATORS = {
     if (typeof out.reciter === 'number') {
       const found = RECITERS.find(r => r.cdnId === out.reciter)
       out.reciter = found ? found.id : undefined
+    }
+    return out
+  },
+  // v2 -> v3: downloadedSurahs held bare surah numbers, but cached MP3s are
+  // reciter-specific. Attribute legacy downloads to the stored reciter (the
+  // one most likely used to download them), falling back to the default.
+  2: prefs => {
+    const out = { ...prefs }
+    if (Array.isArray(out.downloadedSurahs)) {
+      const reciter = isValidReciterId(out.reciter) ? out.reciter : DEFAULT_RECITER_ID
+      out.downloadedSurahs = out.downloadedSurahs
+        .filter(n => typeof n === 'number' && n >= 1 && n <= TOTAL_SURAHS)
+        .map(n => ({ reciter, surah: n }))
     }
     return out
   }
@@ -225,7 +244,13 @@ function normalizePrefs(prefs) {
   }
   if (Array.isArray(out.downloadedSurahs)) {
     out.downloadedSurahs = out.downloadedSurahs.filter(
-      n => typeof n === 'number' && n >= 1 && n <= TOTAL_SURAHS
+      d =>
+        d &&
+        typeof d === 'object' &&
+        isValidReciterId(d.reciter) &&
+        typeof d.surah === 'number' &&
+        d.surah >= 1 &&
+        d.surah <= TOTAL_SURAHS
     )
   }
   if (Array.isArray(out.recentSurahs)) {
@@ -369,7 +394,8 @@ export const usePlayerStore = defineStore('player', {
     errorKind: null, // 'text' | 'audio' | null
     bookmarks: [],
     recentSurahs: [],
-    // Offline downloads: surah numbers explicitly cached for offline use.
+    // Offline downloads: { reciter, surah } entries explicitly cached for offline
+    // use. Keyed per reciter because the cached MP3s are reciter-specific URLs.
     downloadedSurahs: [],
     downloadingSurah: null,
     downloadError: false
@@ -412,7 +438,10 @@ export const usePlayerStore = defineStore('player', {
       state.bookmarks.some(
         b => b.surahNum === state.currentSurahNum && b.verseIndex === state.currentVerseIndex
       ),
-    isCurrentDownloaded: state => state.downloadedSurahs.includes(state.currentSurahNum),
+    isCurrentDownloaded: state =>
+      state.downloadedSurahs.some(
+        d => d.reciter === state.currentReciter && d.surah === state.currentSurahNum
+      ),
     // True when the current surah has a playable, allowlisted audio source.
     canPlayAudio: state =>
       !state.audioUnavailable &&
@@ -707,6 +736,9 @@ export const usePlayerStore = defineStore('player', {
     // audio files populates the CacheFirst audio cache. Uses CORS so failures are real.
     async downloadCurrentSurah() {
       const num = this.currentSurahNum
+      // Capture the reciter now: the loaded audio URLs belong to it, and the
+      // user could switch reciters while the downloads are in flight.
+      const reciter = this.currentReciter
       if (this.downloadingSurah !== null) {
         return
       }
@@ -729,8 +761,8 @@ export const usePlayerStore = defineStore('player', {
           // Fully consume the body so the download is complete even without Cache API.
           await res.arrayBuffer()
         }
-        if (!this.downloadedSurahs.includes(num)) {
-          this.downloadedSurahs.push(num)
+        if (!this.downloadedSurahs.some(d => d.reciter === reciter && d.surah === num)) {
+          this.downloadedSurahs.push({ reciter, surah: num })
         }
         this.savePreferences()
       } catch {
@@ -741,7 +773,9 @@ export const usePlayerStore = defineStore('player', {
     },
 
     removeDownload(num) {
-      this.downloadedSurahs = this.downloadedSurahs.filter(n => n !== num)
+      this.downloadedSurahs = this.downloadedSurahs.filter(
+        d => !(d.reciter === this.currentReciter && d.surah === num)
+      )
       this.savePreferences()
     },
 
