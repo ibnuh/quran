@@ -245,6 +245,24 @@ function toggleDownload() {
   }
 }
 
+// Name the downloading surah (it may differ from the one on screen when the
+// user navigates mid-download) and show a file-count fraction for per-verse
+// downloads. Full-surah downloads are a single MP3, so the fraction is omitted.
+const downloadButtonLabel = computed(() => {
+  if (store.downloadingSurah !== null) {
+    const progress = store.downloadProgress
+    if (progress && progress.total > 1) {
+      return t('settings.downloadingProgress', {
+        surah: store.downloadingSurahName,
+        current: progress.current,
+        total: progress.total
+      })
+    }
+    return t('settings.downloading', { surah: store.downloadingSurahName })
+  }
+  return store.isCurrentDownloaded ? t('settings.downloaded') : t('settings.download')
+})
+
 // Downloads are keyed per reciter, so the same surah saved with two reciters
 // is one surah here but two entries in downloadedSurahs.
 const savedSurahCount = computed(() => new Set(store.downloadedSurahs.map(d => d.surah)).size)
@@ -859,13 +877,15 @@ function onLanguageChange(code) {
                     />
                     <path v-else d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
                   </svg>
-                  {{
-                    store.downloadingSurah === store.currentSurahNum
-                      ? $t('settings.downloading')
-                      : store.isCurrentDownloaded
-                        ? $t('settings.downloaded')
-                        : $t('settings.download')
-                  }}
+                  {{ downloadButtonLabel }}
+                </button>
+                <button
+                  v-if="store.downloadingSurah !== null"
+                  type="button"
+                  class="w-full px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-body hover:bg-border transition-colors cursor-pointer"
+                  @click="store.cancelDownload()"
+                >
+                  {{ $t('settings.downloadCancel') }}
                 </button>
                 <p v-if="store.downloadError" class="text-xs text-red-500 text-center">
                   {{ $t('settings.downloadFailed') }}

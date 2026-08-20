@@ -619,6 +619,118 @@ describe('offline downloads per reciter', () => {
   })
 })
 
+describe('download progress and cancel', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const VERSE_URLS = [
+    'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
+    'https://cdn.islamic.network/quran/audio/128/ar.alafasy/2.mp3',
+    'https://cdn.islamic.network/quran/audio/128/ar.alafasy/3.mp3'
+  ]
+
+  function okResponse() {
+    return {
+      ok: true,
+      clone() {
+        return this
+      },
+      arrayBuffer: async () => new ArrayBuffer(0)
+    }
+  }
+
+  function usePerVerseStore() {
+    const store = usePlayerStore()
+    store.currentSurahNum = 1
+    store.currentReciter = 'alafasy'
+    store.playbackMode = 'verse'
+    store.audioUrls = VERSE_URLS
+    return store
+  }
+
+  it('tracks { current, total } across per-verse downloads and clears it when done', async () => {
+    const store = usePerVerseStore()
+    const seen = []
+    vi.stubGlobal('fetch', async () => {
+      seen.push({ ...store.downloadProgress })
+      return okResponse()
+    })
+    await store.downloadCurrentSurah()
+    expect(seen).toEqual([
+      { current: 0, total: 3 },
+      { current: 1, total: 3 },
+      { current: 2, total: 3 }
+    ])
+    expect(store.downloadProgress).toBe(null)
+    expect(store.downloadingSurah).toBe(null)
+    expect(store.downloadedSurahs).toEqual([{ reciter: 'alafasy', surah: 1 }])
+  })
+
+  it('exposes the name of the surah being downloaded', () => {
+    const store = usePlayerStore()
+    expect(store.downloadingSurahName).toBe('')
+    store.downloadingSurah = 36
+    expect(store.downloadingSurahName).toBe('Yaseen')
+  })
+
+  it('cancels an in-flight download via abort without flagging an error', async () => {
+    const store = usePerVerseStore()
+    vi.stubGlobal(
+      'fetch',
+      (url, { signal }) =>
+        new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+        })
+    )
+    const download = store.downloadCurrentSurah()
+    expect(store.downloadingSurah).toBe(1)
+    expect(store.downloadProgress).toEqual({ current: 0, total: 3 })
+    store.cancelDownload()
+    await download
+    expect(store.downloadError).toBe(false)
+    expect(store.downloadingSurah).toBe(null)
+    expect(store.downloadProgress).toBe(null)
+    expect(store.downloadedSurahs).toEqual([])
+  })
+
+  it('leaves the surah unmarked when cancelled after some files completed', async () => {
+    const store = usePerVerseStore()
+    let calls = 0
+    vi.stubGlobal('fetch', (url, { signal }) => {
+      calls += 1
+      if (calls < 2) {
+        return Promise.resolve(okResponse())
+      }
+      return new Promise((resolve, reject) => {
+        signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+      })
+    })
+    const download = store.downloadCurrentSurah()
+    await vi.waitFor(() => expect(store.downloadProgress?.current).toBe(1))
+    store.cancelDownload()
+    await download
+    expect(store.downloadError).toBe(false)
+    expect(store.downloadedSurahs).toEqual([])
+    expect(store.downloadProgress).toBe(null)
+  })
+
+  it('clears progress state when a download fails', async () => {
+    const store = usePerVerseStore()
+    vi.stubGlobal('fetch', async () => ({ ok: false, status: 500 }))
+    await store.downloadCurrentSurah()
+    expect(store.downloadError).toBe(true)
+    expect(store.downloadProgress).toBe(null)
+    expect(store.downloadingSurah).toBe(null)
+  })
+
+  it('cancelDownload is a no-op when nothing is downloading', () => {
+    const store = usePlayerStore()
+    expect(() => store.cancelDownload()).not.toThrow()
+    expect(store.downloadError).toBe(false)
+  })
+})
+
 describe('canPlayAudio', () => {
   it('is false when audio is unavailable', () => {
     const store = usePlayerStore()
