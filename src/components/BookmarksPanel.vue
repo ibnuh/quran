@@ -110,11 +110,7 @@ onBeforeUnmount(disarmClear)
             <p class="text-xs text-muted/40 mt-1">{{ $t('panels.noBookmarksHint') }}</p>
           </div>
 
-          <ul
-            v-else
-            class="p-4 space-y-2 list-none m-0"
-            style="padding-right: max(1rem, env(safe-area-inset-right, 0px))"
-          >
+          <ul v-else class="p-4 space-y-2 list-none m-0 panel-list-safe-area">
             <li
               v-for="(bm, i) in store.bookmarks"
               :key="bm.surahNum + '-' + bm.verseIndex"
@@ -122,7 +118,7 @@ onBeforeUnmount(disarmClear)
             >
               <button
                 type="button"
-                class="w-full text-left p-3.5 pr-12 cursor-pointer bg-transparent border-0"
+                class="w-full text-left p-3.5 pe-12 cursor-pointer bg-transparent border-0"
                 @click="goToBookmark(i)"
               >
                 <span class="block text-xs font-semibold text-primary tracking-wide mb-1.5">
@@ -192,11 +188,22 @@ onBeforeUnmount(disarmClear)
 .panel-leave-to {
   opacity: 0;
 }
-.panel-enter-from > :last-child {
-  transform: translateX(100%);
-}
+/* The drawer anchors to the inline-end edge (flex justify-end), which is the
+   left side in RTL, so both the slide and the safe-area inset must mirror. */
+.panel-enter-from > :last-child,
 .panel-leave-to > :last-child {
   transform: translateX(100%);
+}
+[dir='rtl'] .panel-enter-from > :last-child,
+[dir='rtl'] .panel-leave-to > :last-child {
+  transform: translateX(-100%);
+}
+
+.panel-list-safe-area {
+  padding-inline-end: max(1rem, env(safe-area-inset-right, 0px));
+}
+[dir='rtl'] .panel-list-safe-area {
+  padding-inline-end: max(1rem, env(safe-area-inset-left, 0px));
 }
 
 /* On fine pointers, de-emphasize remove until hover so the card stays calm. */

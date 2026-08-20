@@ -313,10 +313,7 @@ function onLanguageChange(code) {
       ></div>
 
       <div ref="panelRef" class="relative w-full sm:max-w-sm h-full shadow-2xl">
-        <div
-          class="bg-card h-full overflow-y-auto scrollable"
-          style="padding-left: env(safe-area-inset-left, 0px)"
-        >
+        <div class="bg-card h-full overflow-y-auto scrollable settings-safe-area">
           <div
             class="sticky top-0 bg-card z-10 border-b border-border"
             style="padding-top: max(1rem, env(safe-area-inset-top, 0px))"
@@ -1220,10 +1217,21 @@ function onLanguageChange(code) {
 .settings-panel-leave-to {
   opacity: 0;
 }
-.settings-panel-enter-from > :last-child {
-  transform: translateX(-100%);
-}
+/* The drawer anchors to the inline-start edge (flex justify-start), which is the
+   right side in RTL, so both the slide and the safe-area inset must mirror. */
+.settings-panel-enter-from > :last-child,
 .settings-panel-leave-to > :last-child {
   transform: translateX(-100%);
+}
+[dir='rtl'] .settings-panel-enter-from > :last-child,
+[dir='rtl'] .settings-panel-leave-to > :last-child {
+  transform: translateX(100%);
+}
+
+.settings-safe-area {
+  padding-inline-start: env(safe-area-inset-left, 0px);
+}
+[dir='rtl'] .settings-safe-area {
+  padding-inline-start: env(safe-area-inset-right, 0px);
 }
 </style>

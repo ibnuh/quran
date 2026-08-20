@@ -81,11 +81,7 @@ watch(
             </button>
           </div>
 
-          <div
-            ref="listRef"
-            class="p-4 space-y-2 verse-list-items"
-            style="padding-right: max(1rem, env(safe-area-inset-right, 0px))"
-          >
+          <div ref="listRef" class="p-4 space-y-2 verse-list-items panel-list-safe-area">
             <VerseItem
               v-for="(verse, i) in store.verses"
               :key="verse.number"
@@ -126,10 +122,21 @@ watch(
 .panel-leave-to {
   opacity: 0;
 }
-.panel-enter-from > :last-child {
-  transform: translateX(100%);
-}
+/* The drawer anchors to the inline-end edge (flex justify-end), which is the
+   left side in RTL, so both the slide and the safe-area inset must mirror. */
+.panel-enter-from > :last-child,
 .panel-leave-to > :last-child {
   transform: translateX(100%);
+}
+[dir='rtl'] .panel-enter-from > :last-child,
+[dir='rtl'] .panel-leave-to > :last-child {
+  transform: translateX(-100%);
+}
+
+.panel-list-safe-area {
+  padding-inline-end: max(1rem, env(safe-area-inset-right, 0px));
+}
+[dir='rtl'] .panel-list-safe-area {
+  padding-inline-end: max(1rem, env(safe-area-inset-left, 0px));
 }
 </style>
