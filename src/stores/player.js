@@ -305,6 +305,7 @@ async function deleteUrlsFromAudioCaches(urls) {
 }
 
 let loadAbortController = null
+let downloadAbortController = null
 
 const _responsiveDefaults = getResponsiveDefaults()
 const loadedArabicFontFamilies = new Set()
@@ -418,6 +419,8 @@ export const usePlayerStore = defineStore('player', {
     // use. Keyed per reciter because the cached MP3s are reciter-specific URLs.
     downloadedSurahs: [],
     downloadingSurah: null,
+    // { current, total } file counts while a download is in flight, else null.
+    downloadProgress: null,
     downloadError: false
   }),
 
@@ -462,6 +465,12 @@ export const usePlayerStore = defineStore('player', {
       state.downloadedSurahs.some(
         d => d.reciter === state.currentReciter && d.surah === state.currentSurahNum
       ),
+    // Name of the surah being downloaded, so the UI stays accurate even when
+    // the user navigates to another surah while a download is in flight.
+    downloadingSurahName: state => {
+      const surah = SURAHS.find(s => s.number === state.downloadingSurah)
+      return surah ? surah.englishName : ''
+    },
     // True when the current surah has a playable, allowlisted audio source.
     canPlayAudio: state =>
       !state.audioUnavailable &&
@@ -764,6 +773,8 @@ export const usePlayerStore = defineStore('player', {
       }
       this.downloadingSurah = num
       this.downloadError = false
+      downloadAbortController = new AbortController()
+      const signal = downloadAbortController.signal
       try {
         const rawUrls =
           this.playbackMode === 'full' ? (this.audioUrl ? [this.audioUrl] : []) : this.audioUrls
@@ -771,8 +782,9 @@ export const usePlayerStore = defineStore('player', {
         if (!urls.length) {
           throw new Error('No downloadable audio URLs')
         }
+        this.downloadProgress = { current: 0, total: urls.length }
         for (const url of urls) {
-          const res = await fetch(url)
+          const res = await fetch(url, { signal })
           if (!res.ok) {
             throw new Error(`Download failed (HTTP ${res.status})`)
           }
@@ -780,15 +792,29 @@ export const usePlayerStore = defineStore('player', {
           await putResponseInAudioCaches(url, res.clone())
           // Fully consume the body so the download is complete even without Cache API.
           await res.arrayBuffer()
+          this.downloadProgress = { current: this.downloadProgress.current + 1, total: urls.length }
         }
         if (!this.downloadedSurahs.some(d => d.reciter === reciter && d.surah === num)) {
           this.downloadedSurahs.push({ reciter, surah: num })
         }
         this.savePreferences()
-      } catch {
-        this.downloadError = true
+      } catch (err) {
+        // A cancel surfaces as AbortError; only real failures show the error state.
+        if (err?.name !== 'AbortError') {
+          this.downloadError = true
+        }
       } finally {
         this.downloadingSurah = null
+        this.downloadProgress = null
+        downloadAbortController = null
+      }
+    },
+
+    // Cancel an in-flight offline download. Already fetched files stay cached,
+    // but the surah is not marked downloaded so the user can retry later.
+    cancelDownload() {
+      if (downloadAbortController) {
+        downloadAbortController.abort()
       }
     },
 
