@@ -111,7 +111,9 @@ const mediaSession = useMediaSession(
     prevVerse: handlePrevVerse,
     nextVerse: handleNextVerse,
     prevSurah: handlePrevSurah,
-    nextSurah: handleNextSurah
+    nextSurah: handleNextSurah,
+    // Reuses the seek-bar path so the verse index follows lock-screen scrubs.
+    seek: handleSeek
   },
   audio
 )
