@@ -29,6 +29,9 @@ export const ALLOWED_AUDIO_HOSTS = [
 // -- Networking --
 export const MAX_RETRIES = 2
 export const RETRY_DELAY = 1000
+// Per-attempt fetch deadline. A stalled response (captive portal, dead Wi-Fi,
+// hung CDN) must fail fast enough to retry instead of hanging the caller forever.
+export const FETCH_TIMEOUT = 15000
 
 // Reject audio src values that are not HTTPS URLs on an allowlisted host.
 export function isAllowedAudioUrl(url) {
