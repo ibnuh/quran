@@ -136,7 +136,11 @@ onBeforeUnmount(disarmClear)
                 >
                   {{ bm.verseText }}
                 </p>
-                <p v-if="bm.translationText" class="text-xs text-muted/70 line-clamp-2 select-text">
+                <p
+                  v-if="bm.translationText"
+                  class="text-xs text-muted/70 line-clamp-2 select-text text-start"
+                  dir="auto"
+                >
                   {{ bm.translationText }}
                 </p>
               </button>

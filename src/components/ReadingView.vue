@@ -172,7 +172,8 @@ onMounted(() => nextTick(() => scrollToActive(false)))
         </VerseArabic>
         <p
           v-if="i !== store.currentVerseIndex"
-          class="text-muted font-light mt-2 text-left leading-relaxed"
+          class="text-muted font-light mt-2 text-start leading-relaxed"
+          dir="auto"
           :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
         >
           {{ plainTranslation(i) }}
@@ -182,7 +183,8 @@ onMounted(() => nextTick(() => scrollToActive(false)))
       <!-- Active verse: translation with optional footnote markers -->
       <p
         v-if="i === store.currentVerseIndex"
-        class="text-muted font-light mt-2 text-left leading-relaxed"
+        class="text-muted font-light mt-2 text-start leading-relaxed"
+        dir="auto"
         :style="{ fontSize: store.translationFontSize * 0.92 + 'rem' }"
       >
         <template v-for="(seg, si) in activeTranslationSegments" :key="si">

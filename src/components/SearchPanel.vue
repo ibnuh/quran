@@ -296,7 +296,9 @@ function clearQuery() {
                 class="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center"
                 >{{ v.number }}</span
               >
-              <span class="min-w-0 text-sm text-body line-clamp-2">{{ v.text }}</span>
+              <span class="min-w-0 text-sm text-body line-clamp-2 text-start" dir="auto">{{
+                v.text
+              }}</span>
             </button>
           </div>
         </div>

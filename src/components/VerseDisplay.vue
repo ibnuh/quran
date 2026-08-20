@@ -167,6 +167,7 @@ const isLastVerse = computed(
 
           <p
             class="verse-translation leading-relaxed text-muted font-normal mx-auto"
+            dir="auto"
             :style="{
               fontSize: store.translationFontSize + 'rem',
               maxWidth: store.contentWidth * 0.75 + 'rem'
@@ -211,6 +212,7 @@ const isLastVerse = computed(
             </p>
             <p
               class="leading-relaxed text-muted font-light"
+              dir="auto"
               :style="{ fontSize: store.translationFontSize + 'rem' }"
             >
               {{ extra.text }}
