@@ -1,11 +1,15 @@
 <script setup>
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../stores/player.js'
 import { useFocusTrap } from '../composables/useFocusTrap.js'
+import { useScreenReader } from '../composables/useScreenReader.js'
 
 const store = usePlayerStore()
 const emit = defineEmits(['close', 'select'])
 const panelRef = ref(null)
+const { t } = useI18n()
+const { announce } = useScreenReader()
 
 useFocusTrap(panelRef, { onEscape: () => emit('close'), autoFocus: false })
 
@@ -17,10 +21,32 @@ function goToBookmark(index) {
   }
 }
 
+// Two-step destructive action: the first click arms the button, the second
+// clears. The armed state times out so a stale tap cannot wipe bookmarks later.
+const clearArmed = ref(false)
+let disarmTimer = null
+
+function disarmClear() {
+  clearArmed.value = false
+  if (disarmTimer) {
+    clearTimeout(disarmTimer)
+    disarmTimer = null
+  }
+}
+
 function clearAllBookmarks() {
+  if (!clearArmed.value) {
+    clearArmed.value = true
+    disarmTimer = setTimeout(disarmClear, 5000)
+    return
+  }
+  disarmClear()
   store.bookmarks = []
   store.savePreferences()
+  announce(t('panels.bookmarksCleared'))
 }
+
+onBeforeUnmount(disarmClear)
 </script>
 
 <template>
@@ -49,10 +75,15 @@ function clearAllBookmarks() {
             <div class="flex items-center gap-2">
               <button
                 v-if="store.bookmarks.length > 0"
-                class="text-xs text-muted hover:text-red-500 cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-surface"
+                class="text-xs cursor-pointer transition-colors px-2 py-1 rounded-lg"
+                :class="
+                  clearArmed
+                    ? 'text-red-500 font-semibold bg-red-500/10 hover:bg-red-500/20'
+                    : 'text-muted hover:text-red-500 hover:bg-surface'
+                "
                 @click="clearAllBookmarks"
               >
-                {{ $t('panels.clearAll') }}
+                {{ clearArmed ? $t('panels.clearAllConfirm') : $t('panels.clearAll') }}
               </button>
               <button
                 class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface transition-colors text-muted cursor-pointer"

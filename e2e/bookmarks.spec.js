@@ -66,6 +66,36 @@ test('multiple bookmarks are added correctly', async ({ page }) => {
   expect(stored).toBe(2)
 })
 
+test('clear all requires a second confirming click', async ({ page }) => {
+  await page.getByLabel('Bookmark this verse').click()
+  await page.getByLabel('Show bookmarks').click()
+  const panel = page.getByRole('dialog', { name: 'Bookmarks' })
+  await panel.getByRole('button', { name: 'Clear all', exact: true }).click()
+  // First click only arms the button; the bookmark must survive.
+  await expect(panel.getByRole('button', { name: 'Confirm clear all' })).toBeVisible()
+  await expect(panel.getByText(/Al-Faatiha\s*·\s*1/)).toBeVisible()
+  const stored = await page.evaluate(() => {
+    const raw = localStorage.getItem('quran-player-prefs')
+    return raw ? JSON.parse(raw).bookmarks : null
+  })
+  expect(stored).toHaveLength(1)
+})
+
+test('clear all removes bookmarks after confirmation and announces it', async ({ page }) => {
+  await page.getByLabel('Bookmark this verse').click()
+  await page.getByLabel('Show bookmarks').click()
+  const panel = page.getByRole('dialog', { name: 'Bookmarks' })
+  await panel.getByRole('button', { name: 'Clear all', exact: true }).click()
+  await panel.getByRole('button', { name: 'Confirm clear all' }).click()
+  await expect(panel.getByText('No bookmarks yet')).toBeVisible()
+  const stored = await page.evaluate(() => {
+    const raw = localStorage.getItem('quran-player-prefs')
+    return raw ? JSON.parse(raw).bookmarks : null
+  })
+  expect(stored).toHaveLength(0)
+  await expect(page.locator('#sr-announcements')).toHaveText('All bookmarks cleared')
+})
+
 test('bookmark remove button appears on hover in panel', async ({ page }) => {
   await page.getByLabel('Bookmark this verse').click()
   await page.getByLabel('Show bookmarks').click()

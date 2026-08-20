@@ -106,6 +106,8 @@ export default {
     closeVerses: 'آیات کی فہرست بند کریں',
     bookmarks: 'بک مارکس',
     clearAll: 'سب صاف کریں',
+    clearAllConfirm: 'سب صاف کرنے کی تصدیق کریں',
+    bookmarksCleared: 'تمام بک مارکس صاف ہو گئے',
     noBookmarks: 'ابھی کوئی بک مارک نہیں',
     noBookmarksHint: 'یہاں محفوظ کرنے کے لیے کسی بھی آیت پر بک مارک آئیکن دبائیں',
     removeBookmarkItem: '{surah} آیت {verse} کا بک مارک ہٹائیں',

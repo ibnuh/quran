@@ -106,6 +106,8 @@ export default {
     closeVerses: 'Close verse list',
     bookmarks: 'Bookmarks',
     clearAll: 'Clear all',
+    clearAllConfirm: 'Confirm clear all',
+    bookmarksCleared: 'All bookmarks cleared',
     noBookmarks: 'No bookmarks yet',
     noBookmarksHint: 'Tap the bookmark icon on any verse to save it here',
     removeBookmarkItem: 'Remove bookmark for {surah} verse {verse}',

@@ -106,6 +106,8 @@ export default {
     closeVerses: 'إغلاق قائمة الآيات',
     bookmarks: 'العلامات',
     clearAll: 'مسح الكل',
+    clearAllConfirm: 'تأكيد مسح الكل',
+    bookmarksCleared: 'تم مسح جميع العلامات',
     noBookmarks: 'لا توجد علامات بعد',
     noBookmarksHint: 'انقر على أيقونة العلامة في أي آية لحفظها هنا',
     removeBookmarkItem: 'إزالة العلامة لـ {surah} الآية {verse}',
