@@ -714,10 +714,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .app-header {
-  /* Mobile: keep edge icons off the bezel. Safe-area is added on top. */
+  /* Mobile: keep edge icons (settings / verses hamburger) off the bezel.
+     Safe-area is added on top of the base inset. */
   padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
-  padding-left: calc(1rem + env(safe-area-inset-left, 0px));
-  padding-right: calc(1rem + env(safe-area-inset-right, 0px));
+  padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
 }
 @media (min-width: 640px) {
   .app-header {
@@ -767,6 +768,19 @@ onBeforeUnmount(() => {
 
 .header-actions-end {
   flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  /* Bias the first/last glyphs inward from the bezel while keeping 40px taps.
+     Do not set display on .header-btn (Tailwind hidden/flex utilities own that). */
+  .header-actions-start > .header-btn:first-child {
+    padding-inline-start: 0.7rem;
+    padding-inline-end: 0.35rem;
+  }
+  .header-actions-end > .header-btn:last-child {
+    padding-inline-start: 0.35rem;
+    padding-inline-end: 0.75rem;
+  }
 }
 
 /* Own layout (not header-btn): keeps icon · label · caret on one baseline. */
