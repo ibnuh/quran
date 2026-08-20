@@ -63,7 +63,16 @@ const activeThemeColors = computed(
 )
 const WARNING_COLOR = '#d97706'
 const statusBarFill = computed(() => {
-  if (showSettings.value || showVerses.value || showBookmarks.value) {
+  // Match every full-screen overlay so the notch fill does not stay on the
+  // bright primary color behind a dimmed panel (search, tafsir, shortcuts).
+  if (
+    showSettings.value ||
+    showVerses.value ||
+    showBookmarks.value ||
+    showSearch.value ||
+    showTafsir.value ||
+    showShortcuts.value
+  ) {
     return activeThemeColors.value.card
   }
   if (!isOnline.value) {
