@@ -966,7 +966,10 @@ export const usePlayerStore = defineStore('player', {
 
     setReciter(id) {
       this.currentReciter = id
-      this.currentVerseIndex = 0
+      // Verse text and numbering are identical across reciters, so keep the
+      // current reading position; loadSurah clamps indexes past the surah end.
+      // Word timing segments are reciter-specific, so drop the highlight.
+      this.currentWordIndex = -1
       this.savePreferences()
       return this.loadSurah()
     },
