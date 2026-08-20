@@ -5,6 +5,9 @@
 export const STORAGE_KEY = 'quran-player-prefs'
 export const TIP_DISMISSED_KEY = 'quran-tip-dismissed'
 export const PWA_INSTALL_DISMISSED_KEY = 'quran-pwa-install-dismissed'
+// Fingerprint of a waiting service worker the user already dismissed with Later.
+// Cleared when a newer waiting worker appears or the user accepts an update.
+export const PWA_UPDATE_DISMISSED_KEY = 'quran-pwa-update-dismissed'
 // One-time “what's new” banners for returning users (key includes feature id).
 export const FOOTNOTES_ANNOUNCED_KEY = 'quran-footnotes-announced'
 // Set just before a user-accepted SW update reloads the page; cleared after boot recovery.

@@ -6,7 +6,25 @@ import { safeLocalStorageGet, safeLocalStorageSet } from '../utils/storage.js'
 const show = ref(false)
 const DISMISSED_KEY = PWA_INSTALL_DISMISSED_KEY
 
+function isStandaloneDisplay() {
+  try {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      return true
+    }
+  } catch {
+    // ignore
+  }
+  // iOS Safari home-screen apps.
+  return !!navigator.standalone
+}
+
 function checkPrompt() {
+  // Already installed: never nudge to install again.
+  if (isStandaloneDisplay()) {
+    show.value = false
+    window.__pwaInstallPrompt = null
+    return
+  }
   if (!window.__pwaInstallPrompt) {
     return
   }
@@ -15,7 +33,13 @@ function checkPrompt() {
     return
   }
   setTimeout(() => {
-    show.value = true
+    if (
+      !isStandaloneDisplay() &&
+      window.__pwaInstallPrompt &&
+      !safeLocalStorageGet(DISMISSED_KEY)
+    ) {
+      show.value = true
+    }
   }, 3000)
 }
 
@@ -34,6 +58,9 @@ async function install() {
   }
   show.value = false
   window.__pwaInstallPrompt = null
+  // Accepted or dismissed native UI: do not keep re-offering install chrome.
+  // One install (or one deliberate decline) is enough until the user clears site data.
+  safeLocalStorageSet(DISMISSED_KEY, '1')
 }
 
 function dismiss() {
@@ -44,9 +71,13 @@ function dismiss() {
 function onInstalled() {
   show.value = false
   window.__pwaInstallPrompt = null
+  safeLocalStorageSet(DISMISSED_KEY, '1')
 }
 
 onMounted(() => {
+  if (isStandaloneDisplay()) {
+    return
+  }
   window.addEventListener('appinstalled', onInstalled)
   // Check if prompt was already captured globally
   if (window.__pwaInstallPrompt) {
