@@ -202,13 +202,16 @@ export function useAudio() {
     releaseMuteUntilSeek()
   }
 
+  // iOS Safari ignores the HTMLMediaElement volume setter, so the seek window
+  // must ride on muted. volume stays reserved for the user setting.
   function applyElementVolume() {
-    audio.volume = muteUntilSeek ? 0 : volume.value
+    audio.volume = volume.value
+    audio.muted = muteUntilSeek
   }
 
   function beginMuteUntilSeek() {
     muteUntilSeek = true
-    audio.volume = 0
+    audio.muted = true
   }
 
   function releaseMuteUntilSeek() {
