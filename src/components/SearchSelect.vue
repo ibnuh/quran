@@ -48,9 +48,10 @@ const filtered = computed(() => {
   return props.options.filter(o => fuzzyMatch(o[props.labelKey], query.value))
 })
 
-// Reset highlighted index when filtered results change
+// While a query narrows the list, keep the first match highlighted so Enter
+// selects it right away. With no query, keep nothing highlighted.
 watch(filtered, () => {
-  highlightedIndex.value = -1
+  highlightedIndex.value = query.value.trim() && filtered.value.length > 0 ? 0 : -1
 })
 
 function isTouchDevice() {
@@ -106,9 +107,20 @@ function onKeydown(e) {
     e.preventDefault()
     highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0)
     scrollHighlightedIntoView()
-  } else if (e.key === 'Enter' && highlightedIndex.value >= 0) {
-    e.preventDefault()
-    select(filtered.value[highlightedIndex.value])
+  } else if (e.key === 'Enter') {
+    // With a query, fall back to the first filtered option so Enter works
+    // without ArrowDown. With an empty query, only select if a row is
+    // already highlighted.
+    const option =
+      highlightedIndex.value >= 0
+        ? filtered.value[highlightedIndex.value]
+        : query.value.trim()
+          ? filtered.value[0]
+          : null
+    if (option) {
+      e.preventDefault()
+      select(option)
+    }
   }
 }
 

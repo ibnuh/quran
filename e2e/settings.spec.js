@@ -55,3 +55,32 @@ test('keyboard shortcuts modal opens from header button', async ({ page }) => {
   const modal = page.getByRole('dialog', { name: 'Keyboard shortcuts' })
   await expect(modal).toBeVisible()
 })
+
+async function openReciterPicker(page) {
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  const modal = page.getByRole('dialog', { name: 'Settings' })
+  await expect(modal).toBeVisible()
+  await modal.getByRole('tab', { name: 'Playback' }).click()
+  await modal.getByRole('button', { name: 'Reciter' }).click()
+}
+
+test('typing in the reciter picker highlights the first match', async ({ page }) => {
+  await openReciterPicker(page)
+  await page.getByRole('searchbox').fill('sudais')
+  const firstOption = page.getByRole('option').first()
+  await expect(firstOption).toContainText('as-Sudais')
+  await expect(firstOption).toHaveClass(/option-highlighted/)
+})
+
+test('pressing Enter in the reciter picker selects the first match', async ({ page }) => {
+  await openReciterPicker(page)
+  await page.getByRole('searchbox').fill('sudais')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('searchbox')).not.toBeVisible()
+  await waitForSurahLoad(page)
+  const stored = await page.evaluate(() => {
+    const raw = localStorage.getItem('quran-player-prefs')
+    return raw ? JSON.parse(raw).reciter : null
+  })
+  expect(stored).toBe('sudais')
+})
