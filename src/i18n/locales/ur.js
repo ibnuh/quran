@@ -122,8 +122,10 @@ export default {
     suggested: 'تجویز کردہ',
     suggestedHint: 'شروع کرنے کے لیے مقبول سورتیں',
     versesIn: '{surah} کی آیات',
+    goToAyah: '{surah} آیت {verse} پر جائیں',
     noMatchesTitle: 'کوئی نتیجہ نہیں',
-    noMatches: 'سورہ کا نام یا نمبر آزمائیں۔ آیت کی تلاش صرف موجودہ سورہ میں ہوتی ہے۔',
+    noMatches:
+      'سورہ کا نام، نمبر، یا 2:255 جیسا حوالہ آزمائیں۔ آیت کی تلاش صرف موجودہ سورہ میں ہوتی ہے۔',
     tafsir: 'تفسیر',
     tafsirSource: 'تفسیر کا ماخذ',
     closeTafsir: 'تفسیر بند کریں',

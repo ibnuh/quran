@@ -507,6 +507,7 @@ watch(
       @close="showSearch = false"
       @select-surah="applyDeepLink($event)"
       @select-verse="handleJumpToVerse"
+      @select-ayah="applyDeepLink($event.surah, $event.ayah)"
     />
     <TafsirPanel v-if="showTafsir" @close="showTafsir = false" />
 
